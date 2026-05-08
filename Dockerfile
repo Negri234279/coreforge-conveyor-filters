@@ -15,12 +15,16 @@ ENV NODE_ENV=production \
     NPM_CONFIG_UPDATE_NOTIFIER=false
 
 ############################
-# Install all deps (build) #
+# Production deps          #
+# (also enough for build:  #
+# astro/tailwind/preact    #
+# all live in dependencies)#
 ############################
 FROM base AS deps
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --include=dev
+    npm ci --omit=dev && \
+    npm cache clean --force
 
 ############################
 # Build the Astro app      #
@@ -29,15 +33,6 @@ FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
-
-############################
-# Production deps only     #
-############################
-FROM base AS prod-deps
-COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev && \
-    npm cache clean --force
 
 ############################
 # Runtime image            #
@@ -59,9 +54,9 @@ ENV NODE_ENV=production \
 # Pre-create + chown so a fresh named volume inherits the right perms.
 RUN mkdir -p /data && chown -R node:node /data /app
 
-COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
-COPY --from=build     --chown=node:node /app/dist          ./dist
-COPY                  --chown=node:node package.json       ./
+COPY --from=deps  --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/dist          ./dist
+COPY              --chown=node:node package.json       ./
 
 USER node
 EXPOSE 4321
