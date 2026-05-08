@@ -1,0 +1,36 @@
+# VCS / editor
+.git
+.gitignore
+.gitattributes
+.github
+.vscode
+.idea
+
+# Build output / caches
+dist
+.astro
+node_modules
+*.log
+npm-debug.log*
+
+# Env / secrets
+.env
+.env.*
+
+# Local dev data (kept out of image; runtime uses DATA_DIR volume)
+src/data/filters.dev.json
+src/data/filters.prod.json
+
+# Docker / docs (not needed at build time)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+README.md
+
+# nginx config + basic-auth secrets belong to the sidecar, not the app image
+nginx
+secrets
+
+# OS junk
+.DS_Store
+Thumbs.db

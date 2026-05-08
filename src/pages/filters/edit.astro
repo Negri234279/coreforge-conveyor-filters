@@ -1,0 +1,23 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import EditFilterIsland from '../../components/EditFilterIsland'
+import CopyToast from '../../components/CopyToast'
+---
+
+<Layout title="Edit Filter – CoreForge" activeNav="home">
+    <div class="mb-8">
+        <a
+            href="/"
+            class="text-xs font-semibold tracking-wider text-slate-500 uppercase hover:text-slate-200"
+            >&larr; Back to My Conveyors</a
+        >
+        <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-100">Edit Filter</h1>
+        <p class="mt-1 text-sm text-slate-400">Update an existing conveyor preset.</p>
+    </div>
+
+    <div class="rounded-lg border border-slate-800 bg-slate-900/30 p-6 shadow-inner">
+        <EditFilterIsland client:only="preact" />
+    </div>
+
+    <CopyToast client:only="preact" />
+</Layout>

@@ -1,0 +1,117 @@
+[
+    {
+        "id": 1,
+        "name": "Neon Med",
+        "imagePath": "neon-med-storage"
+    },
+    {
+        "id": 2,
+        "name": "Neon Elec",
+        "imagePath": "neon-elec"
+    },
+    {
+        "id": 3,
+        "name": "Neon Clothes",
+        "imagePath": "neon-clothes"
+    },
+    {
+        "id": 4,
+        "name": "Neon Drop box",
+        "imagePath": "neon-drop-box"
+    },
+    {
+        "id": 5,
+        "name": "Neon Char Storage",
+        "imagePath": "neon-char-storage"
+    },
+    {
+        "id": 6,
+        "name": "Neon Tools Storage",
+        "imagePath": "neon-tools-storage"
+    },
+    {
+        "id": 7,
+        "name": "Neon Misc Storage",
+        "imagePath": "neon-misc-storage"
+    },
+    {
+        "id": 8,
+        "name": "Neon Stone Storage",
+        "imagePath": "neon-stone-storage"
+    },
+    {
+        "id": 9,
+        "name": "Neon Comps Storage",
+        "imagePath": "neon-comps-storage"
+    },
+    {
+        "id": 10,
+        "name": "Neon Armor Storage",
+        "imagePath": "neon-armor-storage"
+    },
+    {
+        "id": 11,
+        "name": "Neon Wood Storage",
+        "imagePath": "neon-wood-storage"
+    },
+    {
+        "id": 12,
+        "name": "Neon Sulfur Storage",
+        "imagePath": "neon-sulfur-storage"
+    },
+    {
+        "id": 13,
+        "name": "Neon Frags Storage",
+        "imagePath": "neon-frags-storage"
+    },
+    {
+        "id": 14,
+        "name": "Neon Ammo Storage",
+        "imagePath": "neon-ammo-storage"
+    },
+    {
+        "id": 15,
+        "name": "Neon Gun Storage",
+        "imagePath": "neon-gun-storage"
+    },
+    {
+        "id": 16,
+        "name": "Neon Food Storage",
+        "imagePath": "neon-food-storage"
+    },
+    {
+        "id": 17,
+        "name": "Neon Boom Storage",
+        "imagePath": "neon-boom-storage"
+    },
+    {
+        "id": 18,
+        "name": "Neon Ore Storage",
+        "imagePath": "neon-ore-storage"
+    },
+    {
+        "id": 19,
+        "name": "Neon Scrap Storage",
+        "imagePath": "neon-scrap-storage"
+    },
+    {
+        "id": 20,
+        "name": "Sinotype Navy Large Box",
+        "imagePath": "sinotype-navy-large-box"
+    },
+    {
+        "id": 21,
+        "name": "Sinotype Fuel Large Box",
+        "imagePath": "sinotype-fuel-large-box"
+    },
+    {
+        "id": 22,
+        "name": "Sinotype Explosive Large Box",
+        "imagePath": "sinotype-explosive-large-box"
+    },
+    {
+        "id": 23,
+        "name": "Sinotype Clothes Large Box",
+        "imagePath": "sinotype-clothes-large-box"
+    }
+]

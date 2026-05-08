@@ -1,0 +1,350 @@
+import { signal } from '@preact/signals'
+import { nanoid } from 'nanoid'
+import type { Category, Filter, FilterItem, Subcategory } from '../types'
+
+const MAX_ITEMS_PER_FILTER = 30
+
+function toNonNegInt(v: unknown): number {
+    const n = typeof v === 'number' ? v : Number(v ?? 0)
+    if (!Number.isFinite(n) || n < 0) return 0
+    return Math.floor(n)
+}
+
+function normalizeItem(raw: unknown): FilterItem | null {
+    if (typeof raw === 'string') {
+        return { shortname: raw, max: 0, buffer: 0, min: 0 }
+    }
+    if (raw && typeof raw === 'object') {
+        const o = raw as Record<string, unknown>
+        const shortname = typeof o.shortname === 'string' ? o.shortname : ''
+        if (!shortname) return null
+        return {
+            shortname,
+            max: toNonNegInt(o.max),
+            buffer: toNonNegInt(o.buffer),
+            min: toNonNegInt(o.min),
+        }
+    }
+    return null
+}
+
+function normalizeFilter(raw: Filter): Filter {
+    const items = Array.isArray(raw.items)
+        ? (raw.items as unknown[])
+              .map(normalizeItem)
+              .filter((x): x is FilterItem => x !== null)
+              .slice(0, MAX_ITEMS_PER_FILTER)
+        : []
+    // Legacy field migration: boxItemShortname -> boxImagePath
+    const legacy = (raw as unknown as { boxItemShortname?: string }).boxItemShortname
+    const boxImagePath = raw.boxImagePath ?? legacy
+    return { ...raw, items, boxImagePath }
+}
+
+function normalizeCategories(cats: Category[]): Category[] {
+    return cats.map((c) => ({
+        ...c,
+        filters: (c.filters ?? []).map(normalizeFilter),
+        subcategories: (c.subcategories ?? []).map((s) => ({
+            ...s,
+            filters: (s.filters ?? []).map(normalizeFilter),
+        })),
+    }))
+}
+
+export const categories = signal<Category[]>([])
+export const isHydrated = signal<boolean>(false)
+export const isSyncing = signal<boolean>(false)
+export const lastError = signal<string | null>(null)
+export const dataSource = signal<string | null>(null)
+
+let loadPromise: Promise<void> | null = null
+
+async function fetchState(): Promise<void> {
+    try {
+        const res = await fetch('/api/filters', { cache: 'no-store' })
+        if (!res.ok) throw new Error(`GET /api/filters failed (${res.status})`)
+        const body = (await res.json()) as {
+            categories: Category[]
+            source?: string
+        }
+        categories.value = Array.isArray(body.categories)
+            ? normalizeCategories(body.categories)
+            : []
+        dataSource.value = body.source ?? null
+        lastError.value = null
+    } catch (err) {
+        lastError.value = err instanceof Error ? err.message : 'Failed to load filters'
+    } finally {
+        isHydrated.value = true
+    }
+}
+
+export function ensureLoaded(): Promise<void> {
+    if (typeof window === 'undefined') return Promise.resolve()
+    if (!loadPromise) loadPromise = fetchState()
+    return loadPromise
+}
+
+if (typeof window !== 'undefined') {
+    // Trigger load on first import in the browser
+    void ensureLoaded()
+}
+
+async function persist(next: Category[]): Promise<void> {
+    if (typeof window === 'undefined') return
+    isSyncing.value = true
+    try {
+        const res = await fetch('/api/filters', {
+            method: 'PUT',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ categories: next }),
+        })
+        if (!res.ok) throw new Error(`PUT /api/filters failed (${res.status})`)
+        lastError.value = null
+    } catch (err) {
+        lastError.value = err instanceof Error ? err.message : 'Failed to save filters'
+        throw err
+    } finally {
+        isSyncing.value = false
+    }
+}
+
+function commit(next: Category[]): Promise<void> {
+    categories.value = next
+    return persist(next)
+}
+
+function commitFireAndForget(next: Category[]): void {
+    categories.value = next
+    void persist(next)
+}
+
+function cloneCategories(): Category[] {
+    return categories.value.map((c) => ({
+        ...c,
+        subcategories: c.subcategories.map((s) => ({ ...s, filters: [...s.filters] })),
+        filters: [...c.filters],
+    }))
+}
+
+export function getAllFilters(): Filter[] {
+    const out: Filter[] = []
+    for (const cat of categories.value) {
+        for (const f of cat.filters) out.push(f)
+        for (const sc of cat.subcategories) for (const f of sc.filters) out.push(f)
+    }
+    return out
+}
+
+export function findFilter(id: string): Filter | undefined {
+    return getAllFilters().find((f) => f.id === id)
+}
+
+export function findCategoryByName(name: string): Category | undefined {
+    return categories.value.find((c) => c.name.trim().toLowerCase() === name.trim().toLowerCase())
+}
+
+function ensureCategoryByNameMutable(
+    next: Category[],
+    name: string,
+    isOpenCoreFilter = false,
+): Category {
+    const trimmed = name.trim()
+    const existing = next.find((c) => c.name.trim().toLowerCase() === trimmed.toLowerCase())
+    if (existing) return existing
+    const created: Category = {
+        id: nanoid(),
+        name: trimmed,
+        isOpenCoreFilter,
+        subcategories: [],
+        filters: [],
+    }
+    next.push(created)
+    return created
+}
+
+function ensureSubcategoryMutable(cat: Category, name: string): Subcategory {
+    const trimmed = name.trim()
+    const existing = cat.subcategories.find(
+        (s) => s.name.trim().toLowerCase() === trimmed.toLowerCase(),
+    )
+    if (existing) return existing
+    const created: Subcategory = {
+        id: nanoid(),
+        name: trimmed,
+        filters: [],
+    }
+    cat.subcategories.push(created)
+    return created
+}
+
+export function addCategory(name: string, isOpenCoreFilter = false): Category {
+    const trimmed = name.trim()
+    if (!trimmed) throw new Error('Category name is required')
+    const next = cloneCategories()
+    const before = next.length
+    const cat = ensureCategoryByNameMutable(next, trimmed, isOpenCoreFilter)
+    if (next.length === before) {
+        // Existed already — no write needed.
+        return cat
+    }
+    commitFireAndForget(next)
+    return cat
+}
+
+export function addSubcategory(categoryId: string, name: string): Subcategory {
+    const next = cloneCategories()
+    const cat = next.find((c) => c.id === categoryId)
+    if (!cat) throw new Error('Category not found')
+    const sub = ensureSubcategoryMutable(cat, name)
+    commitFireAndForget(next)
+    return sub
+}
+
+export function removeSubcategory(categoryId: string, subcategoryId: string) {
+    const next = cloneCategories()
+    const cat = next.find((c) => c.id === categoryId)
+    if (!cat) return
+    const sub = cat.subcategories.find((s) => s.id === subcategoryId)
+    if (!sub) return
+    cat.filters.push(...sub.filters.map((f) => ({ ...f, subcategoryId: undefined })))
+    cat.subcategories = cat.subcategories.filter((s) => s.id !== subcategoryId)
+    commitFireAndForget(next)
+}
+
+export function renameCategory(categoryId: string, name: string) {
+    const next = cloneCategories()
+    const cat = next.find((c) => c.id === categoryId)
+    if (!cat) return
+    cat.name = name.trim()
+    commitFireAndForget(next)
+}
+
+export function updateCategory(
+    categoryId: string,
+    patch: { name: string; isOpenCoreFilter: boolean },
+) {
+    const next = cloneCategories()
+    const cat = next.find((c) => c.id === categoryId)
+    if (!cat) return
+    cat.name = patch.name.trim()
+    cat.isOpenCoreFilter = patch.isOpenCoreFilter
+    commitFireAndForget(next)
+}
+
+export function deleteCategory(categoryId: string) {
+    const next = categories.value.filter((c) => c.id !== categoryId)
+    commitFireAndForget(next)
+}
+
+export function renameSubcategory(categoryId: string, subcategoryId: string, name: string) {
+    const next = cloneCategories()
+    const cat = next.find((c) => c.id === categoryId)
+    if (!cat) return
+    const sub = cat.subcategories.find((s) => s.id === subcategoryId)
+    if (!sub) return
+    sub.name = name.trim()
+    commitFireAndForget(next)
+}
+
+export interface FilterDraft {
+    name: string
+    description?: string
+    coverItemShortname: string
+    boxImagePath?: string
+    categoryName: string
+    subcategoryName?: string
+    items: FilterItem[]
+}
+
+function sanitizeDraftItems(items: FilterItem[]): FilterItem[] {
+    return items.slice(0, MAX_ITEMS_PER_FILTER).map((it) => ({
+        shortname: it.shortname,
+        max: toNonNegInt(it.max),
+        buffer: toNonNegInt(it.buffer),
+        min: toNonNegInt(it.min),
+    }))
+}
+
+export async function createFilter(draft: FilterDraft): Promise<Filter> {
+    const next = cloneCategories()
+    const cat = ensureCategoryByNameMutable(next, draft.categoryName)
+    const sub = draft.subcategoryName
+        ? ensureSubcategoryMutable(cat, draft.subcategoryName)
+        : undefined
+
+    const filter: Filter = {
+        id: nanoid(),
+        name: draft.name.trim(),
+        description: draft.description?.trim() || undefined,
+        coverItemShortname: draft.coverItemShortname,
+        boxImagePath: draft.boxImagePath || undefined,
+        categoryId: cat.id,
+        subcategoryId: sub?.id,
+        items: sanitizeDraftItems(draft.items),
+        createdAt: new Date().toISOString(),
+    }
+
+    if (sub) sub.filters.push(filter)
+    else cat.filters.push(filter)
+
+    await commit(next)
+    return filter
+}
+
+export async function updateFilter(id: string, draft: FilterDraft): Promise<void> {
+    const next = cloneCategories()
+
+    let existing: Filter | undefined
+    for (const c of next) {
+        const ci = c.filters.findIndex((f) => f.id === id)
+        if (ci >= 0) {
+            existing = c.filters[ci]
+            c.filters.splice(ci, 1)
+            break
+        }
+        for (const s of c.subcategories) {
+            const si = s.filters.findIndex((f) => f.id === id)
+            if (si >= 0) {
+                existing = s.filters[si]
+                s.filters.splice(si, 1)
+                break
+            }
+        }
+        if (existing) break
+    }
+
+    const cat = ensureCategoryByNameMutable(next, draft.categoryName)
+    const sub = draft.subcategoryName
+        ? ensureSubcategoryMutable(cat, draft.subcategoryName)
+        : undefined
+
+    const updated: Filter = {
+        id,
+        name: draft.name.trim(),
+        description: draft.description?.trim() || undefined,
+        coverItemShortname: draft.coverItemShortname,
+        boxImagePath: draft.boxImagePath || undefined,
+        categoryId: cat.id,
+        subcategoryId: sub?.id,
+        items: sanitizeDraftItems(draft.items),
+        createdAt: existing?.createdAt ?? new Date().toISOString(),
+    }
+
+    if (sub) sub.filters.push(updated)
+    else cat.filters.push(updated)
+
+    await commit(next)
+}
+
+export function deleteFilter(id: string): void {
+    const next = cloneCategories()
+    for (const c of next) {
+        c.filters = c.filters.filter((f) => f.id !== id)
+        for (const s of c.subcategories) {
+            s.filters = s.filters.filter((f) => f.id !== id)
+        }
+    }
+    commitFireAndForget(next)
+}

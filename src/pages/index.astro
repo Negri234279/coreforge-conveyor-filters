@@ -1,19 +1,24 @@
 ---
-
+import Layout from '../layouts/Layout.astro'
+import MyConveyors from '../components/MyConveyors'
+import CopyToast from '../components/CopyToast'
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
+<Layout title="My Conveyors – CoreForge" activeNav="home">
+    <div class="mb-8 flex items-end justify-between">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-100">My Conveyors</h1>
+            <p class="mt-1 text-sm text-slate-400">
+                Manage industrial conveyor filter presets for Rust.
+            </p>
+        </div>
+        <a
+            href="/filters/new"
+            class="hidden rounded-md bg-teal-500/90 px-3 py-2 text-sm font-semibold text-slate-950 shadow hover:bg-teal-400 md:inline-block"
+            >+ New Filter</a
+        >
+    </div>
 
-		
-	</body>
-</html>
+    <MyConveyors client:only="preact" />
+    <CopyToast client:only="preact" />
+</Layout>
