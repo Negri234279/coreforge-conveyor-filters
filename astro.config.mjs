@@ -7,6 +7,7 @@ import node from '@astrojs/node'
 
 // https://astro.build/config
 export default defineConfig({
+    site: 'https://coreforge-conveyor-filters.negri.es',
     output: 'server',
     adapter: node({ mode: 'standalone' }),
     vite: {

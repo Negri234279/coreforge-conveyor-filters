@@ -26,3 +26,7 @@ pnpm-debug.log*
 # local-only filter store (dev)
 src/data/filters.dev.json
 src/data/coreforge.*
+
+
+*.local.json
+settings.local.json

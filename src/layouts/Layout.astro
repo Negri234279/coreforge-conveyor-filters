@@ -3,12 +3,34 @@ import '../styles/global.css'
 
 interface Props {
     title?: string
+    /** Meta description / OG description for this page. */
+    description?: string
+    /** OG/Twitter preview image, resolved against the site origin. */
+    image?: string
+    /** Set true on pages that shouldn't be indexed (auth, account…). */
+    noindex?: boolean
     activeNav?: 'home' | 'new' | 'org' | 'orgFilters' | 'account'
     /** Hide the nav (used on the auth pages). */
     hideNav?: boolean
 }
 
-const { title = 'CoreForge — Conveyor Filters', activeNav = 'home', hideNav = false } = Astro.props
+const SITE_NAME = 'CoreForge — Conveyor Filters'
+const DEFAULT_DESCRIPTION =
+    'Design, organise and share Rust industrial conveyor filter presets. Build presets in your browser and copy/paste the exact JSON the game expects.'
+
+const {
+    title = SITE_NAME,
+    description = DEFAULT_DESCRIPTION,
+    image = '/og-image.png',
+    noindex = false,
+    activeNav = 'home',
+    hideNav = false,
+} = Astro.props
+
+// Astro.site is set in astro.config.mjs; fall back to the request origin in dev.
+const siteOrigin = Astro.site ?? new URL(Astro.url.origin)
+const canonicalUrl = new URL(Astro.url.pathname, siteOrigin)
+const ogImageUrl = new URL(image, siteOrigin)
 const user = Astro.locals.user
 // Only the bits the UI needs — keeps the email server-side.
 const clientUser = user
@@ -25,11 +47,35 @@ const clientUser = user
 <html lang="en" class="h-full">
     <head>
         <meta charset="utf-8" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="generator" content={Astro.generator} />
+
         <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonicalUrl.href} />
+        {noindex && <meta name="robots" content="noindex, nofollow" />}
+        <meta name="theme-color" content="#0d1117" />
+
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" href="/favicon.ico" />
+
+        <!-- Open Graph -->
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content={SITE_NAME} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={canonicalUrl.href} />
+        <meta property="og:image" content={ogImageUrl.href} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content="en" />
+
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={ogImageUrl.href} />
+
         <script is:inline define:vars={{ clientUser }}>
             window.__cf_user = clientUser
         </script>
