@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
-# Pin Node major + variant. Bump as needed; consider pinning to a digest in CI
-# (e.g. node:24-slim@sha256:<digest>) for reproducible/secure builds.
+# Pin the Node major + variant. For reproducible/secure builds consider
+# pinning to a digest in CI (e.g. node:24-slim@sha256:<digest>).
 ARG NODE_IMAGE=node:24-slim
 
 ############################
@@ -16,15 +16,20 @@ ENV NODE_ENV=production \
 
 ############################
 # Production deps          #
-# (also enough for build:  #
+# (also enough to build —  #
 # astro/tailwind/preact    #
-# all live in dependencies)#
+# are all runtime deps).   #
+# better-sqlite3 and       #
+# @node-rs/argon2 install  #
+# from prebuilt binaries,  #
+# so no compiler toolchain #
+# is needed here.          #
 ############################
 FROM base AS deps
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev && \
-    npm cache clean --force
+    npm ci --omit=dev
+# Note: don't `npm cache clean` — the cache is a build mount, not a layer.
 
 ############################
 # Build the Astro app      #
@@ -40,19 +45,16 @@ RUN npm run build
 FROM ${NODE_IMAGE} AS runner
 WORKDIR /app
 
-# tini gives proper PID 1 / signal handling.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends tini \
-    && rm -rf /var/lib/apt/lists/*
-
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=4321 \
     DATA_DIR=/data
 
-# /data is the writable volume for filters.prod.json.
-# Pre-create + chown so a fresh named volume inherits the right perms.
-RUN mkdir -p /data && chown -R node:node /data /app
+# /data is the only writable state: the SQLite DB (coreforge.prod.db + its
+# -wal/-shm sidecars). Pre-create it owned by the unprivileged `node` user so
+# a fresh named volume inherits the right perms. /app stays root-owned and is
+# read-only at runtime — the app never writes there.
+RUN mkdir -p /data && chown node:node /data
 
 COPY --from=deps  --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist          ./dist
@@ -62,11 +64,13 @@ USER node
 EXPOSE 4321
 VOLUME ["/data"]
 
-# Healthcheck: hits the app over loopback. Node 22+ has fetch built-in.
+# Hit a public route over loopback so the check doesn't depend on auth state.
+# Node 22+ ships fetch built-in; it follows redirects, but /login is a 200.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+    CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
+# No bundled init: run with `--init` (docker run) or `init: true` (compose) so
+# signals are forwarded and zombies reaped. Keeps the image one layer leaner.
 CMD ["node", "dist/server/entry.mjs"]
 
 LABEL org.opencontainers.image.title="CoreForge — Conveyor Filters" \

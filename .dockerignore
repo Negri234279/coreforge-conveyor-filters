@@ -17,19 +17,19 @@ npm-debug.log*
 .env
 .env.*
 
-# Local dev data (kept out of image; runtime uses DATA_DIR volume)
+# Local dev data (kept out of image; runtime uses the DATA_DIR volume)
 src/data/filters.dev.json
 src/data/filters.prod.json
+src/data/*.db
+src/data/*.db-wal
+src/data/*.db-shm
 
 # Docker / docs (not needed at build time)
 Dockerfile
 .dockerignore
 docker-compose*.yml
 README.md
-
-# nginx config + basic-auth secrets belong to the sidecar, not the app image
-nginx
-secrets
+CLAUDE.md
 
 # OS junk
 .DS_Store

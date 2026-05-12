@@ -1,16 +1,21 @@
+# Production stack for CoreForge.
+#
+# Just the app: Astro SSR on Node 24, pulled from Docker Hub. It does its own
+# session auth, CSRF (Origin checks) and security headers, so there's no
+# reverse-proxy sidecar. Put it behind your existing TLS-terminating proxy
+# (e.g. Nginx Proxy Manager) and point a proxy host at  http://<host>:8080.
+
 services:
     app:
-        build:
-            context: .
-            dockerfile: Dockerfile
-        image: coreforge:latest
+        image: negrii/coreforge-conveyor-filters:latest
         container_name: coreforge-app
         restart: unless-stopped
 
-        # No port published to host. Only reachable from the nginx sidecar over
-        # the internal compose network.
-        expose:
-            - '4321'
+        # Host port 8080 -> the app's 4321, so it coexists with a proxy that
+        # owns 80/443. If the proxy runs on this same host, prefer loopback:
+        #   - '127.0.0.1:8080:4321'
+        ports:
+            - '8080:4321'
 
         environment:
             NODE_ENV: production
@@ -21,11 +26,20 @@ services:
         volumes:
             - coreforge-data:/data
 
+        # --- Hardening ---------------------------------------------------
+        user: 'node'
+        init: true # PID-1 signal forwarding + zombie reaping
         security_opt:
             - no-new-privileges:true
         cap_drop:
             - ALL
-        user: 'node'
+        # Root FS is immutable; the only persistent writable path is /data.
+        # tmpfs covers ephemeral scratch: /tmp and Astro's session cache dir
+        # (only touched if a request uses Astro.session, but harmless empty).
+        read_only: true
+        tmpfs:
+            - /tmp:size=64m
+            - /app/.astro:uid=1000,gid=1000,size=16m
 
         deploy:
             resources:
@@ -38,42 +52,10 @@ services:
                 - CMD
                 - node
                 - -e
-                - "fetch('http://127.0.0.1:'+process.env.PORT+'/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+                - "fetch('http://127.0.0.1:'+process.env.PORT+'/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
             interval: 30s
             timeout: 5s
             start_period: 20s
-            retries: 3
-
-        logging:
-            driver: json-file
-            options:
-                max-size: '10m'
-                max-file: '3'
-
-    nginx:
-        image: nginx:1.27-alpine
-        container_name: coreforge-nginx
-        restart: unless-stopped
-        depends_on:
-            app:
-                condition: service_healthy
-
-        # Custom host port — NPM already owns 80/443 on the host.
-        # Override with COREFORGE_PORT in .env or shell env.
-        ports:
-            - '${COREFORGE_PORT:-8080}:80'
-
-        volumes:
-            - ./nginx/conf.d:/etc/nginx/conf.d:ro
-
-        security_opt:
-            - no-new-privileges:true
-
-        healthcheck:
-            test: ['CMD-SHELL', 'wget -q -O - http://127.0.0.1/healthz | grep -q ok']
-            interval: 30s
-            timeout: 5s
-            start_period: 10s
             retries: 3
 
         logging:
