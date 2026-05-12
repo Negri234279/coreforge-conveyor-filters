@@ -32,6 +32,7 @@ const BOX_SOURCE: ComboboxSource = {
 }
 import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
+import { getCurrentUser } from '../store/auth'
 import type { ConveyorItem, FilterItem } from '../types'
 
 interface Props {
@@ -118,12 +119,16 @@ export default function FilterForm({ filterId }: Props) {
     const editing = !!filterId
     const cats = categories.value
 
+    const me = getCurrentUser()
+    const inOrg = !!me?.orgId
+
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
     const [coverItem, setCoverItem] = useState('')
     const [boxImagePath, setBoxImagePath] = useState('')
     const [selection, setSelection] = useState('')
     const [items, setItems] = useState<FilterItem[]>([])
+    const [sharedWithOrg, setSharedWithOrg] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [loaded, setLoaded] = useState(false)
     const [submitting, setSubmitting] = useState(false)
@@ -162,6 +167,7 @@ export default function FilterForm({ filterId }: Props) {
             setBoxImagePath(filter.boxImagePath ?? '')
             setSelection(encodeSelection(filter.categoryId, filter.subcategoryId))
             setItems([...filter.items])
+            setSharedWithOrg(filter.sharedWithOrg === true)
             setLoaded(true)
         })
         return () => {
@@ -273,6 +279,7 @@ export default function FilterForm({ filterId }: Props) {
             categoryName: cat.name,
             subcategoryName: subName,
             items,
+            sharedWithOrg: inOrg ? sharedWithOrg : false,
         }
 
         setSubmitting(true)
@@ -282,7 +289,9 @@ export default function FilterForm({ filterId }: Props) {
             } else {
                 await createFilter(draft)
             }
-            window.location.href = '/'
+            window.location.href = cat.openCoreId
+                ? `/opencore/${encodeURIComponent(cat.openCoreId)}`
+                : '/'
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save filter.')
             setSubmitting(false)
@@ -377,6 +386,24 @@ export default function FilterForm({ filterId }: Props) {
                     </div>
                 </div>
             </div>
+
+            {inOrg ? (
+                <label class="flex cursor-pointer items-start gap-3 rounded-md border border-slate-800 bg-slate-900/40 p-3 hover:border-teal-500/40">
+                    <input
+                        type="checkbox"
+                        checked={sharedWithOrg}
+                        onChange={(e) => setSharedWithOrg((e.target as HTMLInputElement).checked)}
+                        class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900"
+                    />
+                    <span class="flex flex-col">
+                        <span class="text-sm font-medium text-slate-200">Share with my clan</span>
+                        <span class="text-xs text-slate-500">
+                            Other members will see this filter (read-only) on the Clan Filters page
+                            and can clone it to their own space.
+                        </span>
+                    </span>
+                </label>
+            ) : null}
 
             <div>
                 <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">

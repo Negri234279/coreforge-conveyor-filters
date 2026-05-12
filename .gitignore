@@ -25,6 +25,4 @@ pnpm-debug.log*
 
 # local-only filter store (dev)
 src/data/filters.dev.json
-
-# nginx basic-auth credentials (generated per-host, never committed)
-secrets/
+src/data/coreforge.*

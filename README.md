@@ -14,8 +14,9 @@ Part of the personal _Forge_ ecosystem of Rust tooling.
 - Up to 30 items per filter with `Max / Buffer / Min` per slot.
 - A cover item + a destination box image per filter.
 - Import / Export of the raw conveyor JSON the game produces.
-- File-based persistence — the whole app state is a single JSON file (no DB).
-- Production deploy with `nginx` + HTTP basic auth, designed to sit behind an existing Nginx Proxy Manager.
+- Per-user accounts (username + password), with optional **clans**: every user can create or join one clan, mark any of their filters as "shared with the clan", and clone other members' shared filters into their own space.
+- SQLite for everything (users, sessions, clans, filters). One DB file inside the `/data` volume — easy to back up.
+- Production deploy with `nginx` purely as a reverse proxy in front of the app's own session auth, designed to sit behind an existing Nginx Proxy Manager.
 
 ---
 
@@ -24,29 +25,30 @@ Part of the personal _Forge_ ecosystem of Rust tooling.
 ```mermaid
 flowchart LR
     user([Internet]) -->|TLS 443| npm[Nginx Proxy Manager<br/>existing edge]
-    npm -->|http :8080| nginx[coreforge-nginx<br/>basic auth · /healthz bypass]
-    nginx -->|proxy_pass http://app:4321| app[coreforge-app<br/>Astro SSR · Node 24 alpine<br/>runs as 'node' user]
-    app -->|fs read/write| vol[(/data volume<br/>filters.prod.json)]
+    npm -->|http :8080| nginx[coreforge-nginx<br/>plain reverse proxy · /healthz]
+    nginx -->|proxy_pass http://app:4321| app[coreforge-app<br/>Astro SSR · Node 24<br/>session auth · runs as 'node']
+    app -->|fs read/write| vol[(/data volume<br/>coreforge.prod.db)]
 ```
 
 - The **app** container has no host port published. It is only reachable from `nginx` over the internal compose network.
-- **nginx** is the only public entrypoint, on a configurable host port (default `8080`) so it can coexist with NPM owning `80/443`.
-- The `/data` named volume is the only piece of state worth backing up.
+- **nginx** is the only public entrypoint, on a configurable host port (default `8080`) so it can coexist with NPM owning `80/443`. It does no auth — the Astro app handles sessions itself.
+- The `/data` named volume holds the SQLite DB and is the only piece of state worth backing up.
 
 ---
 
 ## Tech stack
 
-| Layer                | Choice                                                                                                               |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Framework            | [Astro 6](https://astro.build) with `output: 'server'`                                                               |
-| Server adapter       | `@astrojs/node` (standalone mode)                                                                                    |
-| UI                   | [Preact 10](https://preactjs.com) + [`@preact/signals`](https://preactjs.com/guide/v10/signals/) for reactive stores |
-| Styling              | [Tailwind CSS 4](https://tailwindcss.com) (Vite plugin)                                                              |
-| Persistence          | Plain JSON file on disk, served by an Astro API route (`GET`/`PUT /api/filters`)                                     |
-| Runtime              | Node 22+ in dev · Node 24 alpine in the production image                                                             |
-| Reverse proxy / auth | `nginx:1.27-alpine` with `.htpasswd` (bcrypt)                                                                        |
-| CI/CD                | GitHub Actions → Docker Hub (`negrii/coreforge-conveyor-filters`, multi-arch `amd64`/`arm64`)                        |
+| Layer          | Choice                                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Framework      | [Astro 6](https://astro.build) with `output: 'server'`                                                               |
+| Server adapter | `@astrojs/node` (standalone mode)                                                                                    |
+| UI             | [Preact 10](https://preactjs.com) + [`@preact/signals`](https://preactjs.com/guide/v10/signals/) for reactive stores |
+| Styling        | [Tailwind CSS 4](https://tailwindcss.com) (Vite plugin)                                                              |
+| Persistence    | SQLite via [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3) + [Drizzle ORM](https://orm.drizzle.team)  |
+| Auth           | App-managed sessions: argon2id passwords (`@node-rs/argon2`), httpOnly+SameSite=Lax cookie, CSRF via Origin check    |
+| Runtime        | Node 22+ in dev · Node 24 slim in the production image                                                               |
+| Reverse proxy  | `nginx:1.27-alpine`, plain pass-through                                                                              |
+| CI/CD          | GitHub Actions → Docker Hub (`negrii/coreforge-conveyor-filters`, multi-arch `amd64`/`arm64`)                        |
 
 ---
 
@@ -81,7 +83,7 @@ npm install
 npm run dev
 ```
 
-Server starts at <http://localhost:4321>. State is persisted to `src/data/filters.dev.json` (gitignored).
+Server starts at <http://localhost:4321>. The SQLite DB is created at `src/data/coreforge.dev.db` on first request (gitignored). Sign up at `/register` to create your first user.
 
 Useful commands:
 
@@ -92,7 +94,7 @@ Useful commands:
 | `npm run preview` | Run the built bundle locally             |
 | `npx astro check` | Type-check the project                   |
 
-> The dev store and the prod store are different files (`filters.dev.json` vs `filters.prod.json`). You can edit the dev one freely without touching prod data.
+> The dev DB and the prod DB are separate files (`coreforge.dev.db` vs `coreforge.prod.db`). You can hack on the dev one freely without touching prod data.
 
 ---
 
@@ -100,25 +102,10 @@ Useful commands:
 
 The compose stack runs two containers:
 
-1. **app** — Node 24 alpine, runs as the unprivileged `node` user, no host port published, persists state to a named volume.
-2. **nginx** — `nginx:1.27-alpine`, the only entrypoint, gates everything with HTTP basic auth (except `/healthz`).
+1. **app** — Node 24 slim, runs as the unprivileged `node` user, no host port published, persists state to a named volume.
+2. **nginx** — `nginx:1.27-alpine`, the only public entrypoint, plain reverse proxy with no auth of its own.
 
-### 1. Create basic-auth credentials
-
-The bind-mounted `secrets/htpasswd` is required — compose refuses to start without it. Generate it once per host:
-
-```sh
-mkdir -p secrets
-docker run --rm httpd:2.4-alpine htpasswd -Bbn negrii 'CHANGE_ME' > secrets/htpasswd
-chmod 600 secrets/htpasswd
-```
-
-- `-B` uses bcrypt.
-- Add more users with `>>` instead of `>`.
-- Reload without downtime: `docker compose exec nginx nginx -s reload`.
-- `secrets/` is gitignored.
-
-### 2. Choose the host port (optional)
+### 1. Choose the host port (optional)
 
 NPM owns `80/443`, so nginx publishes on a custom port. Default is `8080`:
 
@@ -126,14 +113,14 @@ NPM owns `80/443`, so nginx publishes on a custom port. Default is `8080`:
 echo "COREFORGE_PORT=8080" > .env
 ```
 
-### 3. Build and run
+### 2. Build and run
 
 ```sh
 docker compose up -d --build
 docker compose logs -f
 ```
 
-Then point an NPM Proxy Host at `http://<host>:${COREFORGE_PORT}` (or at `coreforge-nginx:80` if NPM shares the docker network), turn on Force SSL, and you're done. The internal nginx applies basic auth on every request.
+Then point an NPM Proxy Host at `http://<host>:${COREFORGE_PORT}` (or at `coreforge-nginx:80` if NPM shares the docker network), turn on Force SSL, and you're done. Anyone can hit `/register` and create an account; lock that down at the NPM/firewall layer if you only want known users to register.
 
 ### Environment variables (app container)
 
@@ -141,7 +128,7 @@ Then point an NPM Proxy Host at `http://<host>:${COREFORGE_PORT}` (or at `corefo
 | ---------- | ------------ | ------------------------------------------------------------------------------------------- |
 | `HOST`     | `0.0.0.0`    | Astro standalone bind address                                                               |
 | `PORT`     | `4321`       | Astro standalone port (internal only)                                                       |
-| `DATA_DIR` | `/data`      | Where `filters.prod.json` is read/written. Locally (no Docker) it falls back to `src/data/` |
+| `DATA_DIR` | `/data`      | Where `coreforge.prod.db` is read/written. Locally (no Docker) it falls back to `src/data/` |
 | `NODE_ENV` | `production` |                                                                                             |
 
 ### Compose-level variables
@@ -154,16 +141,17 @@ Then point an NPM Proxy Host at `http://<host>:${COREFORGE_PORT}` (or at `corefo
 
 ## Data persistence & backup
 
-The full app state lives in **one JSON file**: `filters.prod.json` inside `DATA_DIR` (the `coreforge-data` named volume in compose).
+The full app state lives in **one SQLite file**: `coreforge.prod.db` inside `DATA_DIR` (the `coreforge-data` named volume in compose). WAL mode is on, so there may also be `coreforge.prod.db-wal` / `-shm` files — back them up together or run `sqlite3 coreforge.prod.db 'VACUUM INTO ...'` for a single clean copy.
 
-Quick backup:
+Quick backup (online, consistent — uses SQLite's online backup API via VACUUM):
 
 ```sh
+docker compose exec app sh -c 'sqlite3 /data/coreforge.prod.db ".backup /data/coreforge.bak"'
 docker run --rm -v coreforge-data:/data -v "$PWD":/backup busybox \
-  cp /data/filters.prod.json /backup/coreforge-$(date +%Y%m%d).json
+  cp /data/coreforge.bak /backup/coreforge-$(date +%Y%m%d).db
 ```
 
-Restore: copy the file back into the volume and restart the app.
+Restore: stop the app, copy the file back into the volume as `coreforge.prod.db`, restart.
 
 ---
 

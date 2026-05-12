@@ -5,7 +5,11 @@
       "Bash(npm install *)",
       "Bash(npm run *)",
       "Bash(curl *)",
-      "Bash(npx --no -p @astrojs/check astro check)"
+      "Bash(npx --no -p @astrojs/check astro check)",
+      "PowerShell(npx astro check 2>&1 | Select-Object -Last 80)",
+      "PowerShell(npx astro check 2>&1 | Select-Object -Last 40)",
+      "PowerShell(npm run *)",
+      "PowerShell(npx astro check 2>&1 | Select-Object -Last 8)"
     ]
   }
 }

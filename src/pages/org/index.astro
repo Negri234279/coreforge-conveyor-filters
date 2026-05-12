@@ -1,0 +1,180 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import DeleteClanButton from '../../components/DeleteClanButton'
+import { db, schema } from '../../db/client'
+import { eq } from 'drizzle-orm'
+
+const user = Astro.locals.user!
+
+const url = new URL(Astro.request.url)
+const error = url.searchParams.get('error')
+
+let org: typeof schema.organizations.$inferSelect | null = null
+let members: { id: string; username: string; orgRole: string | null }[] = []
+if (user.orgId) {
+    org =
+        db
+            .select()
+            .from(schema.organizations)
+            .where(eq(schema.organizations.id, user.orgId))
+            .get() ?? null
+    members = db
+        .select({
+            id: schema.users.id,
+            username: schema.users.username,
+            orgRole: schema.users.orgRole,
+        })
+        .from(schema.users)
+        .where(eq(schema.users.orgId, user.orgId))
+        .all()
+}
+
+const isOwner = user.orgRole === 'owner'
+---
+
+<Layout title="Clan – CoreForge" activeNav="org">
+    {
+        error ? (
+            <div class="mb-4 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                {error}
+            </div>
+        ) : null
+    }
+
+    {
+        !org ? (
+            <div class="grid gap-6 md:grid-cols-2">
+                <section class="rounded-lg border border-slate-800 bg-slate-900/30 p-5">
+                    <h2 class="text-lg font-semibold text-slate-100">Create a clan</h2>
+                    <p class="mt-1 text-sm text-slate-400">
+                        Start a new clan. You'll be the owner and get an invite code to share.
+                    </p>
+                    <form method="POST" action="/api/org/create" class="mt-4 flex gap-2">
+                        <input
+                            name="name"
+                            type="text"
+                            required
+                            minlength="2"
+                            maxlength="48"
+                            placeholder="Clan name"
+                            class="flex-1 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                        />
+                        <button
+                            type="submit"
+                            class="rounded-md bg-teal-500/90 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-teal-400"
+                        >
+                            Create
+                        </button>
+                    </form>
+                </section>
+
+                <section class="rounded-lg border border-slate-800 bg-slate-900/30 p-5">
+                    <h2 class="text-lg font-semibold text-slate-100">Join with invite code</h2>
+                    <p class="mt-1 text-sm text-slate-400">
+                        Got an invite from a clan owner? Drop the code below.
+                    </p>
+                    <form method="POST" action="/api/org/join" class="mt-4 flex gap-2">
+                        <input
+                            name="code"
+                            type="text"
+                            required
+                            minlength="6"
+                            maxlength="20"
+                            autocapitalize="characters"
+                            autocorrect="off"
+                            spellcheck="false"
+                            placeholder="Invite code"
+                            class="flex-1 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 font-mono text-sm tracking-wider text-slate-100 uppercase outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                        />
+                        <button
+                            type="submit"
+                            class="rounded-md border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                        >
+                            Join
+                        </button>
+                    </form>
+                </section>
+            </div>
+        ) : (
+            <div class="space-y-6">
+                <header class="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                        <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                            Your clan
+                        </p>
+                        <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-100">
+                            {org.name}
+                        </h1>
+                        <p class="mt-1 text-sm text-slate-400">
+                            {members.length} {members.length === 1 ? 'member' : 'members'} · You are{' '}
+                            <span class="text-teal-300">{user.orgRole}</span>.
+                        </p>
+                    </div>
+                    <a
+                        href="/org/filters"
+                        class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                    >
+                        View shared filters →
+                    </a>
+                </header>
+
+                {isOwner ? (
+                    <section class="rounded-lg border border-slate-800 bg-slate-900/30 p-5">
+                        <h2 class="text-sm font-semibold tracking-wider text-slate-300 uppercase">
+                            Invite code
+                        </h2>
+                        <p class="mt-1 text-xs text-slate-500">
+                            Share this code with anyone you want to add. Rotating it invalidates the
+                            old one.
+                        </p>
+                        <div class="mt-3 flex flex-wrap items-center gap-3">
+                            <code class="rounded-md border border-slate-700 bg-slate-950/80 px-3 py-2 font-mono text-base tracking-[0.2em] text-teal-300">
+                                {org.inviteCode}
+                            </code>
+                            <form method="POST" action="/api/org/invite/rotate" class="m-0">
+                                <button
+                                    type="submit"
+                                    class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                                >
+                                    Rotate code
+                                </button>
+                            </form>
+                        </div>
+                    </section>
+                ) : null}
+
+                <section class="rounded-lg border border-slate-800 bg-slate-900/30 p-5">
+                    <h2 class="text-sm font-semibold tracking-wider text-slate-300 uppercase">
+                        Members
+                    </h2>
+                    <ul class="mt-3 divide-y divide-slate-800">
+                        {members.map((m) => (
+                            <li class="flex items-center justify-between py-2">
+                                <span class="text-sm text-slate-200">{m.username}</span>
+                                <span class="text-xs text-slate-500 uppercase">{m.orgRole}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+
+                <section class="rounded-lg border border-rose-900/40 bg-rose-950/20 p-5">
+                    <h2 class="text-sm font-semibold tracking-wider text-rose-300 uppercase">
+                        Danger zone
+                    </h2>
+                    {isOwner ? (
+                        <DeleteClanButton clanName={org.name} client:only="preact" />
+                    ) : (
+                        <form method="POST" action="/api/org/leave" class="mt-3">
+                            <button
+                                type="submit"
+                                class="rounded-md border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-500/20"
+                            >
+                                Leave clan
+                            </button>
+                        </form>
+                    )}
+                </section>
+            </div>
+        )
+    }
+</Layout>

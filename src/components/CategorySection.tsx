@@ -4,6 +4,7 @@ import {
     addSubcategory,
     categories,
     deleteCategory,
+    openCores,
     removeSubcategory,
     renameSubcategory,
     updateCategory,
@@ -111,7 +112,7 @@ export default function CategorySection({ category }: Props) {
         setEditOpen(true)
     }
 
-    function handleEditSubmit(values: { name: string; isOpenCoreFilter: boolean }) {
+    function handleEditSubmit(values: { name: string; openCoreId: string | null }) {
         updateCategory(category.id, values)
         setEditOpen(false)
     }
@@ -197,7 +198,8 @@ export default function CategorySection({ category }: Props) {
                 open={editOpen}
                 mode="edit"
                 initialName={category.name}
-                initialIsOpenCoreFilter={!!category.isOpenCoreFilter}
+                initialOpenCoreId={category.openCoreId ?? null}
+                openCores={openCores.value}
                 onCancel={() => setEditOpen(false)}
                 onSubmit={handleEditSubmit}
                 validateName={validateEditName}

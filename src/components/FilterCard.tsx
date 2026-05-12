@@ -5,6 +5,7 @@ import { boxImage } from '../store/boxes'
 import { deleteFilter } from '../store/filters'
 import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
+import ConfirmDeleteModal from './ConfirmDeleteModal'
 
 interface Props {
     filter: Filter
@@ -24,6 +25,7 @@ function buildConveyorJson(filter: Filter): ConveyorItem[] {
 
 export default function FilterCard({ filter }: Props) {
     const [menuOpen, setMenuOpen] = useState(false)
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
     const menuRef = useRef<HTMLDivElement | null>(null)
 
     useEffect(() => {
@@ -43,8 +45,11 @@ export default function FilterCard({ filter }: Props) {
 
     function onDelete() {
         setMenuOpen(false)
-        if (typeof window !== 'undefined' && !window.confirm(`Delete filter "${filter.name}"?`))
-            return
+        setConfirmDeleteOpen(true)
+    }
+
+    function confirmDelete() {
+        setConfirmDeleteOpen(false)
         deleteFilter(filter.id)
     }
 
@@ -73,8 +78,18 @@ export default function FilterCard({ filter }: Props) {
             </div>
 
             <div class="flex min-w-0 flex-1 flex-col">
-                <span class="truncate text-sm font-semibold tracking-wide text-slate-100 uppercase">
-                    {filter.name}
+                <span class="flex items-center gap-2">
+                    <span class="truncate text-sm font-semibold tracking-wide text-slate-100 uppercase">
+                        {filter.name}
+                    </span>
+                    {filter.sharedWithOrg ? (
+                        <span
+                            class="rounded bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-300 uppercase"
+                            title="Shared with your clan"
+                        >
+                            Shared
+                        </span>
+                    ) : null}
                 </span>
                 <span class="truncate text-xs text-slate-500">
                     {filter.items.length} {filter.items.length === 1 ? 'item' : 'items'}
@@ -145,6 +160,14 @@ export default function FilterCard({ filter }: Props) {
                     </div>
                 ) : null}
             </div>
+
+            <ConfirmDeleteModal
+                open={confirmDeleteOpen}
+                title="Delete filter"
+                message={`Delete filter "${filter.name}"? This can't be undone.`}
+                onCancel={() => setConfirmDeleteOpen(false)}
+                onConfirm={confirmDelete}
+            />
         </div>
     )
 }

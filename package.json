@@ -6,7 +6,7 @@
         "node": ">=22.12.0"
     },
     "scripts": {
-        "dev": "astro dev",
+        "dev": "astro dev --host 127.0.0.1 --port 3000 --open",
         "build": "astro build",
         "preview": "astro preview",
         "astro": "astro",
@@ -17,16 +17,21 @@
     "dependencies": {
         "@astrojs/node": "10.1.0",
         "@astrojs/preact": "5.1.2",
+        "@node-rs/argon2": "2.0.2",
         "@preact/signals": "2.9.0",
         "@tailwindcss/vite": "4.2.4",
         "astro": "^6.3.0",
+        "better-sqlite3": "12.9.0",
+        "drizzle-orm": "0.45.2",
         "nanoid": "5.1.11",
         "preact": "10.29.1",
         "tailwindcss": "4.2.4"
     },
     "devDependencies": {
         "@astrojs/check": "0.9.9",
+        "@types/better-sqlite3": "7.6.13",
         "@types/node": "25.6.1",
+        "drizzle-kit": "0.31.10",
         "prettier": "3.8.3",
         "prettier-plugin-astro": "0.14.1",
         "prettier-plugin-tailwindcss": "0.8.0",

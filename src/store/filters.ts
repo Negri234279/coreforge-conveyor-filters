@@ -1,6 +1,6 @@
 import { signal } from '@preact/signals'
 import { nanoid } from 'nanoid'
-import type { Category, Filter, FilterItem, Subcategory } from '../types'
+import type { Category, Filter, FilterItem, OpenCore, Subcategory } from '../types'
 
 const MAX_ITEMS_PER_FILTER = 30
 
@@ -38,12 +38,13 @@ function normalizeFilter(raw: Filter): Filter {
     // Legacy field migration: boxItemShortname -> boxImagePath
     const legacy = (raw as unknown as { boxItemShortname?: string }).boxItemShortname
     const boxImagePath = raw.boxImagePath ?? legacy
-    return { ...raw, items, boxImagePath }
+    return { ...raw, items, boxImagePath, sharedWithOrg: raw.sharedWithOrg === true }
 }
 
 function normalizeCategories(cats: Category[]): Category[] {
     return cats.map((c) => ({
         ...c,
+        openCoreId: c.openCoreId ?? null,
         filters: (c.filters ?? []).map(normalizeFilter),
         subcategories: (c.subcategories ?? []).map((s) => ({
             ...s,
@@ -53,6 +54,7 @@ function normalizeCategories(cats: Category[]): Category[] {
 }
 
 export const categories = signal<Category[]>([])
+export const openCores = signal<OpenCore[]>([])
 export const isHydrated = signal<boolean>(false)
 export const isSyncing = signal<boolean>(false)
 export const lastError = signal<string | null>(null)
@@ -62,14 +64,22 @@ let loadPromise: Promise<void> | null = null
 
 async function fetchState(): Promise<void> {
     try {
-        const res = await fetch('/api/filters', { cache: 'no-store' })
-        if (!res.ok) throw new Error(`GET /api/filters failed (${res.status})`)
+        const res = await fetch('/api/me/state', { cache: 'no-store' })
+        if (!res.ok) throw new Error(`GET /api/me/state failed (${res.status})`)
         const body = (await res.json()) as {
+            openCores?: OpenCore[]
             categories: Category[]
             source?: string
         }
         categories.value = Array.isArray(body.categories)
             ? normalizeCategories(body.categories)
+            : []
+        openCores.value = Array.isArray(body.openCores)
+            ? body.openCores.map((o) => ({
+                  id: o.id,
+                  name: o.name,
+                  sharedWithOrg: o.sharedWithOrg === true,
+              }))
             : []
         dataSource.value = body.source ?? null
         lastError.value = null
@@ -87,20 +97,19 @@ export function ensureLoaded(): Promise<void> {
 }
 
 if (typeof window !== 'undefined') {
-    // Trigger load on first import in the browser
     void ensureLoaded()
 }
 
-async function persist(next: Category[]): Promise<void> {
+async function persist(nextCats: Category[], nextOc: OpenCore[]): Promise<void> {
     if (typeof window === 'undefined') return
     isSyncing.value = true
     try {
-        const res = await fetch('/api/filters', {
+        const res = await fetch('/api/me/state', {
             method: 'PUT',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ categories: next }),
+            body: JSON.stringify({ openCores: nextOc, categories: nextCats }),
         })
-        if (!res.ok) throw new Error(`PUT /api/filters failed (${res.status})`)
+        if (!res.ok) throw new Error(`PUT /api/me/state failed (${res.status})`)
         lastError.value = null
     } catch (err) {
         lastError.value = err instanceof Error ? err.message : 'Failed to save filters'
@@ -110,14 +119,16 @@ async function persist(next: Category[]): Promise<void> {
     }
 }
 
-function commit(next: Category[]): Promise<void> {
-    categories.value = next
-    return persist(next)
+function commit(nextCats: Category[], nextOc: OpenCore[] = openCores.value): Promise<void> {
+    categories.value = nextCats
+    openCores.value = nextOc
+    return persist(nextCats, nextOc)
 }
 
-function commitFireAndForget(next: Category[]): void {
-    categories.value = next
-    void persist(next)
+function commitFireAndForget(nextCats: Category[], nextOc: OpenCore[] = openCores.value): void {
+    categories.value = nextCats
+    openCores.value = nextOc
+    void persist(nextCats, nextOc)
 }
 
 function cloneCategories(): Category[] {
@@ -126,6 +137,32 @@ function cloneCategories(): Category[] {
         subcategories: c.subcategories.map((s) => ({ ...s, filters: [...s.filters] })),
         filters: [...c.filters],
     }))
+}
+
+function cloneOpenCores(): OpenCore[] {
+    return openCores.value.map((o) => ({ ...o }))
+}
+
+// ---- queries -----------------------------------------------------------
+
+export function countFiltersInCategory(c: Category): number {
+    return c.filters.length + c.subcategories.reduce((acc, s) => acc + s.filters.length, 0)
+}
+
+export function categoriesForOpenCore(openCoreId: string): Category[] {
+    return categories.value.filter((c) => c.openCoreId === openCoreId)
+}
+
+export function looseCategories(): Category[] {
+    return categories.value.filter((c) => !c.openCoreId)
+}
+
+export function countFiltersForOpenCore(openCoreId: string): number {
+    return categoriesForOpenCore(openCoreId).reduce((acc, c) => acc + countFiltersInCategory(c), 0)
+}
+
+export function findOpenCore(id: string): OpenCore | undefined {
+    return openCores.value.find((o) => o.id === id)
 }
 
 export function getAllFilters(): Filter[] {
@@ -145,10 +182,57 @@ export function findCategoryByName(name: string): Category | undefined {
     return categories.value.find((c) => c.name.trim().toLowerCase() === name.trim().toLowerCase())
 }
 
+// ---- open cores --------------------------------------------------------
+
+export function addOpenCore(name: string): OpenCore {
+    const trimmed = name.trim()
+    if (!trimmed) throw new Error('Open Core name is required')
+    const nextOc = cloneOpenCores()
+    const created: OpenCore = { id: nanoid(), name: trimmed, sharedWithOrg: false }
+    nextOc.push(created)
+    commitFireAndForget(categories.value, nextOc)
+    return created
+}
+
+export function renameOpenCore(id: string, name: string): void {
+    const nextOc = cloneOpenCores()
+    const oc = nextOc.find((o) => o.id === id)
+    if (!oc) return
+    oc.name = name.trim()
+    commitFireAndForget(categories.value, nextOc)
+}
+
+export function setOpenCoreShared(id: string, shared: boolean): void {
+    const nextOc = cloneOpenCores()
+    const oc = nextOc.find((o) => o.id === id)
+    if (!oc) return
+    oc.sharedWithOrg = shared
+    commitFireAndForget(categories.value, nextOc)
+}
+
+/** Delete an Open Core; its categories become loose (openCoreId = null). */
+export function deleteOpenCore(id: string): void {
+    const nextOc = cloneOpenCores().filter((o) => o.id !== id)
+    const nextCats = cloneCategories().map((c) =>
+        c.openCoreId === id ? { ...c, openCoreId: null } : c,
+    )
+    commitFireAndForget(nextCats, nextOc)
+}
+
+export function setCategoryOpenCore(categoryId: string, openCoreId: string | null): void {
+    const next = cloneCategories()
+    const cat = next.find((c) => c.id === categoryId)
+    if (!cat) return
+    cat.openCoreId = openCoreId
+    commitFireAndForget(next)
+}
+
+// ---- categories / subcategories ---------------------------------------
+
 function ensureCategoryByNameMutable(
     next: Category[],
     name: string,
-    isOpenCoreFilter = false,
+    openCoreId: string | null = null,
 ): Category {
     const trimmed = name.trim()
     const existing = next.find((c) => c.name.trim().toLowerCase() === trimmed.toLowerCase())
@@ -156,7 +240,7 @@ function ensureCategoryByNameMutable(
     const created: Category = {
         id: nanoid(),
         name: trimmed,
-        isOpenCoreFilter,
+        openCoreId,
         subcategories: [],
         filters: [],
     }
@@ -170,23 +254,23 @@ function ensureSubcategoryMutable(cat: Category, name: string): Subcategory {
         (s) => s.name.trim().toLowerCase() === trimmed.toLowerCase(),
     )
     if (existing) return existing
-    const created: Subcategory = {
-        id: nanoid(),
-        name: trimmed,
-        filters: [],
-    }
+    const created: Subcategory = { id: nanoid(), name: trimmed, filters: [] }
     cat.subcategories.push(created)
     return created
 }
 
-export function addCategory(name: string, isOpenCoreFilter = false): Category {
+export function addCategory(name: string, openCoreId: string | null = null): Category {
     const trimmed = name.trim()
     if (!trimmed) throw new Error('Category name is required')
     const next = cloneCategories()
     const before = next.length
-    const cat = ensureCategoryByNameMutable(next, trimmed, isOpenCoreFilter)
+    const cat = ensureCategoryByNameMutable(next, trimmed, openCoreId)
     if (next.length === before) {
-        // Existed already — no write needed.
+        // Already existed — make sure its Open Core assignment matches the request.
+        if (openCoreId !== undefined && cat.openCoreId !== openCoreId) {
+            cat.openCoreId = openCoreId
+            commitFireAndForget(next)
+        }
         return cat
     }
     commitFireAndForget(next)
@@ -223,13 +307,13 @@ export function renameCategory(categoryId: string, name: string) {
 
 export function updateCategory(
     categoryId: string,
-    patch: { name: string; isOpenCoreFilter: boolean },
+    patch: { name: string; openCoreId: string | null },
 ) {
     const next = cloneCategories()
     const cat = next.find((c) => c.id === categoryId)
     if (!cat) return
     cat.name = patch.name.trim()
-    cat.isOpenCoreFilter = patch.isOpenCoreFilter
+    cat.openCoreId = patch.openCoreId
     commitFireAndForget(next)
 }
 
@@ -248,6 +332,8 @@ export function renameSubcategory(categoryId: string, subcategoryId: string, nam
     commitFireAndForget(next)
 }
 
+// ---- filters -----------------------------------------------------------
+
 export interface FilterDraft {
     name: string
     description?: string
@@ -256,6 +342,9 @@ export interface FilterDraft {
     categoryName: string
     subcategoryName?: string
     items: FilterItem[]
+    sharedWithOrg?: boolean
+    /** Optional: when creating from inside an Open Core, the new category goes there. */
+    openCoreId?: string | null
 }
 
 function sanitizeDraftItems(items: FilterItem[]): FilterItem[] {
@@ -269,7 +358,7 @@ function sanitizeDraftItems(items: FilterItem[]): FilterItem[] {
 
 export async function createFilter(draft: FilterDraft): Promise<Filter> {
     const next = cloneCategories()
-    const cat = ensureCategoryByNameMutable(next, draft.categoryName)
+    const cat = ensureCategoryByNameMutable(next, draft.categoryName, draft.openCoreId ?? null)
     const sub = draft.subcategoryName
         ? ensureSubcategoryMutable(cat, draft.subcategoryName)
         : undefined
@@ -283,6 +372,7 @@ export async function createFilter(draft: FilterDraft): Promise<Filter> {
         categoryId: cat.id,
         subcategoryId: sub?.id,
         items: sanitizeDraftItems(draft.items),
+        sharedWithOrg: draft.sharedWithOrg === true,
         createdAt: new Date().toISOString(),
     }
 
@@ -315,7 +405,7 @@ export async function updateFilter(id: string, draft: FilterDraft): Promise<void
         if (existing) break
     }
 
-    const cat = ensureCategoryByNameMutable(next, draft.categoryName)
+    const cat = ensureCategoryByNameMutable(next, draft.categoryName, draft.openCoreId ?? null)
     const sub = draft.subcategoryName
         ? ensureSubcategoryMutable(cat, draft.subcategoryName)
         : undefined
@@ -329,6 +419,7 @@ export async function updateFilter(id: string, draft: FilterDraft): Promise<void
         categoryId: cat.id,
         subcategoryId: sub?.id,
         items: sanitizeDraftItems(draft.items),
+        sharedWithOrg: draft.sharedWithOrg === true,
         createdAt: existing?.createdAt ?? new Date().toISOString(),
     }
 

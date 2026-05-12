@@ -1,0 +1,79 @@
+---
+import Layout from '../layouts/Layout.astro'
+
+const url = new URL(Astro.request.url)
+const error = url.searchParams.get('error')
+const username = url.searchParams.get('username') ?? ''
+const next = url.searchParams.get('next') ?? ''
+---
+
+<Layout title="Sign in – CoreForge" activeNav="home" hideNav>
+    <div class="mx-auto max-w-md">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-100">Sign in</h1>
+        <p class="mt-1 text-sm text-slate-400">
+            New here?
+            <a
+                href={`/register${next ? `?next=${encodeURIComponent(next)}` : ''}`}
+                class="text-teal-300 hover:underline">Create an account</a
+            >.
+        </p>
+
+        {
+            error ? (
+                <div class="mt-4 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                    {error}
+                </div>
+            ) : null
+        }
+
+        <form method="POST" action="/api/auth/login" class="mt-6 space-y-4" autocomplete="on">
+            <input type="hidden" name="next" value={next} />
+            <div>
+                <label
+                    for="username"
+                    class="block text-xs font-semibold tracking-wider text-slate-400 uppercase"
+                >
+                    Username
+                </label>
+                <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    minlength="3"
+                    maxlength="32"
+                    autocomplete="username"
+                    autocapitalize="off"
+                    autocorrect="off"
+                    spellcheck="false"
+                    value={username}
+                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                />
+            </div>
+            <div>
+                <label
+                    for="password"
+                    class="block text-xs font-semibold tracking-wider text-slate-400 uppercase"
+                >
+                    Password
+                </label>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    minlength="8"
+                    maxlength="128"
+                    autocomplete="current-password"
+                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                />
+            </div>
+            <button
+                type="submit"
+                class="w-full rounded-md bg-teal-500/90 px-4 py-2 text-sm font-semibold text-slate-950 shadow hover:bg-teal-400"
+            >
+                Sign in
+            </button>
+        </form>
+    </div>
+</Layout>

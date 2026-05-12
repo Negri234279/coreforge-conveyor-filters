@@ -4,6 +4,7 @@ interface Props {
     message: string
     confirmLabel?: string
     cancelLabel?: string
+    confirmTone?: 'danger' | 'primary'
     onCancel: () => void
     onConfirm: () => void
 }
@@ -14,10 +15,16 @@ export default function ConfirmDeleteModal({
     message,
     confirmLabel = 'Delete',
     cancelLabel = 'Cancel',
+    confirmTone = 'danger',
     onCancel,
     onConfirm,
 }: Props) {
     if (!open) return null
+
+    const confirmClass =
+        confirmTone === 'primary'
+            ? 'rounded-md bg-teal-500/90 px-3 py-1.5 text-sm font-semibold text-slate-950 hover:bg-teal-400'
+            : 'rounded-md bg-rose-500/90 px-3 py-1.5 text-sm font-semibold text-slate-50 hover:bg-rose-500'
 
     return (
         <div
@@ -51,11 +58,7 @@ export default function ConfirmDeleteModal({
                     >
                         {cancelLabel}
                     </button>
-                    <button
-                        type="button"
-                        onClick={onConfirm}
-                        class="rounded-md bg-rose-500/90 px-3 py-1.5 text-sm font-semibold text-slate-50 hover:bg-rose-500"
-                    >
+                    <button type="button" onClick={onConfirm} class={confirmClass}>
                         {confirmLabel}
                     </button>
                 </div>

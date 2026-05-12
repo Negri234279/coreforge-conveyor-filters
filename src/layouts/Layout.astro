@@ -3,10 +3,22 @@ import '../styles/global.css'
 
 interface Props {
     title?: string
-    activeNav?: 'home' | 'new'
+    activeNav?: 'home' | 'new' | 'org' | 'orgFilters' | 'account'
+    /** Hide the nav (used on the auth pages). */
+    hideNav?: boolean
 }
 
-const { title = 'CoreForge — Conveyor Filters', activeNav = 'home' } = Astro.props
+const { title = 'CoreForge — Conveyor Filters', activeNav = 'home', hideNav = false } = Astro.props
+const user = Astro.locals.user
+// Only the bits the UI needs — keeps the email server-side.
+const clientUser = user
+    ? {
+          id: user.id,
+          username: user.username,
+          orgId: user.orgId ?? null,
+          orgRole: user.orgRole ?? null,
+      }
+    : null
 ---
 
 <!doctype html>
@@ -18,6 +30,9 @@ const { title = 'CoreForge — Conveyor Filters', activeNav = 'home' } = Astro.p
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="generator" content={Astro.generator} />
         <title>{title}</title>
+        <script is:inline define:vars={{ clientUser }}>
+            window.__cf_user = clientUser
+        </script>
     </head>
     <body
         class="min-h-full bg-[#0d1117] font-sans text-slate-200 antialiased"
@@ -27,9 +42,9 @@ const { title = 'CoreForge — Conveyor Filters', activeNav = 'home' } = Astro.p
             <header
                 class="sticky top-0 z-30 border-b border-slate-800/80 bg-[#0d1117]/95 backdrop-blur"
             >
-                <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+                <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
                     <a
-                        href="/"
+                        href={user ? '/' : '/login'}
                         class="flex items-center gap-2 text-sm font-bold tracking-[0.18em] text-slate-100 uppercase"
                     >
                         <span
@@ -40,26 +55,80 @@ const { title = 'CoreForge — Conveyor Filters', activeNav = 'home' } = Astro.p
                             >· Conveyor Filters</span
                         >
                     </a>
-                    <nav class="flex items-center gap-1 text-sm">
-                        <a
-                            href="/"
-                            class:list={[
-                                'rounded px-3 py-1.5',
-                                activeNav === 'home'
-                                    ? 'bg-slate-800 text-slate-100'
-                                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100',
-                            ]}>My Conveyors</a
-                        >
-                        <a
-                            href="/filters/new"
-                            class:list={[
-                                'rounded px-3 py-1.5 font-semibold',
-                                activeNav === 'new'
-                                    ? 'bg-teal-500/90 text-slate-950'
-                                    : 'bg-teal-500/80 text-slate-950 hover:bg-teal-400',
-                            ]}>+ New Filter</a
-                        >
-                    </nav>
+
+                    {
+                        !hideNav && user ? (
+                            <nav class="flex flex-wrap items-center gap-1 text-sm">
+                                <a
+                                    href="/"
+                                    class:list={[
+                                        'rounded px-3 py-1.5',
+                                        activeNav === 'home'
+                                            ? 'bg-slate-800 text-slate-100'
+                                            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100',
+                                    ]}
+                                >
+                                    My Conveyors
+                                </a>
+                                <a
+                                    href="/org/filters"
+                                    class:list={[
+                                        'rounded px-3 py-1.5',
+                                        activeNav === 'orgFilters'
+                                            ? 'bg-slate-800 text-slate-100'
+                                            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100',
+                                    ]}
+                                >
+                                    Clan Filters
+                                </a>
+                                <a
+                                    href="/org"
+                                    class:list={[
+                                        'rounded px-3 py-1.5',
+                                        activeNav === 'org'
+                                            ? 'bg-slate-800 text-slate-100'
+                                            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100',
+                                    ]}
+                                >
+                                    Clan
+                                </a>
+                                <a
+                                    href="/filters/new"
+                                    class:list={[
+                                        'rounded px-3 py-1.5 font-semibold',
+                                        activeNav === 'new'
+                                            ? 'bg-teal-500/90 text-slate-950'
+                                            : 'bg-teal-500/80 text-slate-950 hover:bg-teal-400',
+                                    ]}
+                                >
+                                    + New Filter
+                                </a>
+                                <div class="ml-2 flex items-center gap-2 border-l border-slate-800 pl-2">
+                                    <a
+                                        href="/account"
+                                        class:list={[
+                                            'rounded px-2 py-1.5 text-xs',
+                                            activeNav === 'account'
+                                                ? 'bg-slate-800 text-slate-100'
+                                                : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100',
+                                        ]}
+                                        title="Account"
+                                    >
+                                        {user.username}
+                                    </a>
+                                    <form method="POST" action="/api/auth/logout" class="m-0">
+                                        <button
+                                            type="submit"
+                                            class="rounded px-2 py-1.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-100"
+                                            title="Sign out"
+                                        >
+                                            Sign out
+                                        </button>
+                                    </form>
+                                </div>
+                            </nav>
+                        ) : null
+                    }
                 </div>
             </header>
 

@@ -1,42 +1,30 @@
 import { useEffect, useState } from 'preact/hooks'
-import type { OpenCore } from '../types'
 
 interface Props {
     open: boolean
     mode: 'create' | 'edit'
     initialName?: string
-    initialOpenCoreId?: string | null
-    /** Available Open Cores to assign this category to. */
-    openCores?: OpenCore[]
-    /** When set, the Open Core picker is hidden and the category is locked to this Open Core. */
-    lockedOpenCoreId?: string | null
     onCancel: () => void
-    onSubmit: (values: { name: string; openCoreId: string | null }) => void
+    onSubmit: (values: { name: string }) => void
     validateName?: (name: string) => string | null
 }
 
-export default function CategoryFormModal({
+export default function OpenCoreFormModal({
     open,
     mode,
     initialName = '',
-    initialOpenCoreId = null,
-    openCores = [],
-    lockedOpenCoreId,
     onCancel,
     onSubmit,
     validateName,
 }: Props) {
-    const locked = lockedOpenCoreId !== undefined
     const [name, setName] = useState(initialName)
-    const [openCoreId, setOpenCoreId] = useState<string>(initialOpenCoreId ?? '')
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         if (!open) return
         setName(initialName)
-        setOpenCoreId((locked ? lockedOpenCoreId : initialOpenCoreId) ?? '')
         setError(null)
-    }, [open, initialName, initialOpenCoreId, locked, lockedOpenCoreId])
+    }, [open, initialName])
 
     if (!open) return null
 
@@ -54,8 +42,7 @@ export default function CategoryFormModal({
                 return
             }
         }
-        const oc = locked ? (lockedOpenCoreId ?? null) : openCoreId || null
-        onSubmit({ name: trimmed, openCoreId: oc })
+        onSubmit({ name: trimmed })
     }
 
     return (
@@ -73,7 +60,7 @@ export default function CategoryFormModal({
             >
                 <div class="flex items-start justify-between gap-4">
                     <h3 class="text-base font-semibold text-slate-100">
-                        {mode === 'create' ? 'New category' : 'Edit category'}
+                        {mode === 'create' ? 'New Open Core' : 'Rename Open Core'}
                     </h3>
                     <button
                         type="button"
@@ -96,32 +83,9 @@ export default function CategoryFormModal({
                         value={name}
                         onInput={(e) => setName((e.target as HTMLInputElement).value)}
                         class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
-                        placeholder="e.g. Metal, Components"
+                        placeholder="e.g. Main Base, Outpost Farm"
                     />
                 </div>
-
-                {!locked ? (
-                    <div class="mt-4">
-                        <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                            Open Core
-                        </label>
-                        <select
-                            value={openCoreId}
-                            onChange={(e) => setOpenCoreId((e.target as HTMLSelectElement).value)}
-                            class="mt-1 w-full appearance-none rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
-                        >
-                            <option value="">— None (loose category) —</option>
-                            {openCores.map((oc) => (
-                                <option key={oc.id} value={oc.id}>
-                                    {oc.name}
-                                </option>
-                            ))}
-                        </select>
-                        <p class="mt-1 text-xs text-slate-500">
-                            Group this category under an Open Core, or leave it loose.
-                        </p>
-                    </div>
-                ) : null}
 
                 {error ? (
                     <div class="mt-3 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
