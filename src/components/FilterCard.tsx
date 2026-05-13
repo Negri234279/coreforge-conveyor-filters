@@ -93,6 +93,11 @@ export default function FilterCard({ filter }: Props) {
                 </span>
                 <span class="truncate text-xs text-slate-500">
                     {filter.items.length} {filter.items.length === 1 ? 'item' : 'items'}
+                    {' · '}
+                    <span title="Boxes / Conveyors / Storage adaptors">
+                        {filter.boxCount ?? 1}/{filter.conveyorCount ?? 1}/
+                        {filter.storageAdaptorCount ?? 1}
+                    </span>
                 </span>
             </div>
 

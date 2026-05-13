@@ -35,6 +35,13 @@ function nonNegInt(v: unknown): number {
     return Math.floor(n)
 }
 
+/** Per-filter deployment count: integer, at least 1; defaults to 1. */
+function countInt(v: unknown): number {
+    const n = typeof v === 'number' ? v : Number(v ?? NaN)
+    if (!Number.isFinite(n) || n < 1) return 1
+    return Math.min(Math.floor(n), 10000)
+}
+
 function trimmedStr(v: unknown, max = MAX_STR): string {
     if (typeof v !== 'string') return ''
     return v.trim().slice(0, max)
@@ -107,6 +114,9 @@ export const GET: APIRoute = ({ locals }) => {
         subcategoryId: row.subcategoryId ?? undefined,
         items: itemsByFilter.get(row.id) ?? [],
         sharedWithOrg: row.sharedWithOrg === 1,
+        boxCount: row.boxCount,
+        conveyorCount: row.conveyorCount,
+        storageAdaptorCount: row.storageAdaptorCount,
         createdAt: new Date(row.createdAt).toISOString(),
     })
 
@@ -215,6 +225,9 @@ function normalizeFilter(raw: unknown): InFilter | null {
         categoryId: '',
         subcategoryId: undefined,
         sharedWithOrg: o.sharedWithOrg === true,
+        boxCount: countInt(o.boxCount),
+        conveyorCount: countInt(o.conveyorCount),
+        storageAdaptorCount: countInt(o.storageAdaptorCount),
         items: normalizeItems(o.items),
         createdAt: typeof o.createdAt === 'string' ? o.createdAt : new Date().toISOString(),
     }
@@ -368,6 +381,9 @@ export const PUT: APIRoute = async ({ locals, request }) => {
                     coverItemShortname: f.coverItemShortname,
                     boxImagePath: f.boxImagePath ?? null,
                     sharedWithOrg: f.sharedWithOrg ? 1 : 0,
+                    boxCount: f.boxCount,
+                    conveyorCount: f.conveyorCount,
+                    storageAdaptorCount: f.storageAdaptorCount,
                     position,
                     createdAt: parseCreatedAt(f.createdAt, now),
                 })

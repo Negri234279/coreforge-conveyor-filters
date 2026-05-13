@@ -4,8 +4,10 @@ import {
     categoriesForOpenCore,
     countFiltersForOpenCore,
     deleteOpenCore,
+    deploymentTotalsForOpenCore,
     setOpenCoreShared,
 } from '../store/filters'
+import DeploymentTotals from './DeploymentTotals'
 import { itemImage } from '../store/items'
 import { getCurrentUser } from '../store/auth'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
@@ -19,6 +21,7 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
     const inOrg = !!getCurrentUser()?.orgId
     const cats = categoriesForOpenCore(openCore.id)
     const filterCount = countFiltersForOpenCore(openCore.id)
+    const totals = deploymentTotalsForOpenCore(openCore.id)
 
     // Up to 4 cover thumbnails from the filters inside, for a little collage.
     const covers: string[] = []
@@ -120,6 +123,7 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
                     {cats.length} {cats.length === 1 ? 'category' : 'categories'} · {filterCount}{' '}
                     {filterCount === 1 ? 'filter' : 'filters'}
                 </p>
+                {filterCount > 0 ? <DeploymentTotals totals={totals} class="mt-2" /> : null}
             </button>
 
             <div class="absolute top-2 right-2" ref={menuRef}>

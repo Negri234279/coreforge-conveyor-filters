@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'preact/hooks'
 import { cloneOrgOpenCore, fetchOrgOpenCoreDetail, orgIsBusy } from '../store/org'
+import { deploymentTotals } from '../store/filters'
 import { showToast } from './CopyToast'
 import OpenCoreBoxesView from './OpenCoreBoxesView'
+import DeploymentTotals from './DeploymentTotals'
 import type { OrgOpenCoreDetail as Detail } from '../types'
 
 interface Props {
@@ -53,6 +55,12 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
         )
     }
 
+    const allFilters = detail.categories.flatMap((c) => [
+        ...c.filters,
+        ...c.subcategories.flatMap((s) => s.filters),
+    ])
+    const totals = deploymentTotals(allFilters)
+
     return (
         <div>
             <div class="mb-6">
@@ -82,6 +90,10 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                     </button>
                 </div>
             </div>
+
+            {allFilters.length > 0 ? (
+                <DeploymentTotals totals={totals} variant="stat" class="mb-6" />
+            ) : null}
 
             <OpenCoreBoxesView categories={detail.categories} />
         </div>

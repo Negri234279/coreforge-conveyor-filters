@@ -53,20 +53,39 @@ export const GET: APIRoute = ({ locals }) => {
 
     const allCatIds = catRows.map((c) => c.id)
     const filterCountByCat = new Map<string, number>()
+    const boxByCat = new Map<string, number>()
+    const conveyorByCat = new Map<string, number>()
+    const adaptorByCat = new Map<string, number>()
     if (allCatIds.length) {
         const fr = db
-            .select({ categoryId: schema.filters.categoryId })
+            .select({
+                categoryId: schema.filters.categoryId,
+                boxCount: schema.filters.boxCount,
+                conveyorCount: schema.filters.conveyorCount,
+                storageAdaptorCount: schema.filters.storageAdaptorCount,
+            })
             .from(schema.filters)
             .where(inArray(schema.filters.categoryId, allCatIds))
             .all()
         for (const f of fr) {
             filterCountByCat.set(f.categoryId, (filterCountByCat.get(f.categoryId) ?? 0) + 1)
+            boxByCat.set(f.categoryId, (boxByCat.get(f.categoryId) ?? 0) + f.boxCount)
+            conveyorByCat.set(
+                f.categoryId,
+                (conveyorByCat.get(f.categoryId) ?? 0) + f.conveyorCount,
+            )
+            adaptorByCat.set(
+                f.categoryId,
+                (adaptorByCat.get(f.categoryId) ?? 0) + f.storageAdaptorCount,
+            )
         }
     }
+    const sumOver = (catIds: string[], m: Map<string, number>) =>
+        catIds.reduce((acc, cid) => acc + (m.get(cid) ?? 0), 0)
 
     const out: OrgOpenCoreView[] = ocRows.map((o) => {
         const catIds = catIdsByOc.get(o.id) ?? []
-        const filterCount = catIds.reduce((acc, cid) => acc + (filterCountByCat.get(cid) ?? 0), 0)
+        const filterCount = sumOver(catIds, filterCountByCat)
         const owner = memberById.get(o.userId)!
         return {
             id: o.id,
@@ -74,6 +93,9 @@ export const GET: APIRoute = ({ locals }) => {
             owner: { id: owner.id, username: owner.username },
             categoryCount: catIds.length,
             filterCount,
+            boxTotal: sumOver(catIds, boxByCat),
+            conveyorTotal: sumOver(catIds, conveyorByCat),
+            storageAdaptorTotal: sumOver(catIds, adaptorByCat),
         }
     })
     out.sort(

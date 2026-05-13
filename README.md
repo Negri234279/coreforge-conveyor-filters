@@ -91,14 +91,14 @@ npm run dev
 
 Useful commands:
 
-| Command              | Action                                       |
-| -------------------- | -------------------------------------------- |
-| `npm run dev`        | Astro dev server with HMR on `:3000`         |
-| `npm run build`      | Build the production bundle to `./dist/`     |
-| `npm run preview`    | Run the built bundle locally                 |
-| `npx astro check`    | Type-check the project (there is no test suite) |
-| `npm run format`     | Prettier `--write` over the repo             |
-| `npm run format:check` | Prettier check only                        |
+| Command                | Action                                          |
+| ---------------------- | ----------------------------------------------- |
+| `npm run dev`          | Astro dev server with HMR on `:3000`            |
+| `npm run build`        | Build the production bundle to `./dist/`        |
+| `npm run preview`      | Run the built bundle locally                    |
+| `npx astro check`      | Type-check the project (there is no test suite) |
+| `npm run format`       | Prettier `--write` over the repo                |
+| `npm run format:check` | Prettier check only                             |
 
 > The dev DB and the prod DB are separate files (`coreforge.dev.db` vs `coreforge.prod.db`). You can hack on the dev one freely without touching prod data. Delete `src/data/coreforge.dev.db*` to start from a clean slate.
 

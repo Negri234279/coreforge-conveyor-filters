@@ -83,6 +83,9 @@ export const filters = sqliteTable('filters', {
     coverItemShortname: text('cover_item_shortname').notNull(),
     boxImagePath: text('box_image_path'),
     sharedWithOrg: integer('shared_with_org').notNull().default(0),
+    boxCount: integer('box_count').notNull().default(1),
+    conveyorCount: integer('conveyor_count').notNull().default(1),
+    storageAdaptorCount: integer('storage_adaptor_count').notNull().default(1),
     position: integer('position').notNull().default(0),
     createdAt: integer('created_at').notNull(),
 })

@@ -35,7 +35,21 @@ export interface FilterItem {
     min: number
 }
 
-export interface Filter {
+/** Deployment counts for a filter. How many boxes it feeds, how many conveyors
+ *  run it, and how many storage adaptors are wired up. Default 1 each. */
+export interface FilterCounts {
+    boxCount: number
+    conveyorCount: number
+    storageAdaptorCount: number
+}
+
+export const DEFAULT_FILTER_COUNTS: FilterCounts = {
+    boxCount: 1,
+    conveyorCount: 1,
+    storageAdaptorCount: 1,
+}
+
+export interface Filter extends FilterCounts {
     id: string
     name: string
     description?: string
@@ -48,7 +62,7 @@ export interface Filter {
     createdAt: string
 }
 
-export interface OrgFilterView {
+export interface OrgFilterView extends FilterCounts {
     id: string
     name: string
     description?: string
@@ -106,6 +120,10 @@ export interface OrgOpenCoreView {
     owner: { id: string; username: string }
     categoryCount: number
     filterCount: number
+    /** Sums of the per-filter deployment counts across the whole Open Core. */
+    boxTotal: number
+    conveyorTotal: number
+    storageAdaptorTotal: number
 }
 
 /** Full read-only contents of a clan member's shared Open Core. */

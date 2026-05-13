@@ -87,6 +87,9 @@ export const GET: APIRoute = ({ locals }) => {
             owner: { id: owner.id, username: owner.username },
             categoryName: catNames.get(f.categoryId) ?? '—',
             subcategoryName: f.subcategoryId ? subNames.get(f.subcategoryId) : undefined,
+            boxCount: f.boxCount,
+            conveyorCount: f.conveyorCount,
+            storageAdaptorCount: f.storageAdaptorCount,
             createdAt: new Date(f.createdAt).toISOString(),
         }
     })

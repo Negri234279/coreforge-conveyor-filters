@@ -29,6 +29,19 @@ function migrate(sqlite: Database.Database): void {
             `CREATE INDEX IF NOT EXISTS categories_open_core_idx ON categories(open_core_id)`,
         )
     }
+    // Per-filter deployment counts (boxes / conveyors / storage adaptors).
+    // Existing rows backfill to 1 via the column default.
+    if (!hasColumn('filters', 'box_count')) {
+        sqlite.exec(`ALTER TABLE filters ADD COLUMN box_count INTEGER NOT NULL DEFAULT 1`)
+    }
+    if (!hasColumn('filters', 'conveyor_count')) {
+        sqlite.exec(`ALTER TABLE filters ADD COLUMN conveyor_count INTEGER NOT NULL DEFAULT 1`)
+    }
+    if (!hasColumn('filters', 'storage_adaptor_count')) {
+        sqlite.exec(
+            `ALTER TABLE filters ADD COLUMN storage_adaptor_count INTEGER NOT NULL DEFAULT 1`,
+        )
+    }
 }
 
 function bootstrap(): Database.Database {

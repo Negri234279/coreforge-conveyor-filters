@@ -1,6 +1,6 @@
 import { signal } from '@preact/signals'
 import { nanoid } from 'nanoid'
-import type { Category, Filter, FilterItem, OpenCore, Subcategory } from '../types'
+import type { Category, Filter, FilterCounts, FilterItem, OpenCore, Subcategory } from '../types'
 
 const MAX_ITEMS_PER_FILTER = 30
 
@@ -8,6 +8,21 @@ function toNonNegInt(v: unknown): number {
     const n = typeof v === 'number' ? v : Number(v ?? 0)
     if (!Number.isFinite(n) || n < 0) return 0
     return Math.floor(n)
+}
+
+/** Deployment counts are at least 1; missing/garbage values default to 1. */
+function toCount(v: unknown): number {
+    const n = typeof v === 'number' ? v : Number(v ?? NaN)
+    if (!Number.isFinite(n) || n < 1) return 1
+    return Math.floor(n)
+}
+
+function normalizeCounts(raw: Partial<FilterCounts> | undefined): FilterCounts {
+    return {
+        boxCount: toCount(raw?.boxCount),
+        conveyorCount: toCount(raw?.conveyorCount),
+        storageAdaptorCount: toCount(raw?.storageAdaptorCount),
+    }
 }
 
 function normalizeItem(raw: unknown): FilterItem | null {
@@ -38,7 +53,13 @@ function normalizeFilter(raw: Filter): Filter {
     // Legacy field migration: boxItemShortname -> boxImagePath
     const legacy = (raw as unknown as { boxItemShortname?: string }).boxItemShortname
     const boxImagePath = raw.boxImagePath ?? legacy
-    return { ...raw, items, boxImagePath, sharedWithOrg: raw.sharedWithOrg === true }
+    return {
+        ...raw,
+        items,
+        boxImagePath,
+        sharedWithOrg: raw.sharedWithOrg === true,
+        ...normalizeCounts(raw),
+    }
 }
 
 function normalizeCategories(cats: Category[]): Category[] {
@@ -159,6 +180,35 @@ export function looseCategories(): Category[] {
 
 export function countFiltersForOpenCore(openCoreId: string): number {
     return categoriesForOpenCore(openCoreId).reduce((acc, c) => acc + countFiltersInCategory(c), 0)
+}
+
+export interface DeploymentTotals {
+    boxTotal: number
+    conveyorTotal: number
+    storageAdaptorTotal: number
+}
+
+function filtersOfCategory(c: Category): Filter[] {
+    return [...c.filters, ...c.subcategories.flatMap((s) => s.filters)]
+}
+
+export function deploymentTotals(filters: Filter[]): DeploymentTotals {
+    return filters.reduce<DeploymentTotals>(
+        (acc, f) => ({
+            boxTotal: acc.boxTotal + (f.boxCount || 0),
+            conveyorTotal: acc.conveyorTotal + (f.conveyorCount || 0),
+            storageAdaptorTotal: acc.storageAdaptorTotal + (f.storageAdaptorCount || 0),
+        }),
+        { boxTotal: 0, conveyorTotal: 0, storageAdaptorTotal: 0 },
+    )
+}
+
+export function deploymentTotalsForCategory(c: Category): DeploymentTotals {
+    return deploymentTotals(filtersOfCategory(c))
+}
+
+export function deploymentTotalsForOpenCore(openCoreId: string): DeploymentTotals {
+    return deploymentTotals(categoriesForOpenCore(openCoreId).flatMap(filtersOfCategory))
 }
 
 export function findOpenCore(id: string): OpenCore | undefined {
@@ -334,7 +384,7 @@ export function renameSubcategory(categoryId: string, subcategoryId: string, nam
 
 // ---- filters -----------------------------------------------------------
 
-export interface FilterDraft {
+export interface FilterDraft extends Partial<FilterCounts> {
     name: string
     description?: string
     coverItemShortname: string
@@ -373,6 +423,7 @@ export async function createFilter(draft: FilterDraft): Promise<Filter> {
         subcategoryId: sub?.id,
         items: sanitizeDraftItems(draft.items),
         sharedWithOrg: draft.sharedWithOrg === true,
+        ...normalizeCounts(draft),
         createdAt: new Date().toISOString(),
     }
 
@@ -420,6 +471,7 @@ export async function updateFilter(id: string, draft: FilterDraft): Promise<void
         subcategoryId: sub?.id,
         items: sanitizeDraftItems(draft.items),
         sharedWithOrg: draft.sharedWithOrg === true,
+        ...normalizeCounts(draft),
         createdAt: existing?.createdAt ?? new Date().toISOString(),
     }
 

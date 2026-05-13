@@ -7,6 +7,7 @@ import {
     orgOpenCoresHydrated,
 } from '../store/org'
 import { showToast } from './CopyToast'
+import DeploymentTotals from './DeploymentTotals'
 import type { OrgOpenCoreView } from '../types'
 
 export default function ClanOpenCoresList() {
@@ -56,6 +57,16 @@ export default function ClanOpenCoresList() {
                         {oc.filterCount} {oc.filterCount === 1 ? 'filter' : 'filters'} · by{' '}
                         <span class="text-slate-400">{oc.owner.username}</span>
                     </p>
+                    {oc.filterCount > 0 ? (
+                        <DeploymentTotals
+                            totals={{
+                                boxTotal: oc.boxTotal,
+                                conveyorTotal: oc.conveyorTotal,
+                                storageAdaptorTotal: oc.storageAdaptorTotal,
+                            }}
+                            class="mt-2"
+                        />
+                    ) : null}
                     <div class="mt-3 flex items-center gap-2">
                         <a
                             href={`/org/opencore/${encodeURIComponent(oc.id)}`}

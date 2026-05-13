@@ -3,6 +3,7 @@ import {
     addCategory,
     categoriesForOpenCore,
     categories as categoriesSignal,
+    deploymentTotalsForOpenCore,
     findCategoryByName,
     findOpenCore,
     isHydrated,
@@ -12,6 +13,7 @@ import {
 } from '../store/filters'
 import { getCurrentUser } from '../store/auth'
 import CategorySection from './CategorySection'
+import DeploymentTotals from './DeploymentTotals'
 import CategoryFormModal from './CategoryFormModal'
 import OpenCoreFormModal from './OpenCoreFormModal'
 import OpenCoreBoxesView from './OpenCoreBoxesView'
@@ -118,6 +120,14 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                     </div>
                 </div>
             </div>
+
+            {cats.length > 0 ? (
+                <DeploymentTotals
+                    totals={deploymentTotalsForOpenCore(openCoreId)}
+                    variant="stat"
+                    class="mb-6"
+                />
+            ) : null}
 
             {/* View toggle */}
             <div class="mb-6 inline-flex rounded-md border border-slate-700 bg-slate-900/60 p-0.5 text-sm">

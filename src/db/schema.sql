@@ -74,6 +74,9 @@ CREATE TABLE IF NOT EXISTS filters (
     cover_item_shortname  TEXT NOT NULL,
     box_image_path        TEXT,
     shared_with_org       INTEGER NOT NULL DEFAULT 0,
+    box_count             INTEGER NOT NULL DEFAULT 1,
+    conveyor_count        INTEGER NOT NULL DEFAULT 1,
+    storage_adaptor_count INTEGER NOT NULL DEFAULT 1,
     position              INTEGER NOT NULL DEFAULT 0,
     created_at            INTEGER NOT NULL
 );

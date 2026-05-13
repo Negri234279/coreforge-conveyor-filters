@@ -74,6 +74,9 @@ export const GET: APIRoute = ({ locals, params }) => {
         categoryId: row.categoryId,
         subcategoryId: row.subcategoryId ?? undefined,
         items: itemsByFilter.get(row.id) ?? [],
+        boxCount: row.boxCount,
+        conveyorCount: row.conveyorCount,
+        storageAdaptorCount: row.storageAdaptorCount,
         createdAt: new Date(row.createdAt).toISOString(),
     })
 

@@ -129,6 +129,9 @@ export default function FilterForm({ filterId }: Props) {
     const [selection, setSelection] = useState('')
     const [items, setItems] = useState<FilterItem[]>([])
     const [sharedWithOrg, setSharedWithOrg] = useState(false)
+    const [boxCount, setBoxCount] = useState(1)
+    const [conveyorCount, setConveyorCount] = useState(1)
+    const [storageAdaptorCount, setStorageAdaptorCount] = useState(1)
     const [error, setError] = useState<string | null>(null)
     const [loaded, setLoaded] = useState(false)
     const [submitting, setSubmitting] = useState(false)
@@ -168,6 +171,9 @@ export default function FilterForm({ filterId }: Props) {
             setSelection(encodeSelection(filter.categoryId, filter.subcategoryId))
             setItems([...filter.items])
             setSharedWithOrg(filter.sharedWithOrg === true)
+            setBoxCount(filter.boxCount ?? 1)
+            setConveyorCount(filter.conveyorCount ?? 1)
+            setStorageAdaptorCount(filter.storageAdaptorCount ?? 1)
             setLoaded(true)
         })
         return () => {
@@ -280,6 +286,9 @@ export default function FilterForm({ filterId }: Props) {
             subcategoryName: subName,
             items,
             sharedWithOrg: inOrg ? sharedWithOrg : false,
+            boxCount,
+            conveyorCount,
+            storageAdaptorCount,
         }
 
         setSubmitting(true)
@@ -384,6 +393,48 @@ export default function FilterForm({ filterId }: Props) {
                             source={BOX_SOURCE}
                         />
                     </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                    Deployment
+                </label>
+                <p class="mt-1 text-xs text-slate-500">
+                    How many of each you run with this filter. Used for the totals shown on the Open
+                    Core.
+                </p>
+                <div class="mt-2 grid gap-3 sm:grid-cols-3">
+                    {(
+                        [
+                            ['Boxes', boxCount, setBoxCount],
+                            ['Conveyors', conveyorCount, setConveyorCount],
+                            ['Storage adaptors', storageAdaptorCount, setStorageAdaptorCount],
+                        ] as const
+                    ).map(([label, value, setter]) => (
+                        <label
+                            key={label}
+                            class="flex items-stretch overflow-hidden rounded-md border border-slate-700 bg-slate-900/60 focus-within:border-teal-500/60 focus-within:ring-1 focus-within:ring-teal-500/40"
+                        >
+                            <span class="flex flex-1 items-center bg-slate-800/60 px-3 py-2 text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                                {label}
+                            </span>
+                            <input
+                                type="number"
+                                min={1}
+                                step={1}
+                                inputMode="numeric"
+                                value={value}
+                                onInput={(e) => {
+                                    const n = Math.floor(
+                                        Number((e.target as HTMLInputElement).value),
+                                    )
+                                    setter(Number.isFinite(n) && n >= 1 ? n : 1)
+                                }}
+                                class="w-20 bg-transparent px-2 py-2 text-right text-sm text-slate-100 outline-none"
+                            />
+                        </label>
+                    ))}
                 </div>
             </div>
 

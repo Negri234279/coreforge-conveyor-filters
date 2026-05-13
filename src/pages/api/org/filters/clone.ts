@@ -135,6 +135,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
                 coverItemShortname: source.coverItemShortname,
                 boxImagePath: source.boxImagePath,
                 sharedWithOrg: 0,
+                boxCount: source.boxCount,
+                conveyorCount: source.conveyorCount,
+                storageAdaptorCount: source.storageAdaptorCount,
                 position: 0,
                 createdAt: now,
             })
