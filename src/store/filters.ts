@@ -438,18 +438,22 @@ export async function updateFilter(id: string, draft: FilterDraft): Promise<void
     const next = cloneCategories()
 
     let existing: Filter | undefined
+    let origList: Filter[] | undefined
+    let origIndex = -1
     for (const c of next) {
         const ci = c.filters.findIndex((f) => f.id === id)
         if (ci >= 0) {
             existing = c.filters[ci]
-            c.filters.splice(ci, 1)
+            origList = c.filters
+            origIndex = ci
             break
         }
         for (const s of c.subcategories) {
             const si = s.filters.findIndex((f) => f.id === id)
             if (si >= 0) {
                 existing = s.filters[si]
-                s.filters.splice(si, 1)
+                origList = s.filters
+                origIndex = si
                 break
             }
         }
@@ -475,8 +479,13 @@ export async function updateFilter(id: string, draft: FilterDraft): Promise<void
         createdAt: existing?.createdAt ?? new Date().toISOString(),
     }
 
-    if (sub) sub.filters.push(updated)
-    else cat.filters.push(updated)
+    const targetList = sub ? sub.filters : cat.filters
+    if (origList === targetList && origIndex >= 0) {
+        targetList[origIndex] = updated
+    } else {
+        if (origList && origIndex >= 0) origList.splice(origIndex, 1)
+        targetList.push(updated)
+    }
 
     await commit(next)
 }
