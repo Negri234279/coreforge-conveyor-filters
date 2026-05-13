@@ -14,7 +14,7 @@ export const users = sqliteTable(
         email: text('email'),
         passwordHash: text('password_hash').notNull(),
         orgId: text('org_id'),
-        orgRole: text('org_role'), // 'owner' | 'member' | null
+        orgRole: text('org_role'), // 'owner' | 'admin' | 'member' | null
         createdAt: integer('created_at').notNull(),
     },
     (t) => [uniqueIndex('users_username_lower_uq').on(t.usernameLower)],

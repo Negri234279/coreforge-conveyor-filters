@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     email           TEXT,
     password_hash   TEXT NOT NULL,
     org_id          TEXT,
-    org_role        TEXT, -- 'owner' | 'member' | NULL
+    org_role        TEXT, -- 'owner' | 'admin' | 'member' | NULL
     created_at      INTEGER NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_uq ON users(username_lower);

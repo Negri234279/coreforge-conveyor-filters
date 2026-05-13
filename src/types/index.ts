@@ -76,12 +76,14 @@ export interface OrgFilterView extends FilterCounts {
     createdAt: string
 }
 
+export type OrgRole = 'owner' | 'admin' | 'member'
+
 export interface OrgSummary {
     id: string
     name: string
     inviteCode: string | null // null for non-owners
-    role: 'owner' | 'member'
-    members: { id: string; username: string; role: 'owner' | 'member' }[]
+    role: OrgRole
+    members: { id: string; username: string; role: OrgRole }[]
 }
 
 export interface Subcategory {

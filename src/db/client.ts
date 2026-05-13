@@ -42,6 +42,12 @@ function migrate(sqlite: Database.Database): void {
             `ALTER TABLE filters ADD COLUMN storage_adaptor_count INTEGER NOT NULL DEFAULT 1`,
         )
     }
+    // Clan roles: introduce 'admin' alongside 'owner' | 'member'. Backfill any
+    // existing user that belongs to an org but has a null/empty role to 'member'
+    // so the new owner-managed role UI has a valid value to display and update.
+    sqlite.exec(
+        `UPDATE users SET org_role = 'member' WHERE org_id IS NOT NULL AND (org_role IS NULL OR org_role = '')`,
+    )
 }
 
 function bootstrap(): Database.Database {
