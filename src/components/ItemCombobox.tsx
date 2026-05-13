@@ -5,7 +5,23 @@ export interface ComboboxEntry {
     key: string
     label: string
     hint?: string
-    imageUrl: string
+    /** Image URL. If omitted, the combobox renders a colored initial chip. */
+    imageUrl?: string
+    /** Optional tag shown next to the label (e.g. "Category"). */
+    badge?: string
+    /** Group label. Consecutive entries with the same group are rendered together. */
+    group?: string
+    /** When true, this entry is rendered as a clickable section header. */
+    isHeader?: boolean
+}
+
+function ChipFallback({ label }: { label: string }) {
+    const letter = label.trim().charAt(0).toUpperCase() || '?'
+    return (
+        <span class="flex h-full w-full items-center justify-center bg-gradient-to-br from-teal-500/30 to-indigo-500/30 text-[11px] font-bold tracking-wider text-teal-100 uppercase">
+            {letter}
+        </span>
+    )
 }
 
 export interface ComboboxSource {
@@ -117,14 +133,27 @@ export default function ItemCombobox({
         <div class="relative" ref={wrapRef}>
             {selected && !resetOnSelect ? (
                 <div class="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1.5">
-                    <img
-                        src={selected.imageUrl}
-                        alt=""
-                        class="h-8 w-8 rounded bg-slate-800 object-contain"
-                        loading="lazy"
-                    />
+                    <div class="h-8 w-8 overflow-hidden rounded bg-slate-800">
+                        {selected.imageUrl ? (
+                            <img
+                                src={selected.imageUrl}
+                                alt=""
+                                class="h-full w-full object-contain"
+                                loading="lazy"
+                            />
+                        ) : (
+                            <ChipFallback label={selected.label} />
+                        )}
+                    </div>
                     <div class="flex min-w-0 flex-1 flex-col">
-                        <span class="truncate text-sm text-slate-100">{selected.label}</span>
+                        <span class="flex items-center gap-1.5 truncate text-sm text-slate-100">
+                            {selected.label}
+                            {selected.badge ? (
+                                <span class="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-200 uppercase">
+                                    {selected.badge}
+                                </span>
+                            ) : null}
+                        </span>
                         {selected.hint && !hideHint ? (
                             <span class="truncate text-xs text-slate-500">{selected.hint}</span>
                         ) : null}
@@ -175,35 +204,69 @@ export default function ItemCombobox({
                             {source.emptyText ?? 'No matches.'}
                         </li>
                     ) : (
-                        results.map((entry, i) => (
-                            <li key={entry.key}>
-                                <button
-                                    type="button"
-                                    onMouseEnter={() => setActive(i)}
-                                    onClick={() => pick(entry)}
-                                    class={`flex w-full items-center gap-2 px-2 py-1.5 text-left ${
-                                        i === active ? 'bg-slate-800' : ''
-                                    }`}
-                                >
-                                    <img
-                                        src={entry.imageUrl}
-                                        alt=""
-                                        class="h-7 w-7 rounded bg-slate-800 object-contain"
-                                        loading="lazy"
-                                    />
-                                    <div class="flex min-w-0 flex-col">
-                                        <span class="truncate text-sm text-slate-100">
-                                            {entry.label}
-                                        </span>
-                                        {entry.hint && !hideHint ? (
-                                            <span class="truncate text-xs text-slate-500">
-                                                {entry.hint}
+                        results.map((entry, i) => {
+                            const isHeader = entry.isHeader === true
+                            const grouped = !isHeader && !!entry.group
+                            const isActive = i === active
+                            return (
+                                <li key={entry.key}>
+                                    <button
+                                        type="button"
+                                        onMouseEnter={() => setActive(i)}
+                                        onClick={() => pick(entry)}
+                                        class={`flex w-full items-center gap-2 text-left ${
+                                            isHeader
+                                                ? `border-t border-slate-800 bg-slate-950/60 px-2 py-2 first:border-t-0 ${
+                                                      isActive
+                                                          ? 'bg-slate-800'
+                                                          : 'hover:bg-slate-800/60'
+                                                  }`
+                                                : `${grouped ? 'pl-6' : 'px-2'} pr-2 py-1.5 ${
+                                                      isActive ? 'bg-slate-800' : ''
+                                                  }`
+                                        }`}
+                                    >
+                                        <div
+                                            class={`flex-shrink-0 overflow-hidden rounded bg-slate-800 ${
+                                                isHeader ? 'h-7 w-7' : 'h-7 w-7'
+                                            }`}
+                                        >
+                                            {entry.imageUrl ? (
+                                                <img
+                                                    src={entry.imageUrl}
+                                                    alt=""
+                                                    class="h-full w-full object-contain"
+                                                    loading="lazy"
+                                                />
+                                            ) : (
+                                                <ChipFallback label={entry.label} />
+                                            )}
+                                        </div>
+                                        <div class="flex min-w-0 flex-col">
+                                            <span
+                                                class={`flex items-center gap-1.5 truncate text-sm ${
+                                                    isHeader
+                                                        ? 'font-semibold tracking-wider text-teal-200 uppercase'
+                                                        : 'text-slate-100'
+                                                }`}
+                                            >
+                                                {entry.label}
+                                                {entry.badge ? (
+                                                    <span class="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-200 uppercase">
+                                                        {entry.badge}
+                                                    </span>
+                                                ) : null}
                                             </span>
-                                        ) : null}
-                                    </div>
-                                </button>
-                            </li>
-                        ))
+                                            {entry.hint && !hideHint ? (
+                                                <span class="truncate text-xs text-slate-500">
+                                                    {entry.hint}
+                                                </span>
+                                            ) : null}
+                                        </div>
+                                    </button>
+                                </li>
+                            )
+                        })
                     )}
                 </ul>
             )}

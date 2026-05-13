@@ -8,9 +8,12 @@ import {
     findFilter,
     type FilterDraft,
 } from '../store/filters'
-import { getItem, itemImage } from '../store/items'
+import { itemImage } from '../store/items'
 import { getBox, boxImage, searchBoxes } from '../store/boxes'
-import ItemCombobox, { type ComboboxSource } from './ItemCombobox'
+import { ALL_GAME_CATEGORIES, itemsInGameCategory } from '../store/gameCategories'
+import { categorySlotShortname, describeSlot } from '../lib/filterSlots'
+import { buildConveyorJson, parseConveyorJson, type ImportResult } from '../lib/conveyor'
+import ItemCombobox, { type ComboboxEntry, type ComboboxSource } from './ItemCombobox'
 
 const BOX_SOURCE: ComboboxSource = {
     emptyText: 'No boxes match.',
@@ -33,7 +36,7 @@ const BOX_SOURCE: ComboboxSource = {
 import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
 import { getCurrentUser } from '../store/auth'
-import type { ConveyorItem, FilterItem } from '../types'
+import type { FilterItem } from '../types'
 
 interface Props {
     filterId?: string
@@ -42,66 +45,71 @@ interface Props {
 const MAX_ITEMS = 30
 type NumField = 'max' | 'buffer' | 'min'
 
-function toNonNegInt(v: unknown): number {
-    const n = typeof v === 'number' ? v : Number(v ?? 0)
-    if (!Number.isFinite(n) || n < 0) return 0
-    return Math.floor(n)
+// Combobox source for the filter's item list. Results are grouped by game
+// category (Weapons, Medical, …) — each group starts with a clickable category
+// header that adds it as a category-level filter, followed by the items that
+// belong to that category. Items keep their item-level shortname; categories
+// use the synthetic `category:<id>` shortname.
+const ITEMS_AND_CATEGORIES_SOURCE: ComboboxSource = {
+    emptyText: 'No items or categories match.',
+    // No artificial limit — there are ~14 groups and the list is virtually
+    // scrolled inside a max-h container. The combobox passes 30 by default;
+    // ignore it and return the whole grouped tree so categories aren't cut off
+    // arbitrarily in the middle.
+    search: (q): ComboboxEntry[] => {
+        const query = q.trim().toLowerCase()
+        const out: ComboboxEntry[] = []
+        for (const cat of ALL_GAME_CATEGORIES) {
+            const catMatches = !query || cat.name.toLowerCase().includes(query)
+            const items = itemsInGameCategory(cat.id).filter((it) => {
+                if (!query) return true
+                if (catMatches) return true
+                return (
+                    it.name.toLowerCase().includes(query) ||
+                    it.shortname.toLowerCase().includes(query)
+                )
+            })
+            if (!catMatches && items.length === 0) continue
+            out.push({
+                key: categorySlotShortname(cat.id),
+                label: cat.name,
+                hint: 'Click to add as a category filter',
+                badge: 'Category',
+                group: cat.name,
+                isHeader: true,
+            })
+            for (const it of items) {
+                out.push({
+                    key: it.shortname,
+                    label: it.name,
+                    hint: it.shortname,
+                    imageUrl: itemImage(it.shortname),
+                    group: cat.name,
+                })
+            }
+        }
+        return out
+    },
+    resolve: (key): ComboboxEntry | undefined => {
+        const meta = describeSlot(key)
+        if (meta.isCategory) {
+            return {
+                key,
+                label: meta.label,
+                hint: meta.hint,
+                badge: 'Category',
+            }
+        }
+        if (meta.unknown) return undefined
+        return {
+            key,
+            label: meta.label,
+            hint: meta.hint,
+            imageUrl: meta.imageUrl,
+        }
+    },
 }
 
-function buildConveyorJson(items: FilterItem[]): ConveyorItem[] {
-    return items.map((it) => ({
-        TargetCategory: null,
-        MaxAmountInOutput: it.max,
-        BufferAmount: it.buffer,
-        MinAmountInInput: it.min,
-        IsBlueprint: false,
-        BufferTransferRemaining: 0,
-        TargetItemName: it.shortname,
-    }))
-}
-
-interface ImportResult {
-    items: FilterItem[]
-    unknown: number
-    skipped: number
-}
-
-function parseConveyorJson(raw: string): ImportResult {
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) {
-        throw new Error('Expected a JSON array of conveyor items.')
-    }
-    const seen = new Set<string>()
-    const out: FilterItem[] = []
-    let unknown = 0
-    let skipped = 0
-    for (const entry of parsed) {
-        if (!entry || typeof entry !== 'object') {
-            skipped++
-            continue
-        }
-        const o = entry as Record<string, unknown>
-        const shortname = typeof o.TargetItemName === 'string' ? o.TargetItemName : ''
-        if (!shortname) {
-            skipped++
-            continue
-        }
-        if (seen.has(shortname)) {
-            skipped++
-            continue
-        }
-        seen.add(shortname)
-        if (!getItem(shortname)) unknown++
-        out.push({
-            shortname,
-            max: toNonNegInt(o.MaxAmountInOutput),
-            buffer: toNonNegInt(o.BufferAmount),
-            min: toNonNegInt(o.MinAmountInInput),
-        })
-        if (out.length >= MAX_ITEMS) break
-    }
-    return { items: out, unknown, skipped }
-}
 const SEP = '|'
 
 function encodeSelection(catId: string, subId?: string): string {
@@ -223,7 +231,7 @@ export default function FilterForm({ filterId }: Props) {
             return
         }
         if (result.items.length === 0) {
-            setImportError('No valid items found in JSON.')
+            setImportError('No valid items or categories found in JSON.')
             return
         }
 
@@ -239,7 +247,8 @@ export default function FilterForm({ filterId }: Props) {
         setImportOpen(false)
 
         const parts = [`Imported ${result.items.length}`]
-        if (result.unknown > 0) parts.push(`${result.unknown} unknown`)
+        const unknown = result.unknownItems + result.unknownCategories
+        if (unknown > 0) parts.push(`${unknown} unknown`)
         if (result.skipped > 0) parts.push(`${result.skipped} skipped`)
         showToast(parts.join(' · '))
     }
@@ -509,9 +518,10 @@ export default function FilterForm({ filterId }: Props) {
                         placeholder={
                             items.length >= MAX_ITEMS
                                 ? 'Maximum of 30 items reached'
-                                : 'Search and add items...'
+                                : 'Search items or categories...'
                         }
                         disabledShortnames={items.map((it) => it.shortname)}
+                        source={ITEMS_AND_CATEGORIES_SOURCE}
                         resetOnSelect
                     />
                 </div>
@@ -519,25 +529,40 @@ export default function FilterForm({ filterId }: Props) {
                 {items.length > 0 ? (
                     <ul class="mt-3 flex flex-wrap gap-3">
                         {items.map((it) => {
-                            const meta = getItem(it.shortname)
+                            const meta = describeSlot(it.shortname)
+                            const letter =
+                                meta.label.trim().charAt(0).toUpperCase() || '?'
                             return (
                                 <li
                                     key={it.shortname}
                                     class="w-full max-w-[280px] flex-1 basis-[280px] rounded-md border border-slate-800 bg-slate-900/40 p-3"
                                 >
                                     <div class="flex items-start gap-3">
-                                        <img
-                                            src={itemImage(it.shortname)}
-                                            alt=""
-                                            class="h-12 w-12 flex-shrink-0 rounded bg-slate-800 object-contain"
-                                            loading="lazy"
-                                        />
+                                        <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded bg-slate-800">
+                                            {meta.isCategory ? (
+                                                <span class="flex h-full w-full items-center justify-center bg-gradient-to-br from-teal-500/30 to-indigo-500/30 text-base font-bold tracking-wider text-teal-100 uppercase">
+                                                    {letter}
+                                                </span>
+                                            ) : (
+                                                <img
+                                                    src={meta.imageUrl}
+                                                    alt=""
+                                                    class="h-full w-full object-contain"
+                                                    loading="lazy"
+                                                />
+                                            )}
+                                        </div>
                                         <div class="flex min-w-0 flex-1 flex-col">
-                                            <span class="truncate text-sm font-medium text-slate-100">
-                                                {meta?.name ?? it.shortname}
+                                            <span class="flex items-center gap-1.5 truncate text-sm font-medium text-slate-100">
+                                                {meta.label}
+                                                {meta.isCategory ? (
+                                                    <span class="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-200 uppercase">
+                                                        Category
+                                                    </span>
+                                                ) : null}
                                             </span>
                                             <span class="truncate text-xs text-slate-500">
-                                                {it.shortname}
+                                                {meta.hint ?? it.shortname}
                                             </span>
                                         </div>
                                         <button
@@ -684,8 +709,9 @@ export default function FilterForm({ filterId }: Props) {
                                     Import conveyor config
                                 </h3>
                                 <p class="mt-1 text-xs text-slate-500">
-                                    Paste a Rust industrial conveyor JSON array (TargetItemName +
-                                    Max/Buffer/Min). Up to {MAX_ITEMS} items.
+                                    Paste a Rust industrial conveyor JSON array. Item slots
+                                    (TargetItemName) and category slots (TargetCategory) are both
+                                    supported. Up to {MAX_ITEMS} slots.
                                 </p>
                             </div>
                             <button

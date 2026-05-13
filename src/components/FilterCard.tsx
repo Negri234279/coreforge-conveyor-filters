@@ -1,26 +1,15 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
-import type { Filter, ConveyorItem } from '../types'
+import type { Filter } from '../types'
 import { itemImage } from '../store/items'
 import { boxImage } from '../store/boxes'
 import { deleteFilter } from '../store/filters'
+import { buildConveyorJson } from '../lib/conveyor'
 import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
 
 interface Props {
     filter: Filter
-}
-
-function buildConveyorJson(filter: Filter): ConveyorItem[] {
-    return filter.items.map((it) => ({
-        TargetCategory: null,
-        MaxAmountInOutput: it.max,
-        BufferAmount: it.buffer,
-        MinAmountInInput: it.min,
-        IsBlueprint: false,
-        BufferTransferRemaining: 0,
-        TargetItemName: it.shortname,
-    }))
 }
 
 export default function FilterCard({ filter }: Props) {
@@ -38,7 +27,7 @@ export default function FilterCard({ filter }: Props) {
     }, [])
 
     async function onCopy() {
-        const json = JSON.stringify(buildConveyorJson(filter))
+        const json = JSON.stringify(buildConveyorJson(filter.items))
         const ok = await copyToClipboard(json)
         showToast(ok ? 'Copied!' : 'Copy failed')
     }

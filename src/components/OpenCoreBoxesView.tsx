@@ -1,24 +1,13 @@
-import type { Category, ConveyorItem, Filter } from '../types'
+import type { Category, Filter } from '../types'
 import { itemImage } from '../store/items'
 import { boxImage } from '../store/boxes'
+import { buildConveyorJson } from '../lib/conveyor'
 import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
 
-function buildConveyorJson(filter: Filter): ConveyorItem[] {
-    return filter.items.map((it) => ({
-        TargetCategory: null,
-        MaxAmountInOutput: it.max,
-        BufferAmount: it.buffer,
-        MinAmountInInput: it.min,
-        IsBlueprint: false,
-        BufferTransferRemaining: 0,
-        TargetItemName: it.shortname,
-    }))
-}
-
 function FilterTile({ filter }: { filter: Filter }) {
     async function onCopy() {
-        const ok = await copyToClipboard(JSON.stringify(buildConveyorJson(filter)))
+        const ok = await copyToClipboard(JSON.stringify(buildConveyorJson(filter.items)))
         showToast(ok ? 'Copied!' : 'Copy failed')
     }
     const imgSrc = filter.boxImagePath

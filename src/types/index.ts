@@ -19,7 +19,8 @@ export interface CategorySeed {
 }
 
 export interface ConveyorItem {
-    TargetCategory: null
+    /** null for item slots; the ItemCategory id for category slots. */
+    TargetCategory: number | null
     MaxAmountInOutput: number
     BufferAmount: number
     MinAmountInInput: number

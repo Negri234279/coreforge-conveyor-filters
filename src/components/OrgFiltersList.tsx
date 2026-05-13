@@ -8,21 +8,10 @@ import {
 } from '../store/org'
 import { itemImage } from '../store/items'
 import { boxImage } from '../store/boxes'
+import { buildConveyorJson } from '../lib/conveyor'
 import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
-import type { ConveyorItem, OrgFilterView } from '../types'
-
-function buildConveyorJson(filter: OrgFilterView): ConveyorItem[] {
-    return filter.items.map((it) => ({
-        TargetCategory: null,
-        MaxAmountInOutput: it.max,
-        BufferAmount: it.buffer,
-        MinAmountInInput: it.min,
-        IsBlueprint: false,
-        BufferTransferRemaining: 0,
-        TargetItemName: it.shortname,
-    }))
-}
+import type { OrgFilterView } from '../types'
 
 export default function OrgFiltersList() {
     void ensureOrgLoaded()
@@ -32,7 +21,7 @@ export default function OrgFiltersList() {
     const busy = orgIsBusy.value
 
     async function onCopy(f: OrgFilterView) {
-        const ok = await copyToClipboard(JSON.stringify(buildConveyorJson(f)))
+        const ok = await copyToClipboard(JSON.stringify(buildConveyorJson(f.items)))
         showToast(ok ? 'Copied!' : 'Copy failed')
     }
     async function onClone(f: OrgFilterView) {
