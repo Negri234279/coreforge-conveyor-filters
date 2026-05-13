@@ -152,7 +152,7 @@ Restore: stop the app, copy the file(s) back into the volume as `coreforge.prod.
 
 ## Continuous delivery
 
-`.github/workflows/docker-publish.yml` builds multi-arch (`linux/amd64`, `linux/arm64`) on every push to `main`/`master` and publishes to Docker Hub:
+`.github/workflows/docker-publish.yml` runs on every push to `main`/`master`. It always type-checks (`astro check`), but it **only builds & publishes a Docker image when `version` in `package.json` changed** vs the previous commit — so pushing code without a version bump ships nothing. When the version did change it builds multi-arch (`linux/amd64`, `linux/arm64`) and pushes to Docker Hub:
 
 - `negrii/coreforge-conveyor-filters:<package.json version>`
 - `negrii/coreforge-conveyor-filters:latest`

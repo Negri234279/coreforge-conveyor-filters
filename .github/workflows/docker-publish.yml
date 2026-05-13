@@ -16,7 +16,46 @@ env:
     IMAGE: negrii/coreforge-conveyor-filters
 
 jobs:
-    # Type-check (and verify formatting) before we build/publish anything.
+    # Gate: only build & publish when package.json "version" actually changed
+    # in this push. Other pushes still get type-checked (verify) but produce
+    # no image — bump the version in package.json to cut a release.
+    gate:
+        name: Check version bump
+        runs-on: ubuntu-latest
+        outputs:
+            publish: ${{ steps.check.outputs.publish }}
+            version: ${{ steps.check.outputs.version }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # need history to read package.json at the previous commit
+
+            - name: Compare versions
+              id: check
+              run: |
+                  CURRENT=$(jq -r .version package.json)
+                  echo "version=$CURRENT" >> "$GITHUB_OUTPUT"
+
+                  BEFORE='${{ github.event.before }}'
+                  if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+                      echo "::notice::No previous commit on this ref — treating as a release ($CURRENT)."
+                      echo "publish=true" >> "$GITHUB_OUTPUT"
+                      exit 0
+                  fi
+
+                  PREV=$(git show "$BEFORE:package.json" 2>/dev/null | jq -r .version 2>/dev/null || echo "")
+                  echo "Previous version: '${PREV:-<unknown>}'  ·  Current version: '$CURRENT'"
+
+                  if [ "$PREV" != "$CURRENT" ]; then
+                      echo "::notice::Version changed ${PREV:-<unknown>} → $CURRENT — building & publishing."
+                      echo "publish=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "::notice::package.json version unchanged ($CURRENT) — skipping Docker build/publish."
+                      echo "publish=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+    # Type-check (and verify formatting) on every push, regardless of release.
     verify:
         name: Verify
         runs-on: ubuntu-latest
@@ -41,7 +80,8 @@ jobs:
     # single multi-arch manifest under the version + latest tags.
     build:
         name: Build ${{ matrix.platform }}
-        needs: verify
+        needs: [gate, verify]
+        if: needs.gate.outputs.publish == 'true'
         runs-on: ${{ matrix.runner }}
         strategy:
             fail-fast: false
@@ -97,19 +137,12 @@ jobs:
 
     merge:
         name: Merge manifests
-        needs: build
+        needs: [gate, build]
+        if: needs.gate.outputs.publish == 'true'
         runs-on: ubuntu-latest
+        env:
+            VERSION: ${{ needs.gate.outputs.version }}
         steps:
-            - name: Checkout (for package.json)
-              uses: actions/checkout@v4
-
-            - name: Read version from package.json
-              id: pkg
-              run: |
-                  VERSION=$(node -p "require('./package.json').version")
-                  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-                  echo "Publishing version $VERSION"
-
             - name: Download digests
               uses: actions/download-artifact@v4
               with:
@@ -133,10 +166,10 @@ jobs:
                   images: ${{ env.IMAGE }}
                   tags: |
                       type=raw,value=latest
-                      type=raw,value=${{ steps.pkg.outputs.version }}
+                      type=raw,value=${{ env.VERSION }}
                   labels: |
                       org.opencontainers.image.title=CoreForge — Conveyor Filters
-                      org.opencontainers.image.version=${{ steps.pkg.outputs.version }}
+                      org.opencontainers.image.version=${{ env.VERSION }}
                       org.opencontainers.image.revision=${{ github.sha }}
                       org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
@@ -149,4 +182,4 @@ jobs:
 
             - name: Inspect image
               run: |
-                  docker buildx imagetools inspect ${{ env.IMAGE }}:${{ steps.pkg.outputs.version }}
+                  docker buildx imagetools inspect ${{ env.IMAGE }}:${{ env.VERSION }}
