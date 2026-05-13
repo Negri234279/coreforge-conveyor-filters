@@ -30,3 +30,6 @@ src/data/coreforge.*
 
 *.local.json
 settings.local.json
+
+public/boxes-raw/*
+!public/boxes-raw/.gitkeep

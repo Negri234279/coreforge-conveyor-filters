@@ -113,5 +113,40 @@
         "id": 23,
         "name": "Sinotype Clothes Large Box",
         "imagePath": "sinotype-clothes-large-box"
+    },
+    {
+        "id": 24,
+        "name": "Neon Storage Small Cards",
+        "imagePath": "neon-storage-small-cards"
+    },
+    {
+        "id": 25,
+        "name": "Neon Pies Fridge",
+        "imagePath": "neon-pies-fridge"
+    },
+    {
+        "id": 26,
+        "name": "Neon Meat Fridge",
+        "imagePath": "neon-meat-fridge"
+    },
+    {
+        "id": 27,
+        "name": "Neon Storage Small Comps",
+        "imagePath": "neon-storage-small-comps"
+    },
+    {
+        "id": 28,
+        "name": "Neon Storage Small Fuel",
+        "imagePath": "neon-storage-small-fuel"
+    },
+    {
+        "id": 29,
+        "name": "Lunar Fridge",
+        "imagePath": "lunar-fridge"
+    },
+    {
+        "id": 30,
+        "name": "Graffiti Metal Storage",
+        "imagePath": "graffiti-metal-storage"
     }
 ]

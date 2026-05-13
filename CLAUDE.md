@@ -16,8 +16,8 @@ npm run preview      # run the built bundle locally
 npx astro check      # type-check (use this — there is no test suite)
 npm run format       # prettier --write . (run before committing)
 npm run format:check
-npm run optimize:boxes                                    # PNG→WebP for public/boxes
-node scripts/optimize-images.mjs public/items --quality=85 # same for any image dir
+npm run optimize:boxes                                    # public/boxes-raw → public/boxes (WebP); originals kept
+node scripts/optimize-images.mjs public/items-raw --out=public/items --quality=85
 ```
 
 There are no tests. Node 24 (`.nvmrc`); `package.json` engines require `>=22.12.0`.

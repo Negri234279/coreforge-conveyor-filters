@@ -10,7 +10,7 @@
         "build": "astro build",
         "preview": "astro preview",
         "astro": "astro",
-        "optimize:boxes": "node scripts/optimize-images.mjs public/boxes",
+        "optimize:boxes": "node scripts/optimize-images.mjs public/boxes-raw",
         "format": "prettier --write .",
         "format:check": "prettier --check ."
     },
