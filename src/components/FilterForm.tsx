@@ -430,7 +430,7 @@ export default function FilterForm({ filterId }: Props) {
                             </span>
                             <input
                                 type="number"
-                                min={1}
+                                min={0}
                                 step={1}
                                 inputMode="numeric"
                                 value={value}
