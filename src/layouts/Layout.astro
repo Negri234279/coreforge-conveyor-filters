@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css'
+import { version as APP_VERSION } from '../../package.json'
 
 interface Props {
     title?: string
@@ -55,6 +56,7 @@ const clientUser = user
         <link rel="canonical" href={canonicalUrl.href} />
         {noindex && <meta name="robots" content="noindex, nofollow" />}
         <meta name="theme-color" content="#0d1117" />
+        <meta name="app-version" content={APP_VERSION} />
 
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" href="/favicon.ico" />
@@ -76,8 +78,9 @@ const clientUser = user
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={ogImageUrl.href} />
 
-        <script is:inline define:vars={{ clientUser }}>
+        <script is:inline define:vars={{ clientUser, APP_VERSION }}>
             window.__cf_user = clientUser
+            window.__cf_version = APP_VERSION
         </script>
     </head>
     <body
@@ -184,6 +187,7 @@ const clientUser = user
 
             <footer class="mx-auto max-w-6xl px-6 py-8 text-xs text-slate-600">
                 © {new Date().getFullYear()} CoreForge — Conveyor Filters
+                <span class="text-slate-700" title="App version">· v{APP_VERSION}</span>
             </footer>
         </div>
     </body>
