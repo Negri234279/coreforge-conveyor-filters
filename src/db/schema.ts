@@ -15,6 +15,10 @@ export const users = sqliteTable(
         passwordHash: text('password_hash').notNull(),
         orgId: text('org_id'),
         orgRole: text('org_role'), // 'owner' | 'admin' | 'member' | null
+        // App-wide super-admin (dashboard access). Independent from org_role.
+        isAdmin: integer('is_admin').notNull().default(0),
+        // Updated by middleware (throttled to ~60s) on authenticated requests.
+        lastSeenAt: integer('last_seen_at'),
         createdAt: integer('created_at').notNull(),
     },
     (t) => [uniqueIndex('users_username_lower_uq').on(t.usernameLower)],
@@ -53,6 +57,7 @@ export const openCores = sqliteTable('open_cores', {
     sharedWithOrg: integer('shared_with_org').notNull().default(0),
     position: integer('position').notNull().default(0),
     createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull().default(0),
 })
 
 export const categories = sqliteTable('categories', {
@@ -64,6 +69,7 @@ export const categories = sqliteTable('categories', {
     sharedWithOrg: integer('shared_with_org').notNull().default(0),
     position: integer('position').notNull().default(0),
     createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull().default(0),
 })
 
 export const subcategories = sqliteTable('subcategories', {
@@ -72,6 +78,7 @@ export const subcategories = sqliteTable('subcategories', {
     name: text('name').notNull(),
     position: integer('position').notNull().default(0),
     createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull().default(0),
 })
 
 export const filters = sqliteTable('filters', {
@@ -89,6 +96,7 @@ export const filters = sqliteTable('filters', {
     storageAdaptorCount: integer('storage_adaptor_count').notNull().default(1),
     position: integer('position').notNull().default(0),
     createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull().default(0),
 })
 
 export const filterItems = sqliteTable(
@@ -105,6 +113,15 @@ export const filterItems = sqliteTable(
     (t) => [uniqueIndex('filter_items_filter_shortname_uq').on(t.filterId, t.shortname)],
 )
 
+export const events = sqliteTable('events', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: text('user_id'),
+    type: text('type').notNull(),
+    targetId: text('target_id'),
+    metadata: text('metadata'),
+    createdAt: integer('created_at').notNull(),
+})
+
 export type DbUser = typeof users.$inferSelect
 export type DbSession = typeof sessions.$inferSelect
 export type DbOrganization = typeof organizations.$inferSelect
@@ -113,6 +130,7 @@ export type DbCategory = typeof categories.$inferSelect
 export type DbSubcategory = typeof subcategories.$inferSelect
 export type DbFilter = typeof filters.$inferSelect
 export type DbFilterItem = typeof filterItems.$inferSelect
+export type DbEvent = typeof events.$inferSelect
 
 // Marker used so TS doesn't drop `sql` import in case we add raw statements.
 export const _markerSql = sql`SELECT 1`

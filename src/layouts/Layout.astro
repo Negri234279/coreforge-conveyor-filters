@@ -10,7 +10,7 @@ interface Props {
     image?: string
     /** Set true on pages that shouldn't be indexed (auth, account…). */
     noindex?: boolean
-    activeNav?: 'home' | 'new' | 'org' | 'orgFilters' | 'account'
+    activeNav?: 'home' | 'new' | 'org' | 'orgFilters' | 'account' | 'admin'
     /** Hide the nav (used on the auth pages). */
     hideNav?: boolean
 }
@@ -183,6 +183,22 @@ const clientUser = user
                                     >
                                         + New Filter
                                     </a>
+                                    {
+                                        user.isAdmin && (
+                                            <a
+                                                href="/admin"
+                                                class:list={[
+                                                    'rounded px-3 py-2 md:py-1.5',
+                                                    activeNav === 'admin'
+                                                        ? 'bg-slate-800 text-amber-200'
+                                                        : 'text-amber-300/80 hover:bg-slate-800 hover:text-amber-200',
+                                                ]}
+                                                title="Admin dashboard"
+                                            >
+                                                Admin
+                                            </a>
+                                        )
+                                    }
                                     <div class="mt-2 flex items-center gap-2 border-t border-slate-800 pt-2 md:mt-0 md:ml-2 md:border-t-0 md:border-l md:pt-0 md:pl-2">
                                         <a
                                             href="/account"
@@ -229,8 +245,12 @@ const clientUser = user
                 <slot />
             </main>
 
-            <footer class="mx-auto max-w-6xl px-6 py-8 text-xs text-slate-600">
-                © {new Date().getFullYear()} CoreForge — Conveyor Filters
+            <footer
+                class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-6 py-8 text-xs text-slate-600"
+            >
+                <span>© {new Date().getFullYear()} CoreForge — Conveyor Filters</span>
+                <span class="text-slate-700">·</span>
+                <a href="/legal" class="text-slate-500 hover:text-slate-300">Legal</a>
                 <span class="text-slate-700" title="App version">· v{APP_VERSION}</span>
             </footer>
         </div>

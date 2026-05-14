@@ -1,6 +1,7 @@
 import type { APIContext, APIRoute } from 'astro'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '../../../db/client'
+import { logEvent } from '../../../lib/events'
 
 export const prerender = false
 
@@ -14,6 +15,7 @@ export const POST: APIRoute = ({ locals, redirect }) => {
     if (user.orgRole !== 'owner') return back(redirect, 'Only the owner can delete the clan.')
 
     const orgId = user.orgId
+    const now = Date.now()
     db.transaction((tx) => {
         // Unset shared flags for every member's filters / categories / open cores.
         const members = tx
@@ -23,15 +25,15 @@ export const POST: APIRoute = ({ locals, redirect }) => {
             .all()
         for (const m of members) {
             tx.update(schema.filters)
-                .set({ sharedWithOrg: 0 })
+                .set({ sharedWithOrg: 0, updatedAt: now })
                 .where(eq(schema.filters.userId, m.id))
                 .run()
             tx.update(schema.categories)
-                .set({ sharedWithOrg: 0 })
+                .set({ sharedWithOrg: 0, updatedAt: now })
                 .where(eq(schema.categories.userId, m.id))
                 .run()
             tx.update(schema.openCores)
-                .set({ sharedWithOrg: 0 })
+                .set({ sharedWithOrg: 0, updatedAt: now })
                 .where(eq(schema.openCores.userId, m.id))
                 .run()
         }
@@ -41,5 +43,6 @@ export const POST: APIRoute = ({ locals, redirect }) => {
             .run()
         tx.delete(schema.organizations).where(eq(schema.organizations.id, orgId)).run()
     })
+    logEvent('org_delete', { userId: user.id, targetId: orgId })
     return back(redirect)
 }

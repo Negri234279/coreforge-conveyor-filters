@@ -54,6 +54,29 @@ function migrate(sqlite: Database.Database): void {
     sqlite.exec(
         `UPDATE users SET org_role = 'member' WHERE org_id IS NOT NULL AND (org_role IS NULL OR org_role = '')`,
     )
+
+    // App-wide super-admin flag (independent of org_role). Powers the /admin
+    // dashboard. Auto-promote the sole owner account on first migration.
+    if (!hasColumn('users', 'is_admin')) {
+        sqlite.exec(`ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0`)
+    }
+    if (!hasColumn('users', 'last_seen_at')) {
+        sqlite.exec(`ALTER TABLE users ADD COLUMN last_seen_at INTEGER`)
+    }
+    // Index lives in migrate() (not schema.sql) so it can run *after* the
+    // column ALTER on existing DBs without erroring out on first boot.
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS users_last_seen_idx ON users(last_seen_at)`)
+    sqlite.exec(`UPDATE users SET is_admin = 1 WHERE username_lower = 'negri234279'`)
+
+    // updated_at on content tables. Backfill from created_at so existing rows
+    // get a sane initial value (they've never been "edited" but at least the
+    // timestamp won't be 0).
+    for (const table of ['filters', 'categories', 'subcategories', 'open_cores']) {
+        if (!hasColumn(table, 'updated_at')) {
+            sqlite.exec(`ALTER TABLE ${table} ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0`)
+        }
+        sqlite.exec(`UPDATE ${table} SET updated_at = created_at WHERE updated_at = 0`)
+    }
 }
 
 function bootstrap(): Database.Database {

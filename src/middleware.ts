@@ -8,10 +8,10 @@
 import { defineMiddleware } from 'astro:middleware'
 import { checkOrigin, expectedHost, isSafeMethod } from './lib/auth/origin'
 import { clearSessionCookie, getSessionToken, setSessionCookie } from './lib/auth/cookie'
-import { loadSession } from './lib/auth/session'
+import { loadSession, touchLastSeen } from './lib/auth/session'
 import type { SafeUser } from './env'
 
-const PUBLIC_PAGES = new Set(['/login', '/register'])
+const PUBLIC_PAGES = new Set(['/login', '/register', '/legal'])
 const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/auth/register']
 
 function isPublicPath(pathname: string): boolean {
@@ -87,9 +87,20 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
               email: session.user.email ?? null,
               orgId: session.user.orgId ?? null,
               orgRole: session.user.orgRole ?? null,
+              isAdmin: session.user.isAdmin === 1,
           }
         : null
     locals.user = user
+
+    // last_seen_at: cheap throttled update so we can compute DAU/MAU without
+    // an event row per request. Only writes when the cached value is >60s old.
+    if (session) {
+        const now = Date.now()
+        const last = session.user.lastSeenAt ?? 0
+        if (now - last > 60_000) {
+            touchLastSeen(session.user.id, now)
+        }
+    }
 
     // Sliding renewal: re-issue the cookie with the new expiry so the browser
     // keeps it in sync.

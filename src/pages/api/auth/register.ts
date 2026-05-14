@@ -7,6 +7,7 @@ import { createSession } from '../../../lib/auth/session'
 import { setSessionCookie } from '../../../lib/auth/cookie'
 import { clientIp, rateLimit } from '../../../lib/auth/rate-limit'
 import { validateEmail, validatePassword, validateUsername } from '../../../lib/auth/validate'
+import { logEvent } from '../../../lib/events'
 
 export const prerender = false
 
@@ -93,6 +94,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
     const session = createSession(id)
     setSessionCookie(cookies, session.token, session.expiresAt)
+    logEvent('user_register', { userId: id })
 
     return redirect('/', 303)
 }

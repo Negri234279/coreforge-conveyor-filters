@@ -108,6 +108,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                 sharedWithOrg: 0,
                 position: myOcs.length,
                 createdAt: now,
+                updatedAt: now,
             })
             .run()
 
@@ -121,6 +122,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                     isOpenCoreFilter: 0,
                     position: myCatCount + ci,
                     createdAt: now,
+                    updatedAt: now,
                 })
                 .run()
         })
@@ -132,6 +134,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                     name: s.name,
                     position: si,
                     createdAt: now,
+                    updatedAt: now,
                 })
                 .run()
         })
@@ -155,6 +158,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                     storageAdaptorCount: f.storageAdaptorCount,
                     position: fi,
                     createdAt: now,
+                    updatedAt: now,
                 })
                 .run()
         })

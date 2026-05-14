@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro'
+import AdminDashboard from '../components/AdminDashboard'
+
+const user = Astro.locals.user!
+// 404 (not 403) to non-admins so the route's existence stays implicit.
+if (!user.isAdmin) {
+    return new Response(null, { status: 404 })
+}
+---
+
+<Layout title="Admin – CoreForge" noindex activeNav="admin">
+    <header class="mb-6">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-100">Admin dashboard</h1>
+        <p class="mt-1 text-sm text-slate-400">
+            App-wide metrics. Visible only to you.
+        </p>
+    </header>
+    <AdminDashboard client:only="preact" />
+</Layout>

@@ -6,6 +6,7 @@ import type { APIRoute } from 'astro'
 import { and, eq, inArray } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { db, schema } from '../../../../db/client'
+import { logEvent } from '../../../../lib/events'
 
 export const prerender = false
 
@@ -92,6 +93,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                 sharedWithOrg: 0,
                 position: myCats.length,
                 createdAt: now,
+                updatedAt: now,
             })
             .run()
 
@@ -103,6 +105,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                     name: s.name,
                     position: si,
                     createdAt: now,
+                    updatedAt: now,
                 })
                 .run()
         })
@@ -127,6 +130,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                     storageAdaptorCount: f.storageAdaptorCount,
                     position: fi,
                     createdAt: now,
+                    updatedAt: now,
                 })
                 .run()
         })
@@ -146,6 +150,12 @@ export const POST: APIRoute = async ({ locals, request }) => {
                     })
                     .run()
             })
+    })
+
+    logEvent('category_clone', {
+        userId: user.id,
+        targetId: srcCat.id,
+        metadata: { ownerId: srcCat.userId, newCategoryId: newCatId },
     })
 
     return json({ ok: true, id: newCatId, name: newName })

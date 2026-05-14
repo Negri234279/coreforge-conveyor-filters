@@ -4,6 +4,7 @@ import { eq, sql } from 'drizzle-orm'
 import { db, schema } from '../../../db/client'
 import { validateOrgName } from '../../../lib/auth/validate'
 import { generateInviteCode } from '../../../lib/auth/invite'
+import { logEvent } from '../../../lib/events'
 
 export const prerender = false
 
@@ -62,5 +63,6 @@ export const POST: APIRoute = async ({ locals, request, redirect }) => {
         if (/UNIQUE/i.test(msg)) return back(redirect, 'That clan name is taken.')
         throw err
     }
+    logEvent('org_create', { userId: user.id, targetId: orgId, metadata: { name: v.value } })
     return back(redirect)
 }

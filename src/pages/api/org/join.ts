@@ -2,6 +2,7 @@ import type { APIContext, APIRoute } from 'astro'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '../../../db/client'
 import { clientIp, rateLimit } from '../../../lib/auth/rate-limit'
+import { logEvent } from '../../../lib/events'
 
 export const prerender = false
 
@@ -38,5 +39,6 @@ export const POST: APIRoute = async ({ locals, request, redirect }) => {
         .set({ orgId: org.id, orgRole: 'member' })
         .where(eq(schema.users.id, user.id))
         .run()
+    logEvent('org_join', { userId: user.id, targetId: org.id })
     return back(redirect)
 }
