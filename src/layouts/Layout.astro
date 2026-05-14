@@ -245,8 +245,12 @@ const clientUser = user
                 <slot />
             </main>
 
-            <footer class="mx-auto max-w-6xl px-6 py-8 text-xs text-slate-600">
-                © {new Date().getFullYear()} CoreForge — Conveyor Filters
+            <footer
+                class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-6 py-8 text-xs text-slate-600"
+            >
+                <span>© {new Date().getFullYear()} CoreForge — Conveyor Filters</span>
+                <span class="text-slate-700">·</span>
+                <a href="/legal" class="text-slate-500 hover:text-slate-300">Legal</a>
                 <span class="text-slate-700" title="App version">· v{APP_VERSION}</span>
             </footer>
         </div>
