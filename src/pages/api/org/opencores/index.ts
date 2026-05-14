@@ -3,6 +3,7 @@
 import type { APIRoute } from 'astro'
 import { and, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '../../../../db/client'
+import { classifyBox } from '../../../../lib/boxKind'
 import type { OrgOpenCoreView } from '../../../../types'
 
 export const prerender = false
@@ -54,12 +55,17 @@ export const GET: APIRoute = ({ locals }) => {
     const allCatIds = catRows.map((c) => c.id)
     const filterCountByCat = new Map<string, number>()
     const boxByCat = new Map<string, number>()
+    const boxLargeByCat = new Map<string, number>()
+    const boxSmallByCat = new Map<string, number>()
+    const boxLockerByCat = new Map<string, number>()
+    const boxFridgeByCat = new Map<string, number>()
     const conveyorByCat = new Map<string, number>()
     const adaptorByCat = new Map<string, number>()
     if (allCatIds.length) {
         const fr = db
             .select({
                 categoryId: schema.filters.categoryId,
+                boxImagePath: schema.filters.boxImagePath,
                 boxCount: schema.filters.boxCount,
                 conveyorCount: schema.filters.conveyorCount,
                 storageAdaptorCount: schema.filters.storageAdaptorCount,
@@ -67,9 +73,20 @@ export const GET: APIRoute = ({ locals }) => {
             .from(schema.filters)
             .where(inArray(schema.filters.categoryId, allCatIds))
             .all()
+        const kindMaps: Record<NonNullable<ReturnType<typeof classifyBox>>, Map<string, number>> = {
+            large: boxLargeByCat,
+            small: boxSmallByCat,
+            locker: boxLockerByCat,
+            fridge: boxFridgeByCat,
+        }
         for (const f of fr) {
             filterCountByCat.set(f.categoryId, (filterCountByCat.get(f.categoryId) ?? 0) + 1)
             boxByCat.set(f.categoryId, (boxByCat.get(f.categoryId) ?? 0) + f.boxCount)
+            const kind = classifyBox(f.boxImagePath)
+            if (kind) {
+                const m = kindMaps[kind]
+                m.set(f.categoryId, (m.get(f.categoryId) ?? 0) + f.boxCount)
+            }
             conveyorByCat.set(
                 f.categoryId,
                 (conveyorByCat.get(f.categoryId) ?? 0) + f.conveyorCount,
@@ -94,6 +111,10 @@ export const GET: APIRoute = ({ locals }) => {
             categoryCount: catIds.length,
             filterCount,
             boxTotal: sumOver(catIds, boxByCat),
+            boxLargeTotal: sumOver(catIds, boxLargeByCat),
+            boxSmallTotal: sumOver(catIds, boxSmallByCat),
+            boxLockerTotal: sumOver(catIds, boxLockerByCat),
+            boxFridgeTotal: sumOver(catIds, boxFridgeByCat),
             conveyorTotal: sumOver(catIds, conveyorByCat),
             storageAdaptorTotal: sumOver(catIds, adaptorByCat),
         }

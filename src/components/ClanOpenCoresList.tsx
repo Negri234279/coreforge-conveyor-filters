@@ -61,6 +61,10 @@ export default function ClanOpenCoresList() {
                         <DeploymentTotals
                             totals={{
                                 boxTotal: oc.boxTotal,
+                                boxLargeTotal: oc.boxLargeTotal,
+                                boxSmallTotal: oc.boxSmallTotal,
+                                boxLockerTotal: oc.boxLockerTotal,
+                                boxFridgeTotal: oc.boxFridgeTotal,
                                 conveyorTotal: oc.conveyorTotal,
                                 storageAdaptorTotal: oc.storageAdaptorTotal,
                             }}

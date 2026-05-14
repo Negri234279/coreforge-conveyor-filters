@@ -125,6 +125,10 @@ export interface OrgOpenCoreView {
     filterCount: number
     /** Sums of the per-filter deployment counts across the whole Open Core. */
     boxTotal: number
+    boxLargeTotal: number
+    boxSmallTotal: number
+    boxLockerTotal: number
+    boxFridgeTotal: number
     conveyorTotal: number
     storageAdaptorTotal: number
 }

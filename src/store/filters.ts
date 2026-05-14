@@ -1,5 +1,6 @@
 import { signal } from '@preact/signals'
 import { nanoid } from 'nanoid'
+import { classifyBox } from '../lib/boxKind'
 import type { Category, Filter, FilterCounts, FilterItem, OpenCore, Subcategory } from '../types'
 
 const MAX_ITEMS_PER_FILTER = 30
@@ -183,7 +184,16 @@ export function countFiltersForOpenCore(openCoreId: string): number {
 }
 
 export interface DeploymentTotals {
+    /** Sum of all box deployment counts, regardless of kind. */
     boxTotal: number
+    /** Subset of boxTotal whose boxImagePath classifies as a large box. */
+    boxLargeTotal: number
+    /** Subset of boxTotal whose boxImagePath classifies as a small box. */
+    boxSmallTotal: number
+    /** Subset of boxTotal whose boxImagePath classifies as a locker. */
+    boxLockerTotal: number
+    /** Subset of boxTotal whose boxImagePath classifies as a fridge. */
+    boxFridgeTotal: number
     conveyorTotal: number
     storageAdaptorTotal: number
 }
@@ -194,12 +204,28 @@ function filtersOfCategory(c: Category): Filter[] {
 
 export function deploymentTotals(filters: Filter[]): DeploymentTotals {
     return filters.reduce<DeploymentTotals>(
-        (acc, f) => ({
-            boxTotal: acc.boxTotal + (f.boxCount || 0),
-            conveyorTotal: acc.conveyorTotal + (f.conveyorCount || 0),
-            storageAdaptorTotal: acc.storageAdaptorTotal + (f.storageAdaptorCount || 0),
-        }),
-        { boxTotal: 0, conveyorTotal: 0, storageAdaptorTotal: 0 },
+        (acc, f) => {
+            const boxes = f.boxCount || 0
+            const kind = classifyBox(f.boxImagePath)
+            return {
+                boxTotal: acc.boxTotal + boxes,
+                boxLargeTotal: acc.boxLargeTotal + (kind === 'large' ? boxes : 0),
+                boxSmallTotal: acc.boxSmallTotal + (kind === 'small' ? boxes : 0),
+                boxLockerTotal: acc.boxLockerTotal + (kind === 'locker' ? boxes : 0),
+                boxFridgeTotal: acc.boxFridgeTotal + (kind === 'fridge' ? boxes : 0),
+                conveyorTotal: acc.conveyorTotal + (f.conveyorCount || 0),
+                storageAdaptorTotal: acc.storageAdaptorTotal + (f.storageAdaptorCount || 0),
+            }
+        },
+        {
+            boxTotal: 0,
+            boxLargeTotal: 0,
+            boxSmallTotal: 0,
+            boxLockerTotal: 0,
+            boxFridgeTotal: 0,
+            conveyorTotal: 0,
+            storageAdaptorTotal: 0,
+        },
     )
 }
 

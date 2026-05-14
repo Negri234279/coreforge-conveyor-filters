@@ -7,18 +7,60 @@ interface Props {
     class?: string
 }
 
+const LARGE_BOX = (
+    <>
+        <path d="M21 8v8a2 2 0 0 1-1 1.73l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.73l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8z" />
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+        <line x1="12" y1="22.08" x2="12" y2="12" />
+    </>
+)
+
+const SMALL_BOX = (
+    <>
+        <rect x="5" y="7" width="14" height="12" rx="1.5" />
+        <line x1="5" y1="11" x2="19" y2="11" />
+        <line x1="11" y1="14.5" x2="13" y2="14.5" />
+    </>
+)
+
+const LOCKER = (
+    <>
+        <rect x="6" y="3" width="12" height="18" rx="1" />
+        <line x1="12" y1="3" x2="12" y2="21" />
+        <line x1="9" y1="12" x2="10" y2="12" />
+        <line x1="14" y1="12" x2="15" y2="12" />
+    </>
+)
+
+const FRIDGE = (
+    <>
+        <rect x="6" y="3" width="12" height="18" rx="1.5" />
+        <line x1="6" y1="10" x2="18" y2="10" />
+        <line x1="9" y1="6" x2="9" y2="8" />
+        <line x1="9" y1="13" x2="9" y2="17" />
+    </>
+)
+
 const ITEMS = [
     {
-        key: 'boxTotal' as const,
-        label: 'Boxes',
-        // box / container
-        path: (
-            <>
-                <path d="M21 8v8a2 2 0 0 1-1 1.73l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.73l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8z" />
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                <line x1="12" y1="22.08" x2="12" y2="12" />
-            </>
-        ),
+        key: 'boxLargeTotal' as const,
+        label: 'Large',
+        path: LARGE_BOX,
+    },
+    {
+        key: 'boxSmallTotal' as const,
+        label: 'Small',
+        path: SMALL_BOX,
+    },
+    {
+        key: 'boxLockerTotal' as const,
+        label: 'Lockers',
+        path: LOCKER,
+    },
+    {
+        key: 'boxFridgeTotal' as const,
+        label: 'Fridges',
+        path: FRIDGE,
     },
     {
         key: 'conveyorTotal' as const,
