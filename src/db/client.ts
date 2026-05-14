@@ -29,6 +29,12 @@ function migrate(sqlite: Database.Database): void {
             `CREATE INDEX IF NOT EXISTS categories_open_core_idx ON categories(open_core_id)`,
         )
     }
+    // Per-category clan sharing flag.
+    if (!hasColumn('categories', 'shared_with_org')) {
+        sqlite.exec(
+            `ALTER TABLE categories ADD COLUMN shared_with_org INTEGER NOT NULL DEFAULT 0`,
+        )
+    }
     // Per-filter deployment counts (boxes / conveyors / storage adaptors).
     // Existing rows backfill to 1 via the column default.
     if (!hasColumn('filters', 'box_count')) {

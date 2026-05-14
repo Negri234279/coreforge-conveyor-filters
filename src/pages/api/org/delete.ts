@@ -15,7 +15,7 @@ export const POST: APIRoute = ({ locals, redirect }) => {
 
     const orgId = user.orgId
     db.transaction((tx) => {
-        // Unset shared flags for every member's filters.
+        // Unset shared flags for every member's filters / categories / open cores.
         const members = tx
             .select({ id: schema.users.id })
             .from(schema.users)
@@ -25,6 +25,14 @@ export const POST: APIRoute = ({ locals, redirect }) => {
             tx.update(schema.filters)
                 .set({ sharedWithOrg: 0 })
                 .where(eq(schema.filters.userId, m.id))
+                .run()
+            tx.update(schema.categories)
+                .set({ sharedWithOrg: 0 })
+                .where(eq(schema.categories.userId, m.id))
+                .run()
+            tx.update(schema.openCores)
+                .set({ sharedWithOrg: 0 })
+                .where(eq(schema.openCores.userId, m.id))
                 .run()
         }
         tx.update(schema.users)

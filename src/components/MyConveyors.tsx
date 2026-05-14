@@ -12,6 +12,7 @@ import {
     openCores,
     renameOpenCore,
 } from '../store/filters'
+import { getCurrentUser } from '../store/auth'
 import CategorySection from './CategorySection'
 import CategoryFormModal from './CategoryFormModal'
 import OpenCoreCard from './OpenCoreCard'
@@ -31,10 +32,15 @@ export default function MyConveyors() {
     const [ocRenameId, setOcRenameId] = useState<string | null>(null)
     const [view, setView] = useState<'opencores' | 'categories'>('opencores')
 
-    function handleCreateCategory(values: { name: string; openCoreId: string | null }) {
-        addCategory(values.name, values.openCoreId)
+    function handleCreateCategory(values: {
+        name: string
+        openCoreId: string | null
+        sharedWithOrg: boolean
+    }) {
+        addCategory(values.name, values.openCoreId, values.sharedWithOrg)
         setCatCreateOpen(false)
     }
+    const inOrg = !!getCurrentUser()?.orgId
     function validateNewCategoryName(name: string): string | null {
         return findCategoryByName(name) ? `A category named "${name}" already exists.` : null
     }
@@ -196,6 +202,7 @@ export default function MyConveyors() {
                 open={catCreateOpen}
                 mode="create"
                 openCores={ocs}
+                canShareWithOrg={inOrg}
                 onCancel={() => setCatCreateOpen(false)}
                 onSubmit={handleCreateCategory}
                 validateName={validateNewCategoryName}

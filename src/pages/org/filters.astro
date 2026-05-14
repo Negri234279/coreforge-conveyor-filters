@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro'
 import OrgFiltersList from '../../components/OrgFiltersList'
 import ClanOpenCoresList from '../../components/ClanOpenCoresList'
+import ClanCategoriesList from '../../components/ClanCategoriesList'
 import CopyToast from '../../components/CopyToast'
 
 const user = Astro.locals.user!
@@ -41,6 +42,12 @@ const user = Astro.locals.user!
                         Shared Open Cores
                     </h2>
                     <ClanOpenCoresList client:only="preact" />
+                </section>
+                <section>
+                    <h2 class="mb-3 text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                        Shared categories
+                    </h2>
+                    <ClanCategoriesList client:only="preact" />
                 </section>
                 <section>
                     <h2 class="mb-3 text-xs font-semibold tracking-wider text-slate-400 uppercase">

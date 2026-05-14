@@ -1,0 +1,15 @@
+---
+import Layout from '../../../layouts/Layout.astro'
+import OrgCategoryDetail from '../../../components/OrgCategoryDetail'
+import CopyToast from '../../../components/CopyToast'
+
+const user = Astro.locals.user!
+const { id } = Astro.params
+if (!id) return Astro.redirect('/org/filters')
+if (!user.orgId) return Astro.redirect('/org')
+---
+
+<Layout title="Clan Category – CoreForge" activeNav="orgFilters">
+    <OrgCategoryDetail client:only="preact" categoryId={id} />
+    <CopyToast client:only="preact" />
+</Layout>

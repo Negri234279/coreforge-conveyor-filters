@@ -2,7 +2,13 @@
 // Cores. Loads on import in the browser, mirroring src/store/filters.ts.
 
 import { signal } from '@preact/signals'
-import type { OrgFilterView, OrgOpenCoreDetail, OrgOpenCoreView } from '../types'
+import type {
+    OrgCategoryDetail,
+    OrgCategoryView,
+    OrgFilterView,
+    OrgOpenCoreDetail,
+    OrgOpenCoreView,
+} from '../types'
 
 // ---- shared filters ----------------------------------------------------
 
@@ -81,9 +87,66 @@ export function ensureOrgOpenCoresLoaded(): Promise<void> {
     return ocLoadPromise
 }
 
+// ---- shared categories -------------------------------------------------
+
+export const orgCategories = signal<OrgCategoryView[]>([])
+export const orgCategoriesHydrated = signal<boolean>(false)
+export const orgCategoriesError = signal<string | null>(null)
+
+let catLoadPromise: Promise<void> | null = null
+
+async function fetchOrgCategories(): Promise<void> {
+    try {
+        const res = await fetch('/api/org/categories', { cache: 'no-store' })
+        if (!res.ok) throw new Error(`GET /api/org/categories failed (${res.status})`)
+        const body = (await res.json()) as { categories: OrgCategoryView[] }
+        orgCategories.value = Array.isArray(body.categories) ? body.categories : []
+        orgCategoriesError.value = null
+    } catch (err) {
+        orgCategoriesError.value =
+            err instanceof Error ? err.message : 'Failed to load clan categories'
+    } finally {
+        orgCategoriesHydrated.value = true
+    }
+}
+
+export function ensureOrgCategoriesLoaded(): Promise<void> {
+    if (typeof window === 'undefined') return Promise.resolve()
+    if (!catLoadPromise) catLoadPromise = fetchOrgCategories()
+    return catLoadPromise
+}
+
+export async function fetchOrgCategoryDetail(id: string): Promise<OrgCategoryDetail> {
+    const res = await fetch(`/api/org/categories/${encodeURIComponent(id)}`, { cache: 'no-store' })
+    if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        throw new Error(text || `Failed to load category (${res.status})`)
+    }
+    return (await res.json()) as OrgCategoryDetail
+}
+
+export async function cloneOrgCategory(id: string): Promise<{ id: string; name: string }> {
+    orgIsBusy.value = true
+    try {
+        const res = await fetch('/api/org/categories/clone', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ id }),
+        })
+        if (!res.ok) {
+            const text = await res.text().catch(() => '')
+            throw new Error(text || `Clone failed (${res.status})`)
+        }
+        return (await res.json()) as { id: string; name: string }
+    } finally {
+        orgIsBusy.value = false
+    }
+}
+
 if (typeof window !== 'undefined') {
     void ensureOrgLoaded()
     void ensureOrgOpenCoresLoaded()
+    void ensureOrgCategoriesLoaded()
 }
 
 export async function fetchOrgOpenCoreDetail(id: string): Promise<OrgOpenCoreDetail> {

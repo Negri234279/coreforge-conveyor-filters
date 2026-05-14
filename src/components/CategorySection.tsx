@@ -7,8 +7,10 @@ import {
     openCores,
     removeSubcategory,
     renameSubcategory,
+    setCategoryShared,
     updateCategory,
 } from '../store/filters'
+import { getCurrentUser } from '../store/auth'
 import FilterCard from './FilterCard'
 import CategoryFormModal from './CategoryFormModal'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
@@ -88,9 +90,13 @@ export default function CategorySection({ category }: Props) {
 
     const [editOpen, setEditOpen] = useState(false)
     const [deleteOpen, setDeleteOpen] = useState(false)
+    const [confirmShareOpen, setConfirmShareOpen] = useState(false)
     const [subDeleteId, setSubDeleteId] = useState<string | null>(null)
     const [subRenameId, setSubRenameId] = useState<string | null>(null)
     const [subCreateOpen, setSubCreateOpen] = useState(false)
+
+    const inOrg = !!getCurrentUser()?.orgId
+    const isShared = category.sharedWithOrg === true
 
     function onAddSubcategory() {
         setSubCreateOpen(true)
@@ -112,9 +118,18 @@ export default function CategorySection({ category }: Props) {
         setEditOpen(true)
     }
 
-    function handleEditSubmit(values: { name: string; openCoreId: string | null }) {
+    function handleEditSubmit(values: {
+        name: string
+        openCoreId: string | null
+        sharedWithOrg: boolean
+    }) {
         updateCategory(category.id, values)
         setEditOpen(false)
+    }
+
+    function confirmToggleShare() {
+        setConfirmShareOpen(false)
+        setCategoryShared(category.id, !isShared)
     }
 
     function validateEditName(name: string): string | null {
@@ -166,9 +181,19 @@ export default function CategorySection({ category }: Props) {
     return (
         <section class="mb-12">
             <header class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h2 class="text-sm font-bold tracking-[0.18em] text-slate-100 uppercase">
-                    {category.name}
-                </h2>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-sm font-bold tracking-[0.18em] text-slate-100 uppercase">
+                        {category.name}
+                    </h2>
+                    {isShared ? (
+                        <span
+                            class="rounded bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-300 uppercase"
+                            title="Shared with your clan"
+                        >
+                            Shared
+                        </span>
+                    ) : null}
+                </div>
                 <div class="flex items-center gap-1">
                     <button
                         type="button"
@@ -188,7 +213,17 @@ export default function CategorySection({ category }: Props) {
                                 },
                             },
                             { label: 'Edit', onClick: onEditCategory },
-                            { label: 'Delete', tone: 'danger', onClick: onDeleteCategory },
+                            ...(inOrg
+                                ? [
+                                      {
+                                          label: isShared
+                                              ? 'Unshare from clan'
+                                              : 'Share with clan',
+                                          onClick: () => setConfirmShareOpen(true),
+                                      },
+                                  ]
+                                : []),
+                            { label: 'Delete', tone: 'danger' as const, onClick: onDeleteCategory },
                         ]}
                     />
                 </div>
@@ -199,6 +234,8 @@ export default function CategorySection({ category }: Props) {
                 mode="edit"
                 initialName={category.name}
                 initialOpenCoreId={category.openCoreId ?? null}
+                initialSharedWithOrg={isShared}
+                canShareWithOrg={inOrg}
                 openCores={openCores.value}
                 onCancel={() => setEditOpen(false)}
                 onSubmit={handleEditSubmit}
@@ -212,6 +249,20 @@ export default function CategorySection({ category }: Props) {
                 confirmLabel="Delete category"
                 onCancel={() => setDeleteOpen(false)}
                 onConfirm={confirmDeleteCategory}
+            />
+
+            <ConfirmDeleteModal
+                open={confirmShareOpen}
+                title={isShared ? 'Unshare from clan' : 'Share with clan'}
+                message={
+                    isShared
+                        ? `Stop sharing "${category.name}" with your clan? Clan members will no longer see it.`
+                        : `Share "${category.name}" with your clan? All clan members will be able to see it.`
+                }
+                confirmLabel={isShared ? 'Unshare' : 'Share'}
+                confirmTone="primary"
+                onCancel={() => setConfirmShareOpen(false)}
+                onConfirm={confirmToggleShare}
             />
 
             <ConfirmDeleteModal

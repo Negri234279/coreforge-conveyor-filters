@@ -67,6 +67,7 @@ function normalizeCategories(cats: Category[]): Category[] {
     return cats.map((c) => ({
         ...c,
         openCoreId: c.openCoreId ?? null,
+        sharedWithOrg: c.sharedWithOrg === true,
         filters: (c.filters ?? []).map(normalizeFilter),
         subcategories: (c.subcategories ?? []).map((s) => ({
             ...s,
@@ -335,21 +336,29 @@ function ensureSubcategoryMutable(cat: Category, name: string): Subcategory {
     return created
 }
 
-export function addCategory(name: string, openCoreId: string | null = null): Category {
+export function addCategory(
+    name: string,
+    openCoreId: string | null = null,
+    sharedWithOrg = false,
+): Category {
     const trimmed = name.trim()
     if (!trimmed) throw new Error('Category name is required')
     const next = cloneCategories()
     const before = next.length
     const cat = ensureCategoryByNameMutable(next, trimmed, openCoreId)
-    if (next.length === before) {
+    let dirty = next.length !== before
+    if (!dirty) {
         // Already existed — make sure its Open Core assignment matches the request.
         if (openCoreId !== undefined && cat.openCoreId !== openCoreId) {
             cat.openCoreId = openCoreId
-            commitFireAndForget(next)
+            dirty = true
         }
-        return cat
     }
-    commitFireAndForget(next)
+    if (sharedWithOrg && !cat.sharedWithOrg) {
+        cat.sharedWithOrg = true
+        dirty = true
+    }
+    if (dirty) commitFireAndForget(next)
     return cat
 }
 
@@ -383,13 +392,22 @@ export function renameCategory(categoryId: string, name: string) {
 
 export function updateCategory(
     categoryId: string,
-    patch: { name: string; openCoreId: string | null },
+    patch: { name: string; openCoreId: string | null; sharedWithOrg?: boolean },
 ) {
     const next = cloneCategories()
     const cat = next.find((c) => c.id === categoryId)
     if (!cat) return
     cat.name = patch.name.trim()
     cat.openCoreId = patch.openCoreId
+    if (typeof patch.sharedWithOrg === 'boolean') cat.sharedWithOrg = patch.sharedWithOrg
+    commitFireAndForget(next)
+}
+
+export function setCategoryShared(categoryId: string, shared: boolean): void {
+    const next = cloneCategories()
+    const cat = next.find((c) => c.id === categoryId)
+    if (!cat) return
+    cat.sharedWithOrg = shared
     commitFireAndForget(next)
 }
 

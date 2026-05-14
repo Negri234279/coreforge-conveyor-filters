@@ -99,6 +99,7 @@ export interface Category {
     openCoreId?: string | null
     /** @deprecated Replaced by the Open Core entity. Kept for backward-compat; unused. */
     isOpenCoreFilter?: boolean
+    sharedWithOrg?: boolean
     subcategories: Subcategory[]
     filters: Filter[]
 }
@@ -139,4 +140,32 @@ export interface OrgOpenCoreDetail {
     name: string
     owner: { id: string; username: string }
     categories: Category[]
+}
+
+/** A clan member's shared standalone category, as listed on the Clan page. */
+export interface OrgCategoryView {
+    id: string
+    name: string
+    owner: { id: string; username: string }
+    /** Name of the Open Core the category belongs to, if any. Purely informative. */
+    openCoreName?: string
+    subcategoryCount: number
+    filterCount: number
+    boxTotal: number
+    boxLargeTotal: number
+    boxSmallTotal: number
+    boxLockerTotal: number
+    boxFridgeTotal: number
+    conveyorTotal: number
+    storageAdaptorTotal: number
+}
+
+/** Full read-only contents of a clan member's shared category. */
+export interface OrgCategoryDetail {
+    id: string
+    name: string
+    owner: { id: string; username: string }
+    openCoreName?: string
+    subcategories: Subcategory[]
+    filters: Filter[]
 }

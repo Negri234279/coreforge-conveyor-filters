@@ -53,8 +53,12 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
         )
     }
 
-    function handleCreateCategory(values: { name: string; openCoreId: string | null }) {
-        addCategory(values.name, values.openCoreId)
+    function handleCreateCategory(values: {
+        name: string
+        openCoreId: string | null
+        sharedWithOrg: boolean
+    }) {
+        addCategory(values.name, values.openCoreId, values.sharedWithOrg)
         setCatCreateOpen(false)
     }
     function validateNewCategoryName(name: string): string | null {
@@ -176,6 +180,7 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                 open={catCreateOpen}
                 mode="create"
                 lockedOpenCoreId={openCoreId}
+                canShareWithOrg={inOrg}
                 onCancel={() => setCatCreateOpen(false)}
                 onSubmit={handleCreateCategory}
                 validateName={validateNewCategoryName}

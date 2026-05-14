@@ -154,6 +154,7 @@ export const GET: APIRoute = ({ locals }) => {
             id: c.id,
             name: c.name,
             openCoreId: c.openCoreId && knownOcIds.has(c.openCoreId) ? c.openCoreId : null,
+            sharedWithOrg: c.sharedWithOrg === 1,
             subcategories: subsByCat.get(c.id) ?? [],
             filters: filtersByCatRoot.get(c.id) ?? [],
         }))
@@ -179,6 +180,7 @@ interface InCategory {
     id: string
     name: string
     openCoreId: string | null
+    sharedWithOrg: boolean
     subcategories: InSub[]
     filters: InFilter[]
 }
@@ -288,7 +290,14 @@ function normalizeCategories(raw: unknown, validOpenCoreIds: Set<string>): InCat
             .filter((f): f is InFilter => f !== null)
             .slice(0, MAX_FILTERS_PER_CATEGORY)
 
-        out.push({ id, name, openCoreId, subcategories: subs, filters: rootFilters })
+        out.push({
+            id,
+            name,
+            openCoreId,
+            sharedWithOrg: o.sharedWithOrg === true,
+            subcategories: subs,
+            filters: rootFilters,
+        })
         if (out.length >= MAX_CATEGORIES) break
     }
     return out
@@ -315,6 +324,7 @@ export const PUT: APIRoute = async ({ locals, request }) => {
     if (!user.orgId) {
         for (const oc of openCores) oc.sharedWithOrg = false
         for (const c of cats) {
+            c.sharedWithOrg = false
             for (const f of c.filters) f.sharedWithOrg = false
             for (const s of c.subcategories) for (const f of s.filters) f.sharedWithOrg = false
         }
@@ -410,6 +420,7 @@ export const PUT: APIRoute = async ({ locals, request }) => {
                     name: cat.name,
                     openCoreId: cat.openCoreId,
                     isOpenCoreFilter: 0,
+                    sharedWithOrg: cat.sharedWithOrg ? 1 : 0,
                     position: ci,
                     createdAt: now,
                 })

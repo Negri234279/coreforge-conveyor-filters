@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS categories (
     name                 TEXT NOT NULL,
     open_core_id         TEXT,
     is_open_core_filter  INTEGER NOT NULL DEFAULT 0,
+    shared_with_org      INTEGER NOT NULL DEFAULT 0,
     position             INTEGER NOT NULL DEFAULT 0,
     created_at           INTEGER NOT NULL
 );

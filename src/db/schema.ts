@@ -61,6 +61,7 @@ export const categories = sqliteTable('categories', {
     name: text('name').notNull(),
     openCoreId: text('open_core_id'),
     isOpenCoreFilter: integer('is_open_core_filter').notNull().default(0),
+    sharedWithOrg: integer('shared_with_org').notNull().default(0),
     position: integer('position').notNull().default(0),
     createdAt: integer('created_at').notNull(),
 })

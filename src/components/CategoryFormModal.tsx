@@ -6,12 +6,19 @@ interface Props {
     mode: 'create' | 'edit'
     initialName?: string
     initialOpenCoreId?: string | null
+    initialSharedWithOrg?: boolean
     /** Available Open Cores to assign this category to. */
     openCores?: OpenCore[]
     /** When set, the Open Core picker is hidden and the category is locked to this Open Core. */
     lockedOpenCoreId?: string | null
+    /** Show the "Share with clan" toggle (caller must be in an org). */
+    canShareWithOrg?: boolean
     onCancel: () => void
-    onSubmit: (values: { name: string; openCoreId: string | null }) => void
+    onSubmit: (values: {
+        name: string
+        openCoreId: string | null
+        sharedWithOrg: boolean
+    }) => void
     validateName?: (name: string) => string | null
 }
 
@@ -20,8 +27,10 @@ export default function CategoryFormModal({
     mode,
     initialName = '',
     initialOpenCoreId = null,
+    initialSharedWithOrg = false,
     openCores = [],
     lockedOpenCoreId,
+    canShareWithOrg = false,
     onCancel,
     onSubmit,
     validateName,
@@ -29,14 +38,16 @@ export default function CategoryFormModal({
     const locked = lockedOpenCoreId !== undefined
     const [name, setName] = useState(initialName)
     const [openCoreId, setOpenCoreId] = useState<string>(initialOpenCoreId ?? '')
+    const [shared, setShared] = useState<boolean>(initialSharedWithOrg)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         if (!open) return
         setName(initialName)
         setOpenCoreId((locked ? lockedOpenCoreId : initialOpenCoreId) ?? '')
+        setShared(initialSharedWithOrg)
         setError(null)
-    }, [open, initialName, initialOpenCoreId, locked, lockedOpenCoreId])
+    }, [open, initialName, initialOpenCoreId, initialSharedWithOrg, locked, lockedOpenCoreId])
 
     if (!open) return null
 
@@ -55,7 +66,7 @@ export default function CategoryFormModal({
             }
         }
         const oc = locked ? (lockedOpenCoreId ?? null) : openCoreId || null
-        onSubmit({ name: trimmed, openCoreId: oc })
+        onSubmit({ name: trimmed, openCoreId: oc, sharedWithOrg: canShareWithOrg && shared })
     }
 
     return (
@@ -120,6 +131,27 @@ export default function CategoryFormModal({
                         <p class="mt-1 text-xs text-slate-500">
                             Group this category under an Open Core, or leave it loose.
                         </p>
+                    </div>
+                ) : null}
+
+                {canShareWithOrg ? (
+                    <div class="mt-4">
+                        <label class="flex cursor-pointer items-start gap-2 text-sm text-slate-200">
+                            <input
+                                type="checkbox"
+                                checked={shared}
+                                onChange={(e) =>
+                                    setShared((e.target as HTMLInputElement).checked)
+                                }
+                                class="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 text-teal-500 focus:ring-teal-500/40"
+                            />
+                            <span>
+                                Share with clan
+                                <span class="mt-0.5 block text-xs text-slate-500">
+                                    All clan members will see this category and can clone it.
+                                </span>
+                            </span>
+                        </label>
                     </div>
                 ) : null}
 
