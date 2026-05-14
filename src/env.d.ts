@@ -2,7 +2,9 @@
 
 import type { DbUser } from './db/schema'
 
-export type SafeUser = Pick<DbUser, 'id' | 'username' | 'email' | 'orgId' | 'orgRole'>
+export type SafeUser = Pick<DbUser, 'id' | 'username' | 'email' | 'orgId' | 'orgRole'> & {
+    isAdmin: boolean
+}
 
 declare global {
     namespace App {

@@ -212,6 +212,19 @@ export default function FilterForm({ filterId }: Props) {
         const json = JSON.stringify(buildConveyorJson(items))
         const ok = await copyToClipboard(json)
         showToast(ok ? 'Conveyor config copied!' : 'Copy failed')
+        if (ok) {
+            // Fire-and-forget usage beacon. Failure is non-fatal — server-side
+            // logEvent already swallows its own errors.
+            void fetch('/api/events/log', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'filter_export_json',
+                    targetId: filterId ?? null,
+                    metadata: { itemCount: items.length },
+                }),
+            }).catch(() => {})
+        }
     }
 
     function openImport() {

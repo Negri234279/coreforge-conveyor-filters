@@ -8,6 +8,7 @@
 import type { APIRoute } from 'astro'
 import { eq, inArray } from 'drizzle-orm'
 import { db, schema } from '../../../db/client'
+import { logEvent } from '../../../lib/events'
 import type { Category, Filter, FilterItem, OpenCore, Subcategory } from '../../../types'
 
 export const prerender = false
@@ -330,46 +331,169 @@ export const PUT: APIRoute = async ({ locals, request }) => {
         }
     }
 
+    // Diff prep — we need to know which ids are new, deleted, or unchanged so we
+    // can (1) keep updated_at stable on unchanged rows and (2) emit usage
+    // events. Reads happen before the transaction; that's fine because we hold
+    // the only writer (SQLite single-writer + the user is scoped to themselves).
+    const now = Date.now()
+
+    const prevFilterRows = db
+        .select()
+        .from(schema.filters)
+        .where(eq(schema.filters.userId, user.id))
+        .all()
+    const prevFilterIds = prevFilterRows.map((r) => r.id)
+    const prevFilterItems = prevFilterIds.length
+        ? db
+              .select()
+              .from(schema.filterItems)
+              .where(inArray(schema.filterItems.filterId, prevFilterIds))
+              .all()
+        : []
+    const prevItemsByFilter = new Map<string, FilterItem[]>()
+    for (const it of prevFilterItems) {
+        const list = prevItemsByFilter.get(it.filterId) ?? []
+        list.push({ shortname: it.shortname, max: it.max, buffer: it.buffer, min: it.min })
+        prevItemsByFilter.set(it.filterId, list)
+    }
+
+    const prevCatRows = db
+        .select()
+        .from(schema.categories)
+        .where(eq(schema.categories.userId, user.id))
+        .all()
+    const prevCatIds = prevCatRows.map((c) => c.id)
+    const prevSubRows = prevCatIds.length
+        ? db
+              .select()
+              .from(schema.subcategories)
+              .where(inArray(schema.subcategories.categoryId, prevCatIds))
+              .all()
+        : []
+    const prevOcRows = db
+        .select()
+        .from(schema.openCores)
+        .where(eq(schema.openCores.userId, user.id))
+        .all()
+
+    const prevFiltersById = new Map(prevFilterRows.map((r) => [r.id, r]))
+    const prevCatsById = new Map(prevCatRows.map((r) => [r.id, r]))
+    const prevSubsById = new Map(prevSubRows.map((r) => [r.id, r]))
+    const prevOcsById = new Map(prevOcRows.map((r) => [r.id, r]))
+
+    // Stable content hashes — position is excluded so pure reorders don't bump
+    // updated_at. Items are sorted by shortname for stability.
+    function hashItems(items: FilterItem[]): string {
+        return JSON.stringify(
+            [...items]
+                .sort((a, b) => a.shortname.localeCompare(b.shortname))
+                .map((it) => [it.shortname, it.max, it.buffer, it.min]),
+        )
+    }
+    function prevFilterHash(id: string): string | null {
+        const row = prevFiltersById.get(id)
+        if (!row) return null
+        const items = prevItemsByFilter.get(id) ?? []
+        return [
+            row.categoryId,
+            row.subcategoryId ?? '',
+            row.name,
+            row.description ?? '',
+            row.coverItemShortname,
+            row.boxImagePath ?? '',
+            row.sharedWithOrg,
+            row.boxCount,
+            row.conveyorCount,
+            row.storageAdaptorCount,
+            hashItems(items),
+        ].join('|')
+    }
+    function nextFilterHash(
+        f: InFilter,
+        categoryId: string,
+        subcategoryId: string | null,
+    ): string {
+        return [
+            categoryId,
+            subcategoryId ?? '',
+            f.name,
+            f.description ?? '',
+            f.coverItemShortname,
+            f.boxImagePath ?? '',
+            f.sharedWithOrg ? 1 : 0,
+            f.boxCount,
+            f.conveyorCount,
+            f.storageAdaptorCount,
+            hashItems(f.items),
+        ].join('|')
+    }
+
+    // Collect events to emit *after* the transaction commits (logEvent does its
+    // own writes — running them inside the same tx is fine but logging them
+    // post-commit means a rollback won't leave orphan event rows).
+    const createdFilterIds: string[] = []
+    const deletedFilterIds: string[] = []
+    const createdCategoryIds: string[] = []
+    const deletedCategoryIds: string[] = []
+
+    // Flatten incoming filters once for diffing.
+    const incomingFilters: { f: InFilter; categoryId: string; subcategoryId: string | null }[] = []
+    for (const cat of cats) {
+        for (const f of cat.filters) {
+            incomingFilters.push({ f, categoryId: cat.id, subcategoryId: null })
+        }
+        for (const sub of cat.subcategories) {
+            for (const f of sub.filters) {
+                incomingFilters.push({ f, categoryId: cat.id, subcategoryId: sub.id })
+            }
+        }
+    }
+    const incomingFilterIds = new Set(incomingFilters.map((x) => x.f.id))
+    for (const id of prevFilterIds) {
+        if (!incomingFilterIds.has(id)) deletedFilterIds.push(id)
+    }
+
+    const incomingCatIds = new Set(cats.map((c) => c.id))
+    for (const id of prevCatIds) {
+        if (!incomingCatIds.has(id)) deletedCategoryIds.push(id)
+    }
+    for (const c of cats) {
+        if (!prevCatsById.has(c.id)) createdCategoryIds.push(c.id)
+    }
+    for (const x of incomingFilters) {
+        if (!prevFiltersById.has(x.f.id)) createdFilterIds.push(x.f.id)
+    }
+
     db.transaction((tx) => {
-        // Wipe this user's tree.
-        const existingFilters = tx
-            .select({ id: schema.filters.id })
-            .from(schema.filters)
-            .where(eq(schema.filters.userId, user.id))
-            .all()
-        const existingFilterIds = existingFilters.map((r) => r.id)
-        if (existingFilterIds.length) {
+        // Wipe this user's tree, then rebuild it. updated_at on each row is
+        // either preserved (no change) or stamped with `now` (new or changed).
+        if (prevFilterIds.length) {
             tx.delete(schema.filterItems)
-                .where(inArray(schema.filterItems.filterId, existingFilterIds))
+                .where(inArray(schema.filterItems.filterId, prevFilterIds))
                 .run()
         }
         tx.delete(schema.filters).where(eq(schema.filters.userId, user.id)).run()
-
-        const existingCats = tx
-            .select({ id: schema.categories.id })
-            .from(schema.categories)
-            .where(eq(schema.categories.userId, user.id))
-            .all()
-        const existingCatIds = existingCats.map((r) => r.id)
-        if (existingCatIds.length) {
+        if (prevCatIds.length) {
             tx.delete(schema.subcategories)
-                .where(inArray(schema.subcategories.categoryId, existingCatIds))
+                .where(inArray(schema.subcategories.categoryId, prevCatIds))
                 .run()
         }
         tx.delete(schema.categories).where(eq(schema.categories.userId, user.id)).run()
         tx.delete(schema.openCores).where(eq(schema.openCores.userId, user.id)).run()
 
-        const now = Date.now()
-
         openCores.forEach((oc, i) => {
+            const prev = prevOcsById.get(oc.id)
+            const sharedFlag = oc.sharedWithOrg ? 1 : 0
+            const changed = !prev || prev.name !== oc.name || prev.sharedWithOrg !== sharedFlag
             tx.insert(schema.openCores)
                 .values({
                     id: oc.id,
                     userId: user.id,
                     name: oc.name,
-                    sharedWithOrg: oc.sharedWithOrg ? 1 : 0,
+                    sharedWithOrg: sharedFlag,
                     position: i,
-                    createdAt: now,
+                    createdAt: prev?.createdAt ?? now,
+                    updatedAt: changed ? now : (prev?.updatedAt ?? now),
                 })
                 .run()
         })
@@ -380,6 +504,10 @@ export const PUT: APIRoute = async ({ locals, request }) => {
             subcategoryId: string | null,
             position: number,
         ) => {
+            const prev = prevFiltersById.get(f.id)
+            const newHash = nextFilterHash(f, categoryId, subcategoryId)
+            const oldHash = prevFilterHash(f.id)
+            const changed = !prev || newHash !== oldHash
             tx.insert(schema.filters)
                 .values({
                     id: f.id,
@@ -395,7 +523,8 @@ export const PUT: APIRoute = async ({ locals, request }) => {
                     conveyorCount: f.conveyorCount,
                     storageAdaptorCount: f.storageAdaptorCount,
                     position,
-                    createdAt: parseCreatedAt(f.createdAt, now),
+                    createdAt: prev?.createdAt ?? parseCreatedAt(f.createdAt, now),
+                    updatedAt: changed ? now : (prev?.updatedAt ?? now),
                 })
                 .run()
             f.items.forEach((it, ii) => {
@@ -413,6 +542,13 @@ export const PUT: APIRoute = async ({ locals, request }) => {
         }
 
         cats.forEach((cat, ci) => {
+            const prev = prevCatsById.get(cat.id)
+            const sharedFlag = cat.sharedWithOrg ? 1 : 0
+            const changed =
+                !prev ||
+                prev.name !== cat.name ||
+                (prev.openCoreId ?? null) !== (cat.openCoreId ?? null) ||
+                prev.sharedWithOrg !== sharedFlag
             tx.insert(schema.categories)
                 .values({
                     id: cat.id,
@@ -420,19 +556,23 @@ export const PUT: APIRoute = async ({ locals, request }) => {
                     name: cat.name,
                     openCoreId: cat.openCoreId,
                     isOpenCoreFilter: 0,
-                    sharedWithOrg: cat.sharedWithOrg ? 1 : 0,
+                    sharedWithOrg: sharedFlag,
                     position: ci,
-                    createdAt: now,
+                    createdAt: prev?.createdAt ?? now,
+                    updatedAt: changed ? now : (prev?.updatedAt ?? now),
                 })
                 .run()
             cat.subcategories.forEach((sub, si) => {
+                const psub = prevSubsById.get(sub.id)
+                const subChanged = !psub || psub.name !== sub.name || psub.categoryId !== cat.id
                 tx.insert(schema.subcategories)
                     .values({
                         id: sub.id,
                         categoryId: cat.id,
                         name: sub.name,
                         position: si,
-                        createdAt: now,
+                        createdAt: psub?.createdAt ?? now,
+                        updatedAt: subChanged ? now : (psub?.updatedAt ?? now),
                     })
                     .run()
                 sub.filters.forEach((f, fi) => insertFilter(f, cat.id, sub.id, fi))
@@ -440,6 +580,15 @@ export const PUT: APIRoute = async ({ locals, request }) => {
             cat.filters.forEach((f, fi) => insertFilter(f, cat.id, null, fi))
         })
     })
+
+    for (const id of createdFilterIds) logEvent('filter_create', { userId: user.id, targetId: id })
+    for (const id of deletedFilterIds) logEvent('filter_delete', { userId: user.id, targetId: id })
+    for (const id of createdCategoryIds) {
+        logEvent('category_create', { userId: user.id, targetId: id })
+    }
+    for (const id of deletedCategoryIds) {
+        logEvent('category_delete', { userId: user.id, targetId: id })
+    }
 
     return json({ ok: true, source: 'sqlite' })
 }

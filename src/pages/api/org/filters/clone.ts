@@ -6,6 +6,7 @@ import type { APIRoute } from 'astro'
 import { and, eq, inArray } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { db, schema } from '../../../../db/client'
+import { logEvent } from '../../../../lib/events'
 
 export const prerender = false
 
@@ -93,9 +94,17 @@ export const POST: APIRoute = async ({ locals, request }) => {
                     isOpenCoreFilter: srcCat.isOpenCoreFilter,
                     position: myCats.length,
                     createdAt: now,
+                    updatedAt: now,
                 })
                 .run()
-            targetCat = { ...srcCat, id, userId: user.id, position: myCats.length, createdAt: now }
+            targetCat = {
+                ...srcCat,
+                id,
+                userId: user.id,
+                position: myCats.length,
+                createdAt: now,
+                updatedAt: now,
+            }
         }
 
         let targetSubId: string | null = null
@@ -119,6 +128,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                         name: srcSub.name,
                         position: mySubs.length,
                         createdAt: now,
+                        updatedAt: now,
                     })
                     .run()
             }
@@ -140,6 +150,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                 storageAdaptorCount: source.storageAdaptorCount,
                 position: 0,
                 createdAt: now,
+                updatedAt: now,
             })
             .run()
         items.forEach((it, ii) => {
@@ -154,6 +165,12 @@ export const POST: APIRoute = async ({ locals, request }) => {
                 })
                 .run()
         })
+    })
+
+    logEvent('filter_clone', {
+        userId: user.id,
+        targetId: source.id,
+        metadata: { ownerId: source.userId, newFilterId },
     })
 
     return json({ ok: true, id: newFilterId })

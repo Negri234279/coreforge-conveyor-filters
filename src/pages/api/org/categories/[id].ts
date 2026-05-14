@@ -3,6 +3,7 @@
 import type { APIRoute } from 'astro'
 import { and, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '../../../../db/client'
+import { logEvent } from '../../../../lib/events'
 import type { Filter, FilterItem, Subcategory } from '../../../../types'
 
 export const prerender = false
@@ -33,6 +34,16 @@ export const GET: APIRoute = ({ locals, params }) => {
         .where(eq(schema.users.id, cat.userId))
         .get()
     if (!owner || owner.orgId !== user.orgId) return json({ error: 'Not available' }, 403)
+
+    // Only count views from someone other than the owner — self-views aren't
+    // engagement.
+    if (owner.id !== user.id) {
+        logEvent('category_view_shared', {
+            userId: user.id,
+            targetId: cat.id,
+            metadata: { ownerId: owner.id },
+        })
+    }
 
     const subRows = db
         .select()

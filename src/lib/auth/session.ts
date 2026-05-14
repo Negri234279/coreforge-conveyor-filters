@@ -98,6 +98,11 @@ export function purgeExpiredSessions(): void {
     db.delete(schema.sessions).where(lt(schema.sessions.expiresAt, Date.now())).run()
 }
 
+/** Stamp the user's last_seen_at. Middleware calls this throttled to ~60s. */
+export function touchLastSeen(userId: string, now: number): void {
+    db.update(schema.users).set({ lastSeenAt: now }).where(eq(schema.users.id, userId)).run()
+}
+
 export const SESSION_TTL_S = SESSION_TTL_MS / 1000
 // re-exported so middleware can reuse the and() import without pulling drizzle directly
 export const _re = { and }
