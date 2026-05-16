@@ -39,6 +39,6 @@ export const POST: APIRoute = async ({ locals, request, redirect }) => {
         .set({ orgId: org.id, orgRole: 'member' })
         .where(eq(schema.users.id, user.id))
         .run()
-    logEvent('org_join', { userId: user.id, targetId: org.id })
+    logEvent('org_join', { userId: user.id, userName: user.username, targetId: org.id })
     return back(redirect)
 }

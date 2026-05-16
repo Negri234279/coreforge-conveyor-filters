@@ -90,7 +90,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
     const session = createSession(user.id)
     setSessionCookie(cookies, session.token, session.expiresAt)
-    logEvent('user_login', { userId: user.id })
+    logEvent('user_login', { userId: user.id, userName: user.username })
 
     return redirect(next ?? '/', 303)
 }

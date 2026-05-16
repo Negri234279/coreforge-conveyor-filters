@@ -19,6 +19,17 @@ const SITE_NAME = 'CoreForge — Conveyor Filters'
 const DEFAULT_DESCRIPTION =
     'Design, organise and share Rust industrial conveyor filter presets. Build presets in your browser and copy/paste the exact JSON the game expects.'
 
+// Runtime-configurable OTLP/HTTP endpoint for browser RUM. Pass it through to
+// the client via a small inline script so the SDK can pick it up before any
+// user code runs. Empty/unset = RUM disabled (no SDK side effects).
+const otelRum = process.env.OTEL_RUM_EXPORTER_URL
+    ? {
+          endpoint: process.env.OTEL_RUM_EXPORTER_URL,
+          serviceName: process.env.OTEL_RUM_SERVICE_NAME ?? 'coreforge-web',
+          serviceVersion: APP_VERSION,
+      }
+    : null
+
 const {
     title = SITE_NAME,
     description = DEFAULT_DESCRIPTION,
@@ -78,9 +89,17 @@ const clientUser = user
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={ogImageUrl.href} />
 
-        <script is:inline define:vars={{ clientUser, APP_VERSION }}>
+        <script is:inline define:vars={{ clientUser, APP_VERSION, otelRum }}>
             window.__cf_user = clientUser
             window.__cf_version = APP_VERSION
+            if (otelRum) window.__cf_otel = otelRum
+        </script>
+        <!-- OTel browser RUM bootstrap. Vite hoists this script into a chunk
+             that's loaded on every page; the module short-circuits unless
+             window.__cf_otel is set, so unsetting OTEL_RUM_EXPORTER_URL
+             disables RUM at runtime (the chunk still ships, but does nothing). -->
+        <script>
+            import '../otel-web/init'
         </script>
     </head>
     <body

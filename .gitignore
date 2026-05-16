@@ -33,3 +33,6 @@ settings.local.json
 
 public/boxes-raw/*
 !public/boxes-raw/.gitkeep
+
+histogramQuantile
+bash.exe.stackdump

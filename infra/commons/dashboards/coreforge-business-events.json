@@ -1,0 +1,368 @@
+{
+    "title": "CoreForge — Business Events",
+    "description": "Eventos de negocio emitidos desde lib/events.ts (filter_create, category_clone, user_login, etc.). Cada panel filtra por el atributo `app.event.type` que pone logEvent() en cada log.",
+    "tags": ["coreforge", "product"],
+    "version": "v4",
+    "panelMap": {},
+    "variables": {
+        "service-var": {
+            "id": "service-var",
+            "name": "service.name",
+            "description": "Servicio (coreforge en prod, coreforge-dev en dev).",
+            "type": "QUERY",
+            "queryValue": "SELECT DISTINCT resources_string['service.name'] AS `service.name` FROM signoz_logs.distributed_logs_v2 WHERE timestamp >= toUInt64(toUnixTimestamp(now() - toIntervalDay(7))) * 1000000000 AND resources_string['service.name'] LIKE 'coreforge%' ORDER BY `service.name`",
+            "multiSelect": false,
+            "showALLOption": true,
+            "allSelected": true,
+            "sort": "ASC",
+            "modificationUUID": "var-mod-1",
+            "order": 0,
+            "customValue": "",
+            "textboxValue": ""
+        }
+    },
+    "layout": [
+        { "i": "panel-events-rate", "x": 0, "y": 0, "w": 8, "h": 6, "moved": false, "static": false },
+        { "i": "panel-events-totals", "x": 8, "y": 0, "w": 4, "h": 6, "moved": false, "static": false },
+        { "i": "panel-top-users", "x": 0, "y": 6, "w": 6, "h": 6, "moved": false, "static": false },
+        { "i": "panel-recent-events", "x": 6, "y": 6, "w": 6, "h": 6, "moved": false, "static": false }
+    ],
+    "widgets": [
+        {
+            "id": "panel-events-rate",
+            "title": "Eventos por minuto, por tipo",
+            "description": "Conteo de logs con atributo app.event.type. Útil para ver picos (deploy, viral en clan…).",
+            "panelTypes": "graph",
+            "fillSpans": false,
+            "isStacked": true,
+            "nullZeroValues": "zero",
+            "opacity": "1",
+            "yAxisUnit": "short",
+            "query": {
+                "queryType": "builder",
+                "builder": {
+                    "queryData": [
+                        {
+                            "queryName": "A",
+                            "expression": "A",
+                            "dataSource": "logs",
+                            "aggregateOperator": "count",
+                            "aggregateAttribute": {
+                                "key": "",
+                                "dataType": "",
+                                "type": "",
+                                "isColumn": false,
+                                "isJSON": false,
+                                "id": "------false"
+                            },
+                            "filters": {
+                                "op": "AND",
+                                "items": [
+                                    {
+                                        "id": "f1",
+                                        "key": {
+                                            "key": "resource.service.name",
+                                            "dataType": "string",
+                                            "type": "resource",
+                                            "isColumn": false,
+                                            "isJSON": false,
+                                            "id": "resource.service.name--string--resource--false"
+                                        },
+                                        "op": "in",
+                                        "value": ["{{.service.name}}"]
+                                    },
+                                    {
+                                        "id": "f2",
+                                        "key": {
+                                            "key": "app.event.type",
+                                            "dataType": "string",
+                                            "type": "tag",
+                                            "isColumn": false,
+                                            "isJSON": false,
+                                            "id": "app.event.type--string--tag--false"
+                                        },
+                                        "op": "exists",
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            "groupBy": [
+                                {
+                                    "key": "app.event.type",
+                                    "dataType": "string",
+                                    "type": "tag",
+                                    "isColumn": false,
+                                    "isJSON": false,
+                                    "id": "app.event.type--string--tag--false"
+                                }
+                            ],
+                            "having": [],
+                            "orderBy": [],
+                            "legend": "{{app.event.type}}",
+                            "stepInterval": 60,
+                            "timeAggregation": "rate",
+                            "spaceAggregation": "sum",
+                            "functions": [],
+                            "disabled": false,
+                            "limit": null,
+                            "reduceTo": "sum"
+                        }
+                    ],
+                    "queryFormulas": []
+                },
+                "promql": [{ "name": "A", "query": "", "legend": "", "disabled": false }],
+                "clickhouse_sql": [{ "name": "A", "query": "", "legend": "", "disabled": false }],
+                "id": "q-events-rate"
+            }
+        },
+        {
+            "id": "panel-events-totals",
+            "title": "Totales por tipo (rango actual)",
+            "description": "Tabla de totales por app.event.type en la ventana seleccionada. Click en una fila para ver detalles.",
+            "panelTypes": "table",
+            "nullZeroValues": "zero",
+            "opacity": "1",
+            "query": {
+                "queryType": "builder",
+                "builder": {
+                    "queryData": [
+                        {
+                            "queryName": "A",
+                            "expression": "A",
+                            "dataSource": "logs",
+                            "aggregateOperator": "count",
+                            "aggregateAttribute": {
+                                "key": "",
+                                "dataType": "",
+                                "type": "",
+                                "isColumn": false,
+                                "isJSON": false,
+                                "id": "------false"
+                            },
+                            "filters": {
+                                "op": "AND",
+                                "items": [
+                                    {
+                                        "id": "f1",
+                                        "key": {
+                                            "key": "resource.service.name",
+                                            "dataType": "string",
+                                            "type": "resource",
+                                            "isColumn": false,
+                                            "isJSON": false,
+                                            "id": "resource.service.name--string--resource--false"
+                                        },
+                                        "op": "in",
+                                        "value": ["{{.service.name}}"]
+                                    },
+                                    {
+                                        "id": "f2",
+                                        "key": {
+                                            "key": "app.event.type",
+                                            "dataType": "string",
+                                            "type": "tag",
+                                            "isColumn": false,
+                                            "isJSON": false,
+                                            "id": "app.event.type--string--tag--false"
+                                        },
+                                        "op": "exists",
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            "groupBy": [
+                                {
+                                    "key": "app.event.type",
+                                    "dataType": "string",
+                                    "type": "tag",
+                                    "isColumn": false,
+                                    "isJSON": false,
+                                    "id": "app.event.type--string--tag--false"
+                                }
+                            ],
+                            "having": [],
+                            "orderBy": [{ "columnName": "#SIGNOZ_VALUE", "order": "desc" }],
+                            "legend": "",
+                            "stepInterval": 60,
+                            "timeAggregation": "rate",
+                            "spaceAggregation": "sum",
+                            "functions": [],
+                            "disabled": false,
+                            "limit": 50,
+                            "reduceTo": "sum"
+                        }
+                    ],
+                    "queryFormulas": []
+                },
+                "promql": [{ "name": "A", "query": "", "legend": "", "disabled": false }],
+                "clickhouse_sql": [{ "name": "A", "query": "", "legend": "", "disabled": false }],
+                "id": "q-events-totals"
+            }
+        },
+        {
+            "id": "panel-top-users",
+            "title": "Top usuarios (por eventos)",
+            "description": "Quién más actividad genera. enduser.username viene del middleware + logEvent.",
+            "panelTypes": "table",
+            "nullZeroValues": "zero",
+            "opacity": "1",
+            "query": {
+                "queryType": "builder",
+                "builder": {
+                    "queryData": [
+                        {
+                            "queryName": "A",
+                            "expression": "A",
+                            "dataSource": "logs",
+                            "aggregateOperator": "count",
+                            "aggregateAttribute": {
+                                "key": "",
+                                "dataType": "",
+                                "type": "",
+                                "isColumn": false,
+                                "isJSON": false,
+                                "id": "------false"
+                            },
+                            "filters": {
+                                "op": "AND",
+                                "items": [
+                                    {
+                                        "id": "f1",
+                                        "key": {
+                                            "key": "resource.service.name",
+                                            "dataType": "string",
+                                            "type": "resource",
+                                            "isColumn": false,
+                                            "isJSON": false,
+                                            "id": "resource.service.name--string--resource--false"
+                                        },
+                                        "op": "in",
+                                        "value": ["{{.service.name}}"]
+                                    },
+                                    {
+                                        "id": "f2",
+                                        "key": {
+                                            "key": "enduser.username",
+                                            "dataType": "string",
+                                            "type": "tag",
+                                            "isColumn": false,
+                                            "isJSON": false,
+                                            "id": "enduser.username--string--tag--false"
+                                        },
+                                        "op": "exists",
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            "groupBy": [
+                                {
+                                    "key": "enduser.username",
+                                    "dataType": "string",
+                                    "type": "tag",
+                                    "isColumn": false,
+                                    "isJSON": false,
+                                    "id": "enduser.username--string--tag--false"
+                                }
+                            ],
+                            "having": [],
+                            "orderBy": [{ "columnName": "#SIGNOZ_VALUE", "order": "desc" }],
+                            "legend": "",
+                            "stepInterval": 60,
+                            "timeAggregation": "rate",
+                            "spaceAggregation": "sum",
+                            "functions": [],
+                            "disabled": false,
+                            "limit": 25,
+                            "reduceTo": "sum"
+                        }
+                    ],
+                    "queryFormulas": []
+                },
+                "promql": [{ "name": "A", "query": "", "legend": "", "disabled": false }],
+                "clickhouse_sql": [{ "name": "A", "query": "", "legend": "", "disabled": false }],
+                "id": "q-top-users"
+            }
+        },
+        {
+            "id": "panel-recent-events",
+            "title": "Stream de eventos (últimos)",
+            "description": "Lista cronológica. Body del log = `<event> target=<id> by <user>`.",
+            "panelTypes": "list",
+            "selectedLogFields": [
+                { "name": "timestamp", "dataType": "string", "type": "" },
+                { "name": "body", "dataType": "string", "type": "" },
+                { "name": "app.event.type", "dataType": "string", "type": "tag" },
+                { "name": "enduser.username", "dataType": "string", "type": "tag" },
+                { "name": "app.target.id", "dataType": "string", "type": "tag" }
+            ],
+            "query": {
+                "queryType": "builder",
+                "builder": {
+                    "queryData": [
+                        {
+                            "queryName": "A",
+                            "expression": "A",
+                            "dataSource": "logs",
+                            "aggregateOperator": "noop",
+                            "aggregateAttribute": {
+                                "key": "",
+                                "dataType": "",
+                                "type": "",
+                                "isColumn": false,
+                                "isJSON": false,
+                                "id": "------false"
+                            },
+                            "filters": {
+                                "op": "AND",
+                                "items": [
+                                    {
+                                        "id": "f1",
+                                        "key": {
+                                            "key": "resource.service.name",
+                                            "dataType": "string",
+                                            "type": "resource",
+                                            "isColumn": false,
+                                            "isJSON": false,
+                                            "id": "resource.service.name--string--resource--false"
+                                        },
+                                        "op": "in",
+                                        "value": ["{{.service.name}}"]
+                                    },
+                                    {
+                                        "id": "f2",
+                                        "key": {
+                                            "key": "app.event.type",
+                                            "dataType": "string",
+                                            "type": "tag",
+                                            "isColumn": false,
+                                            "isJSON": false,
+                                            "id": "app.event.type--string--tag--false"
+                                        },
+                                        "op": "exists",
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            "groupBy": [],
+                            "having": [],
+                            "orderBy": [{ "columnName": "timestamp", "order": "desc" }],
+                            "legend": "",
+                            "stepInterval": 60,
+                            "timeAggregation": "",
+                            "spaceAggregation": "",
+                            "functions": [],
+                            "disabled": false,
+                            "limit": 100,
+                            "reduceTo": "sum",
+                            "pageSize": 50
+                        }
+                    ],
+                    "queryFormulas": []
+                },
+                "promql": [{ "name": "A", "query": "", "legend": "", "disabled": false }],
+                "clickhouse_sql": [{ "name": "A", "query": "", "legend": "", "disabled": false }],
+                "id": "q-recent-events"
+            }
+        }
+    ]
+}

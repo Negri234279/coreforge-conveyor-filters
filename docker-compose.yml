@@ -23,8 +23,51 @@ services:
             PORT: '4321'
             DATA_DIR: /data
 
+            # --- OpenTelemetry → SigNoz ----------------------------------
+            # The SigNoz collector lives in the shared `observability` docker
+            # network (brought up by infra/prod/docker-compose.yml). gRPC
+            # over the internal hostname is the fastest path and never leaves
+            # the host. If SigNoz is on another host, point this at the
+            # public OTLP endpoint (https://otlp.<app>.<domain>) and remove
+            # the network alias below.
+            OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4317
+            OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+            OTEL_SERVICE_NAME: coreforge
+            OTEL_RESOURCE_ATTRIBUTES: 'service.namespace=coreforge,deployment.environment=production'
+            # Surfaces the app's version (read from package.json + git SHA at
+            # build) as service.version so SigNoz can split metrics by release.
+            OTEL_LOG_LEVEL: error
+
+            # Trace sampling: keep 10% of browser-initiated traces (which are
+            # the user-facing requests). `parentbased_traceidratio` respects
+            # upstream sampling decisions, so a trace sampled by the browser
+            # SDK is fully recorded on the backend too — no orphan spans.
+            # Errors are NOT exempted from sampling here (the SDK doesn't
+            # support tail-based out of the box); if missed errors become a
+            # problem, raise the ratio or move sampling to the collector.
+            OTEL_TRACES_SAMPLER: parentbased_traceidratio
+            OTEL_TRACES_SAMPLER_ARG: '0.1'
+
+            # Browser RUM endpoint. The frontend SDK POSTs OTLP/HTTP to
+            # <url>/v1/traces and /v1/logs. Must terminate TLS — point NPM at
+            # the collector's host:4318. Unset to disable RUM.
+            OTEL_RUM_EXPORTER_URL: https://otlp.coreforge-conveyor-filters.negri.es
+            OTEL_RUM_SERVICE_NAME: coreforge-web
+
+            # Admin shortcut: render a "SigNoz" button on /admin that opens
+            # the observability UI in a new tab. Unset to hide the button.
+            SIGNOZ_URL: https://signoz.negri.es
+
         volumes:
             - coreforge-data:/data
+
+        # Joins the SigNoz stack network so the OTel SDK can resolve
+        # `signoz-otel-collector`. The network is created/owned by
+        # infra/prod/docker-compose.yml (`docker network create
+        # --driver bridge observability` if you bring CoreForge up first).
+        networks:
+            - default
+            - observability
 
         # --- Hardening ---------------------------------------------------
         user: 'node'
@@ -52,7 +95,7 @@ services:
                 - CMD
                 - node
                 - -e
-                - "fetch('http://127.0.0.1:'+process.env.PORT+'/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+                - "fetch('http://127.0.0.1:'+process.env.PORT+'/api/healthz').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"
             interval: 30s
             timeout: 5s
             start_period: 20s
@@ -66,3 +109,8 @@ services:
 
 volumes:
     coreforge-data:
+
+networks:
+    observability:
+        name: observability
+        external: true

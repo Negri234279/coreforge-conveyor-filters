@@ -6,13 +6,14 @@
 //   5. Stamp a small set of security headers onto every response.
 
 import { defineMiddleware } from 'astro:middleware'
+import { trace } from '@opentelemetry/api'
 import { checkOrigin, expectedHost, isSafeMethod } from './lib/auth/origin'
 import { clearSessionCookie, getSessionToken, setSessionCookie } from './lib/auth/cookie'
 import { loadSession, touchLastSeen } from './lib/auth/session'
 import type { SafeUser } from './env'
 
 const PUBLIC_PAGES = new Set(['/login', '/register', '/legal'])
-const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/auth/register']
+const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/auth/register', '/api/healthz']
 
 function isPublicPath(pathname: string): boolean {
     if (PUBLIC_PAGES.has(pathname)) return true
@@ -91,6 +92,21 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
           }
         : null
     locals.user = user
+
+    // Stamp the active HTTP span with who this request belongs to. SigNoz can
+    // then filter/group traces by enduser.id, splice org-scoped requests, or
+    // build admin-vs-user breakdowns without any extra instrumentation in the
+    // route handlers. No-op when the OTel SDK isn't running.
+    if (user) {
+        const span = trace.getActiveSpan()
+        if (span) {
+            span.setAttribute('enduser.id', user.id)
+            span.setAttribute('enduser.username', user.username)
+            if (user.orgId) span.setAttribute('enduser.org.id', user.orgId)
+            if (user.orgRole) span.setAttribute('enduser.org.role', user.orgRole)
+            if (user.isAdmin) span.setAttribute('enduser.role', 'admin')
+        }
+    }
 
     // last_seen_at: cheap throttled update so we can compute DAU/MAU without
     // an event row per request. Only writes when the cached value is >60s old.

@@ -169,6 +169,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     logEvent('filter_clone', {
         userId: user.id,
+        userName: user.username,
         targetId: source.id,
         metadata: { ownerId: source.userId, newFilterId },
     })
