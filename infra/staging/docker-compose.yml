@@ -1,0 +1,351 @@
+# Staging stack for CoreForge — app + dedicated SigNoz backend in a single
+# compose. Builds the SAME Dockerfile prod uses, with prod-like env vars
+# (NODE_ENV=production, sampling on, OTel pointing to the staging collector),
+# but isolated under the `staging.*` subdomain so it never collides with
+# prod data or sessions.
+#
+# Sibling stacks per environment:
+#   infra/dev/   (obs only — Astro dev server runs on host)
+#   infra/prod/  (obs only — prod app compose is at the repo root)
+# Each env has its own ClickHouse + Zookeeper + UI + collector so telemetry
+# never mixes. Shared XML/YAML lives in infra/commons/.
+#
+# Topology:
+#   dev host  (192.168.1.11)   ── this whole compose (app + SigNoz)
+#   RPi       (192.168.1.7)    ── Nginx Proxy Manager (separate machine)
+#
+# NPM cannot join the docker network on the dev host because it lives on
+# another box. It reaches the staging services via host-published ports
+# over LAN. The compose-owned `npm_proxy` bridge connects app ↔ collector
+# inside docker — the name preserves the convention from earlier two-compose
+# setups in case another staging service needs to join later.
+#
+# Bring-up:
+#   npm run staging:up
+# (equivalent to: docker compose -f infra/staging/docker-compose.yml \
+#                   --env-file infra/staging/.env up -d --build)
+#
+# Iterate fast on uncommitted changes:
+#   npm run staging:rebuild
+# (no need to push, no need to bump version — `--build` rebuilds the local
+# Dockerfile and replaces just the app container.)
+#
+# NPM proxy hosts to create on the RPi (192.168.1.7), pointing at the dev
+# host's LAN IP (192.168.1.11):
+#   staging.coreforge-conveyor-filters.negri.es        ->  http://192.168.1.11:8081
+#   otlp.staging.coreforge-conveyor-filters.negri.es   ->  http://192.168.1.11:4320
+#   signoz.staging.coreforge-conveyor-filters.negri.es ->  http://192.168.1.11:3302  (optional) ddns.negri.es
+#
+# Published host ports (no collision with infra/dev when both stacks run):
+#   8081  app (HTTP)
+#   3302  SigNoz UI         (loopback by default; flip SIGNOZ_UI_BIND=0.0.0.0 for NPM)
+#   4320  OTLP HTTP         (0.0.0.0 by default — RUM via NPM needs this)
+# OTLP gRPC is NOT host-exposed; the app reaches the collector by service
+# name on `npm_proxy`.
+#
+# Resource notes: ClickHouse + Zookeeper + SigNoz + app ≈ 2.5 GB RAM at idle.
+# If your dev box is tight, stop infra/dev before running this.
+
+x-obs-common: &obs-common
+    networks:
+        - npm_proxy
+    restart: unless-stopped
+    logging:
+        driver: json-file
+        options:
+            max-size: '20m'
+            max-file: '3'
+
+x-clickhouse-defaults: &clickhouse-defaults
+    <<: *obs-common
+    image: clickhouse/clickhouse-server:25.5.6
+    tty: true
+    depends_on:
+        init-clickhouse:
+            condition: service_completed_successfully
+        zookeeper-1:
+            condition: service_healthy
+    healthcheck:
+        test: ['CMD', 'wget', '--spider', '-q', '0.0.0.0:8123/ping']
+        interval: 30s
+        timeout: 5s
+        retries: 3
+    ulimits:
+        nproc: 65535
+        nofile:
+            soft: 262144
+            hard: 262144
+    environment:
+        - CLICKHOUSE_SKIP_USER_SETUP=1
+
+x-zookeeper-defaults: &zookeeper-defaults
+    <<: *obs-common
+    image: signoz/zookeeper:3.7.1
+    user: root
+    healthcheck:
+        test:
+            - CMD-SHELL
+            - curl -s -m 2 http://localhost:8080/commands/ruok | grep error | grep null
+        interval: 30s
+        timeout: 5s
+        retries: 3
+
+x-db-depend: &db-depend
+    <<: *obs-common
+    depends_on:
+        clickhouse:
+            condition: service_healthy
+
+services:
+    # ── SigNoz backend ───────────────────────────────────────────────────
+    init-clickhouse:
+        <<: *obs-common
+        image: clickhouse/clickhouse-server:25.5.6
+        container_name: signoz-init-clickhouse-staging
+        command:
+            - bash
+            - -c
+            - |
+                version="v0.0.1"
+                node_os=$$(uname -s | tr '[:upper:]' '[:lower:]')
+                node_arch=$$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
+                echo "Fetching histogram-binary for $${node_os}/$${node_arch}"
+                cd /tmp
+                wget -O histogram-quantile.tar.gz "https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2F$${version}/histogram-quantile_$${node_os}_$${node_arch}.tar.gz"
+                tar -xvzf histogram-quantile.tar.gz
+                mv histogram-quantile /var/lib/clickhouse/user_scripts/histogramQuantile
+        restart: on-failure
+        volumes:
+            - ../commons/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
+
+    zookeeper-1:
+        <<: *zookeeper-defaults
+        container_name: signoz-zookeeper-1-staging
+        volumes:
+            - zookeeper-1:/bitnami/zookeeper
+        environment:
+            - ZOO_SERVER_ID=1
+            - ALLOW_ANONYMOUS_LOGIN=yes
+            - ZOO_AUTOPURGE_INTERVAL=1
+            - ZOO_ENABLE_PROMETHEUS_METRICS=yes
+            - ZOO_PROMETHEUS_METRICS_PORT_NUMBER=9141
+
+    clickhouse:
+        <<: *clickhouse-defaults
+        container_name: signoz-clickhouse-staging
+        volumes:
+            - ../commons/clickhouse/config.xml:/etc/clickhouse-server/config.xml
+            - ../commons/clickhouse/users.xml:/etc/clickhouse-server/users.xml
+            - ../commons/clickhouse/custom-function.xml:/etc/clickhouse-server/custom-function.xml
+            - ../commons/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
+            - ../commons/clickhouse/cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
+            - clickhouse:/var/lib/clickhouse/
+
+    signoz-telemetrystore-migrator:
+        <<: *db-depend
+        image: signoz/signoz-otel-collector:${OTELCOL_TAG:-v0.144.4}
+        container_name: signoz-telemetrystore-migrator-staging
+        environment:
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
+            - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+        entrypoint:
+            - /bin/sh
+        command:
+            - -c
+            - |
+                /signoz-otel-collector migrate bootstrap &&
+                /signoz-otel-collector migrate sync up &&
+                /signoz-otel-collector migrate async up
+        restart: on-failure
+
+    signoz:
+        <<: *db-depend
+        image: signoz/signoz:${SIGNOZ_TAG:-v0.122.0}
+        container_name: signoz-staging
+        # Host port 3302 so it coexists with infra/dev (3301) on the same
+        # box. Loopback by default — flip SIGNOZ_UI_BIND to 0.0.0.0 if NPM
+        # at 192.168.1.7 proxies signoz.staging.<domain> -> 192.168.1.11:3302.
+        ports:
+            - '${SIGNOZ_UI_BIND:-127.0.0.1}:3302:8080'
+        volumes:
+            - signoz-sqlite:/var/lib/signoz/
+        environment:
+            - SIGNOZ_ALERTMANAGER_PROVIDER=signoz
+            - SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN=tcp://clickhouse:9000
+            - SIGNOZ_SQLSTORE_SQLITE_PATH=/var/lib/signoz/signoz.db
+            # Required: staging UI may be reached via NPM. Set a real secret
+            # in .env — never reuse the prod or dev secret.
+            - SIGNOZ_TOKENIZER_JWT_SECRET=${SIGNOZ_TOKENIZER_JWT_SECRET:?SIGNOZ_TOKENIZER_JWT_SECRET must be set in .env}
+        healthcheck:
+            test: ['CMD', 'wget', '--spider', '-q', 'localhost:8080/api/v1/health']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+        networks:
+            npm_proxy:
+                # OpAMP manager-config hard-codes ws://signoz:4320/v1/opamp.
+                # Container is signoz-staging; alias keeps the lookup working
+                # without colliding with sibling stacks (no two stacks share
+                # this network — it's compose-owned).
+                aliases:
+                    - signoz
+
+    otel-collector:
+        <<: *db-depend
+        image: signoz/signoz-otel-collector:${OTELCOL_TAG:-v0.144.4}
+        # Container name is what the app's OTEL_EXPORTER_OTLP_ENDPOINT
+        # resolves to over `npm_proxy`.
+        container_name: signoz-otel-collector-staging
+        depends_on:
+            clickhouse:
+                condition: service_healthy
+            signoz-telemetrystore-migrator:
+                condition: service_completed_successfully
+        entrypoint:
+            - /bin/sh
+        command:
+            - -c
+            - |
+                /signoz-otel-collector migrate sync check &&
+                /signoz-otel-collector --config=/etc/otel-collector-config.yaml --manager-config=/etc/manager-config.yaml --copy-path=/var/tmp/collector-config.yaml
+        volumes:
+            - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+            - ../commons/signoz/otel-collector-opamp-config.yaml:/etc/manager-config.yaml
+        environment:
+            - OTEL_RESOURCE_ATTRIBUTES=host.name=signoz-host-staging,os.type=linux,deployment.environment=staging
+            - LOW_CARDINAL_EXCEPTION_GROUPING=false
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
+            - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+        ports:
+            # gRPC reached from the app over `npm_proxy` (in-docker DNS),
+            # so we don't publish it. HTTP must be reachable by NPM running
+            # on the RPi at 192.168.1.7, which proxies otlp.staging.<domain>
+            # -> 192.168.1.11:4320.
+            - '${STAGING_OTLP_HTTP_BIND:-0.0.0.0}:4320:4318'
+        networks:
+            npm_proxy:
+                # SigNoz image hard-codes `signoz-otel-collector` in internal
+                # telemetry. Alias keeps that name resolvable on the network.
+                aliases:
+                    - signoz-otel-collector
+
+    # ── App ──────────────────────────────────────────────────────────────
+    app:
+        # Build from the local Dockerfile every time, using the repo root as
+        # context. The `image:` tag is just a friendly local name (visible in
+        # `docker image ls`); nothing pushes to a registry from here.
+        build:
+            context: ../..
+            dockerfile: Dockerfile
+        image: coreforge-conveyor-filters:staging
+        container_name: coreforge-app-staging
+        restart: unless-stopped
+        # Always pull base images on rebuild so a stale node:24-slim doesn't
+        # mask a vulnerability that prod would otherwise pick up.
+        pull_policy: build
+
+        depends_on:
+            # Soft dep: the SDK retries OTLP exports, so the app boots even
+            # if the collector is still migrating ClickHouse. `service_started`
+            # is enough — `service_healthy` would block ~30s on first up.
+            otel-collector:
+                condition: service_started
+
+        # Host port 8081 (vs prod's 8080) so the two coexist on the same host.
+        # Bound to 0.0.0.0 by default so NPM on the RPi can reach it over LAN.
+        ports:
+            - '${STAGING_BIND:-0.0.0.0}:8081:4321'
+
+        environment:
+            # ---- Identical to prod -----------------------------------------
+            NODE_ENV: production
+            HOST: 0.0.0.0
+            PORT: '4321'
+            DATA_DIR: /data
+
+            # ---- Differs from prod by collector + service.name + env ------
+            # Resolved over `npm_proxy` to the in-compose collector.
+            OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector-staging:4317
+            OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+            OTEL_SERVICE_NAME: coreforge-staging
+            OTEL_RESOURCE_ATTRIBUTES: 'service.namespace=coreforge,deployment.environment=staging'
+            OTEL_LOG_LEVEL: error
+
+            # Same sampling as prod so latency/volume figures are comparable.
+            OTEL_TRACES_SAMPLER: parentbased_traceidratio
+            OTEL_TRACES_SAMPLER_ARG: '0.1'
+
+            # Browser RUM. The frontend SDK POSTs to NPM at otlp.staging.*
+            # which proxies to the collector's host-published 4320/HTTP.
+            OTEL_RUM_EXPORTER_URL: ${OTEL_RUM_EXPORTER_URL:-https://otlp.staging.coreforge-conveyor-filters.negri.es}
+            OTEL_RUM_SERVICE_NAME: coreforge-web-staging
+
+            # Admin shortcut points at the staging SigNoz UI on host port
+            # 3302 (loopback by default). Override if you proxy
+            # signoz.staging.<domain> through NPM.
+            SIGNOZ_URL: ${SIGNOZ_URL:-http://127.0.0.1:3302}
+
+        volumes:
+            # Separate volume — staging's SQLite is throwaway, never mix with
+            # prod's data. `docker volume rm coreforge-data-staging` to wipe.
+            - coreforge-data-staging:/data
+
+        networks:
+            - npm_proxy
+
+        # ---- Same hardening as prod ---------------------------------------
+        user: 'node'
+        init: true
+        security_opt:
+            - no-new-privileges:true
+        cap_drop:
+            - ALL
+        read_only: true
+        tmpfs:
+            - /tmp:size=64m
+            - /app/.astro:uid=1000,gid=1000,size=16m
+
+        deploy:
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 512M
+
+        healthcheck:
+            test:
+                - CMD
+                - node
+                - -e
+                - "fetch('http://127.0.0.1:'+process.env.PORT+'/api/healthz').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"
+            interval: 30s
+            timeout: 5s
+            start_period: 20s
+            retries: 3
+
+        logging:
+            driver: json-file
+            options:
+                max-size: '10m'
+                max-file: '3'
+
+networks:
+    # Compose-owned bridge — connects app ↔ collector ↔ SigNoz backend
+    # without leaking onto the host LAN. NPM does not join (it's on the
+    # RPi); it reaches services via the host-published ports above.
+    npm_proxy:
+        name: npm_proxy
+        driver: bridge
+
+volumes:
+    coreforge-data-staging:
+        name: coreforge-data-staging
+    clickhouse:
+        name: signoz-clickhouse-staging
+    signoz-sqlite:
+        name: signoz-sqlite-staging
+    zookeeper-1:
+        name: signoz-zookeeper-1-staging

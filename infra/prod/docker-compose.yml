@@ -1,0 +1,219 @@
+# PRODUCTION SigNoz self-hosted observability stack.
+#
+# Sibling stacks per environment:
+#   infra/dev/      (loopback-only, for `npm run dev` on host)
+#   infra/staging/  (merged app + obs, LAN-exposed for NPM on RPi)
+# Each env has its own ClickHouse + Zookeeper + UI + collector so telemetry
+# never mixes. Shared XML/YAML lives in infra/commons/.
+#
+# This compose is decoupled from the CoreForge app compose (at the repo
+# root: docker-compose.yml) so the same SigNoz instance can be shared by
+# every PROD app on the host. Bring it up first; then any app compose joins
+# the `observability` external network and points its OTel SDK at
+# `signoz-otel-collector:4317`.
+#
+# Bring-up (first time):
+#   docker network create --driver bridge observability
+#   cd infra/prod && docker compose --env-file .env up -d
+#
+# UI:          host:3301 (point NPM at signoz.<domain> -> http://<host>:3301)
+# OTLP HTTP:   host:4318 (point NPM at otlp.<app>.<domain> -> http://<host>:4318)
+# OTLP gRPC:   NOT exposed on the host; only reachable inside the `observability`
+#              docker network. Apps on the same host use signoz-otel-collector:4317.
+#
+# Resource notes: ClickHouse + Zookeeper + SigNoz needs ~2 GB RAM at idle. The
+# memory limits below are a starting point; raise them if you ingest from many
+# apps or keep long retention.
+
+x-common: &common
+    networks:
+        - observability
+    restart: unless-stopped
+    logging:
+        driver: json-file
+        options:
+            max-size: '50m'
+            max-file: '3'
+
+x-clickhouse-defaults: &clickhouse-defaults
+    <<: *common
+    image: clickhouse/clickhouse-server:25.5.6
+    tty: true
+    labels:
+        signoz.io/scrape: 'true'
+        signoz.io/port: '9363'
+        signoz.io/path: '/metrics'
+    depends_on:
+        init-clickhouse:
+            condition: service_completed_successfully
+        zookeeper-1:
+            condition: service_healthy
+    healthcheck:
+        test: ['CMD', 'wget', '--spider', '-q', '0.0.0.0:8123/ping']
+        interval: 30s
+        timeout: 5s
+        retries: 3
+    ulimits:
+        nproc: 65535
+        nofile:
+            soft: 262144
+            hard: 262144
+    environment:
+        - CLICKHOUSE_SKIP_USER_SETUP=1
+
+x-zookeeper-defaults: &zookeeper-defaults
+    <<: *common
+    image: signoz/zookeeper:3.7.1
+    user: root
+    labels:
+        signoz.io/scrape: 'true'
+        signoz.io/port: '9141'
+        signoz.io/path: '/metrics'
+    healthcheck:
+        test:
+            - CMD-SHELL
+            - curl -s -m 2 http://localhost:8080/commands/ruok | grep error | grep null
+        interval: 30s
+        timeout: 5s
+        retries: 3
+
+x-db-depend: &db-depend
+    <<: *common
+    depends_on:
+        clickhouse:
+            condition: service_healthy
+
+services:
+    # Fetches the histogramQuantile user-defined function binary into the
+    # ClickHouse user_scripts dir before clickhouse-server starts. Runs once.
+    init-clickhouse:
+        <<: *common
+        image: clickhouse/clickhouse-server:25.5.6
+        container_name: signoz-init-clickhouse
+        command:
+            - bash
+            - -c
+            - |
+                version="v0.0.1"
+                node_os=$$(uname -s | tr '[:upper:]' '[:lower:]')
+                node_arch=$$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
+                echo "Fetching histogram-binary for $${node_os}/$${node_arch}"
+                cd /tmp
+                wget -O histogram-quantile.tar.gz "https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2F$${version}/histogram-quantile_$${node_os}_$${node_arch}.tar.gz"
+                tar -xvzf histogram-quantile.tar.gz
+                mv histogram-quantile /var/lib/clickhouse/user_scripts/histogramQuantile
+        restart: on-failure
+        volumes:
+            - ../commons/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
+
+    zookeeper-1:
+        <<: *zookeeper-defaults
+        container_name: signoz-zookeeper-1
+        volumes:
+            - zookeeper-1:/bitnami/zookeeper
+        environment:
+            - ZOO_SERVER_ID=1
+            - ALLOW_ANONYMOUS_LOGIN=yes
+            - ZOO_AUTOPURGE_INTERVAL=1
+            - ZOO_ENABLE_PROMETHEUS_METRICS=yes
+            - ZOO_PROMETHEUS_METRICS_PORT_NUMBER=9141
+
+    clickhouse:
+        <<: *clickhouse-defaults
+        container_name: signoz-clickhouse
+        volumes:
+            - ../commons/clickhouse/config.xml:/etc/clickhouse-server/config.xml
+            - ../commons/clickhouse/users.xml:/etc/clickhouse-server/users.xml
+            - ../commons/clickhouse/custom-function.xml:/etc/clickhouse-server/custom-function.xml
+            - ../commons/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
+            - ../commons/clickhouse/cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
+            - clickhouse:/var/lib/clickhouse/
+
+    # Runs schema migrations against ClickHouse and exits. The main collector
+    # depends on this completing so the storage tables exist before ingest.
+    signoz-telemetrystore-migrator:
+        <<: *db-depend
+        image: signoz/signoz-otel-collector:${OTELCOL_TAG:-v0.144.4}
+        container_name: signoz-telemetrystore-migrator
+        environment:
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
+            - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+        entrypoint:
+            - /bin/sh
+        command:
+            - -c
+            - |
+                /signoz-otel-collector migrate bootstrap &&
+                /signoz-otel-collector migrate sync up &&
+                /signoz-otel-collector migrate async up
+        restart: on-failure
+
+    signoz:
+        <<: *db-depend
+        image: signoz/signoz:${SIGNOZ_TAG:-v0.122.0}
+        container_name: signoz
+        # 3301 is the published host port; SigNoz listens on 8080 inside the
+        # container. Point Nginx Proxy Manager at http://<host-ip>:3301 (or
+        # join NPM to this network and use http://signoz:8080 directly).
+        ports:
+            - '${SIGNOZ_UI_BIND:-0.0.0.0}:3301:8080'
+        volumes:
+            - signoz-sqlite:/var/lib/signoz/
+        environment:
+            - SIGNOZ_ALERTMANAGER_PROVIDER=signoz
+            - SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN=tcp://clickhouse:9000
+            - SIGNOZ_SQLSTORE_SQLITE_PATH=/var/lib/signoz/signoz.db
+            - SIGNOZ_TOKENIZER_JWT_SECRET=${SIGNOZ_TOKENIZER_JWT_SECRET:?SIGNOZ_TOKENIZER_JWT_SECRET must be set in .env}
+        healthcheck:
+            test: ['CMD', 'wget', '--spider', '-q', 'localhost:8080/api/v1/health']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+
+    otel-collector:
+        <<: *db-depend
+        image: signoz/signoz-otel-collector:${OTELCOL_TAG:-v0.144.4}
+        container_name: signoz-otel-collector
+        depends_on:
+            clickhouse:
+                condition: service_healthy
+            signoz-telemetrystore-migrator:
+                condition: service_completed_successfully
+        entrypoint:
+            - /bin/sh
+        command:
+            - -c
+            - |
+                /signoz-otel-collector migrate sync check &&
+                /signoz-otel-collector --config=/etc/otel-collector-config.yaml --manager-config=/etc/manager-config.yaml --copy-path=/var/tmp/collector-config.yaml
+        volumes:
+            - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+            - ../commons/signoz/otel-collector-opamp-config.yaml:/etc/manager-config.yaml
+        environment:
+            - OTEL_RESOURCE_ATTRIBUTES=host.name=signoz-host,os.type=linux
+            - LOW_CARDINAL_EXCEPTION_GROUPING=false
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
+            - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+        ports:
+            # gRPC is only reachable inside the `observability` network — apps
+            # on the same host use signoz-otel-collector:4317 directly.
+            # HTTP is exposed because browser RUM has to POST from outside
+            # docker; restrict via NPM + the CORS allowlist in the config.
+            - '${OTLP_HTTP_BIND:-0.0.0.0}:4318:4318'
+
+networks:
+    observability:
+        name: observability
+        external: true
+
+volumes:
+    clickhouse:
+        name: signoz-clickhouse
+    signoz-sqlite:
+        name: signoz-sqlite
+    zookeeper-1:
+        name: signoz-zookeeper-1

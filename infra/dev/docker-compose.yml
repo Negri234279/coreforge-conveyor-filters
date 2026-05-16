@@ -1,0 +1,229 @@
+# DEVELOPMENT SigNoz self-hosted observability stack.
+#
+# Sibling stacks per environment:
+#   infra/staging/  (merged app + obs, LAN-exposed for NPM on RPi)
+#   infra/prod/     (obs stack only — prod app lives at the repo root)
+# Each env has its own ClickHouse + Zookeeper + UI + collector so telemetry
+# never mixes across environments. Shared XML/YAML lives in infra/commons/.
+#
+# This stack supports `npm run dev` running OUTSIDE docker on the host
+# (Astro dev server on http://localhost:3000 — port 4321 is reserved by
+# Windows on this machine, see CLAUDE.md). All ports are loopback-only
+# so the dev collector never accidentally accepts traffic from the LAN.
+#
+# Bring-up:
+#   npm run dev:obs:up
+# (equivalent to: docker compose -f infra/dev/docker-compose.yml \
+#                   --env-file infra/dev/.env up -d  — .env is optional)
+# No external network needed; this compose owns its `observability-dev`
+# bridge internally.
+#
+# UI:                http://127.0.0.1:3301
+# OTLP gRPC (host):  127.0.0.1:4317   (for the Node SDK in `npm run dev`)
+# OTLP HTTP (host):  127.0.0.1:4318   (for browser RUM on localhost:3000)
+#
+# CORS for browser RUM is restricted to http://localhost:3000 +
+# http://127.0.0.1:3000 in ./otel-collector-config.yaml — do not relax it.
+#
+# Resource notes: ~2 GB RAM at idle. If your dev box is tight, stop this
+# stack before running staging (another ~2 GB on its own backend).
+#
+# Teardown:
+#   npm run dev:obs:down                              # preserves data
+#   docker compose -f infra/dev/docker-compose.yml down -v   # wipes data
+
+x-common: &common
+    networks:
+        - observability-dev
+    restart: unless-stopped
+    logging:
+        driver: json-file
+        options:
+            max-size: '20m'
+            max-file: '3'
+
+x-clickhouse-defaults: &clickhouse-defaults
+    <<: *common
+    image: clickhouse/clickhouse-server:25.5.6
+    tty: true
+    depends_on:
+        init-clickhouse:
+            condition: service_completed_successfully
+        zookeeper-1:
+            condition: service_healthy
+    healthcheck:
+        test: ['CMD', 'wget', '--spider', '-q', '0.0.0.0:8123/ping']
+        interval: 30s
+        timeout: 5s
+        retries: 3
+    ulimits:
+        nproc: 65535
+        nofile:
+            soft: 262144
+            hard: 262144
+    environment:
+        - CLICKHOUSE_SKIP_USER_SETUP=1
+
+x-zookeeper-defaults: &zookeeper-defaults
+    <<: *common
+    image: signoz/zookeeper:3.7.1
+    user: root
+    healthcheck:
+        test:
+            - CMD-SHELL
+            - curl -s -m 2 http://localhost:8080/commands/ruok | grep error | grep null
+        interval: 30s
+        timeout: 5s
+        retries: 3
+
+x-db-depend: &db-depend
+    <<: *common
+    depends_on:
+        clickhouse:
+            condition: service_healthy
+
+services:
+    init-clickhouse:
+        <<: *common
+        image: clickhouse/clickhouse-server:25.5.6
+        container_name: signoz-init-clickhouse-dev
+        command:
+            - bash
+            - -c
+            - |
+                version="v0.0.1"
+                node_os=$$(uname -s | tr '[:upper:]' '[:lower:]')
+                node_arch=$$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
+                echo "Fetching histogram-binary for $${node_os}/$${node_arch}"
+                cd /tmp
+                wget -O histogram-quantile.tar.gz "https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2F$${version}/histogram-quantile_$${node_os}_$${node_arch}.tar.gz"
+                tar -xvzf histogram-quantile.tar.gz
+                mv histogram-quantile /var/lib/clickhouse/user_scripts/histogramQuantile
+        restart: on-failure
+        volumes:
+            - ../commons/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
+
+    zookeeper-1:
+        <<: *zookeeper-defaults
+        container_name: signoz-zookeeper-1-dev
+        volumes:
+            - zookeeper-1:/bitnami/zookeeper
+        environment:
+            - ZOO_SERVER_ID=1
+            - ALLOW_ANONYMOUS_LOGIN=yes
+            - ZOO_AUTOPURGE_INTERVAL=1
+            - ZOO_ENABLE_PROMETHEUS_METRICS=yes
+            - ZOO_PROMETHEUS_METRICS_PORT_NUMBER=9141
+
+    clickhouse:
+        <<: *clickhouse-defaults
+        container_name: signoz-clickhouse-dev
+        volumes:
+            - ../commons/clickhouse/config.xml:/etc/clickhouse-server/config.xml
+            - ../commons/clickhouse/users.xml:/etc/clickhouse-server/users.xml
+            - ../commons/clickhouse/custom-function.xml:/etc/clickhouse-server/custom-function.xml
+            - ../commons/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
+            - ../commons/clickhouse/cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
+            - clickhouse:/var/lib/clickhouse/
+
+    signoz-telemetrystore-migrator:
+        <<: *db-depend
+        image: signoz/signoz-otel-collector:${OTELCOL_TAG:-v0.144.4}
+        container_name: signoz-telemetrystore-migrator-dev
+        environment:
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
+            - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+        entrypoint:
+            - /bin/sh
+        command:
+            - -c
+            - |
+                /signoz-otel-collector migrate bootstrap &&
+                /signoz-otel-collector migrate sync up &&
+                /signoz-otel-collector migrate async up
+        restart: on-failure
+
+    signoz:
+        <<: *db-depend
+        image: signoz/signoz:${SIGNOZ_TAG:-v0.122.0}
+        container_name: signoz-dev
+        # Loopback-only — dev UI is local-only. Override with SIGNOZ_UI_BIND
+        # in .env if you proxy a signoz-dev.<domain> through NPM.
+        ports:
+            - '${SIGNOZ_UI_BIND:-127.0.0.1}:3301:8080'
+        volumes:
+            - signoz-sqlite:/var/lib/signoz/
+        environment:
+            - SIGNOZ_ALERTMANAGER_PROVIDER=signoz
+            - SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN=tcp://clickhouse:9000
+            - SIGNOZ_SQLSTORE_SQLITE_PATH=/var/lib/signoz/signoz.db
+            # Hard-coded fallback because this stack is local-only. Override
+            # via .env if you care; never reuse this in prod.
+            - SIGNOZ_TOKENIZER_JWT_SECRET=${SIGNOZ_TOKENIZER_JWT_SECRET:-local-only-not-a-secret-change-me}
+        healthcheck:
+            test: ['CMD', 'wget', '--spider', '-q', 'localhost:8080/api/v1/health']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+        networks:
+            observability-dev:
+                # OpAMP manager-config hard-codes ws://signoz:4320/v1/opamp.
+                # Container is signoz-dev, alias keeps the lookup working.
+                aliases:
+                    - signoz
+
+    otel-collector:
+        <<: *db-depend
+        image: signoz/signoz-otel-collector:${OTELCOL_TAG:-v0.144.4}
+        container_name: signoz-otel-collector-dev
+        depends_on:
+            clickhouse:
+                condition: service_healthy
+            signoz-telemetrystore-migrator:
+                condition: service_completed_successfully
+        entrypoint:
+            - /bin/sh
+        command:
+            - -c
+            - |
+                /signoz-otel-collector migrate sync check &&
+                /signoz-otel-collector --config=/etc/otel-collector-config.yaml --manager-config=/etc/manager-config.yaml --copy-path=/var/tmp/collector-config.yaml
+        volumes:
+            - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+            - ../commons/signoz/otel-collector-opamp-config.yaml:/etc/manager-config.yaml
+        environment:
+            - OTEL_RESOURCE_ATTRIBUTES=host.name=signoz-host-dev,os.type=linux,deployment.environment=development
+            - LOW_CARDINAL_EXCEPTION_GROUPING=false
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
+            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
+            - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+        ports:
+            # Loopback only — `npm run dev` runs on the same host, so the
+            # dev collector must not accept traffic from the LAN.
+            - '127.0.0.1:4317:4317'
+            - '127.0.0.1:4318:4318'
+        networks:
+            observability-dev:
+                # The shared SigNoz image hard-codes `signoz-otel-collector`
+                # in internal telemetry and manager-config. Alias keeps the
+                # backward-compatible name resolvable inside the network.
+                aliases:
+                    - signoz-otel-collector
+
+networks:
+    # Internal-only bridge; this compose creates and owns it. No external
+    # dependency, no overlap with prod/staging.
+    observability-dev:
+        name: observability-dev
+        driver: bridge
+
+volumes:
+    clickhouse:
+        name: signoz-clickhouse-dev
+    signoz-sqlite:
+        name: signoz-sqlite-dev
+    zookeeper-1:
+        name: signoz-zookeeper-1-dev

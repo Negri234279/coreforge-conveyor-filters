@@ -154,6 +154,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     logEvent('category_clone', {
         userId: user.id,
+        userName: user.username,
         targetId: srcCat.id,
         metadata: { ownerId: srcCat.userId, newCategoryId: newCatId },
     })

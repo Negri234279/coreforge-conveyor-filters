@@ -41,6 +41,6 @@ export const POST: APIRoute = async ({ locals, request }) => {
         if (s.length <= 1000) metadata = p.metadata
     }
 
-    logEvent(type, { userId: user.id, targetId, metadata })
+    logEvent(type, { userId: user.id, userName: user.username, targetId, metadata })
     return json({ ok: true })
 }

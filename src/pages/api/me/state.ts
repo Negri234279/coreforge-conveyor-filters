@@ -433,8 +433,13 @@ export const PUT: APIRoute = async ({ locals, request }) => {
     // post-commit means a rollback won't leave orphan event rows).
     const createdFilterIds: string[] = []
     const deletedFilterIds: string[] = []
+    const updatedFilterIds: string[] = []
     const createdCategoryIds: string[] = []
     const deletedCategoryIds: string[] = []
+    const updatedCategoryIds: string[] = []
+    const createdSubcategoryIds: string[] = []
+    const deletedSubcategoryIds: string[] = []
+    const updatedSubcategoryIds: string[] = []
 
     // Flatten incoming filters once for diffing.
     const incomingFilters: { f: InFilter; categoryId: string; subcategoryId: string | null }[] = []
@@ -462,6 +467,12 @@ export const PUT: APIRoute = async ({ locals, request }) => {
     }
     for (const x of incomingFilters) {
         if (!prevFiltersById.has(x.f.id)) createdFilterIds.push(x.f.id)
+    }
+
+    const incomingSubIds = new Set<string>()
+    for (const c of cats) for (const s of c.subcategories) incomingSubIds.add(s.id)
+    for (const id of prevSubsById.keys()) {
+        if (!incomingSubIds.has(id)) deletedSubcategoryIds.push(id)
     }
 
     db.transaction((tx) => {
@@ -508,6 +519,10 @@ export const PUT: APIRoute = async ({ locals, request }) => {
             const newHash = nextFilterHash(f, categoryId, subcategoryId)
             const oldHash = prevFilterHash(f.id)
             const changed = !prev || newHash !== oldHash
+            // `changed && prev` = it existed before and the hash differs ->
+            // an update. (`changed && !prev` is a create, already tracked
+            // above by the diff against prevFiltersById.)
+            if (changed && prev) updatedFilterIds.push(f.id)
             tx.insert(schema.filters)
                 .values({
                     id: f.id,
@@ -549,6 +564,7 @@ export const PUT: APIRoute = async ({ locals, request }) => {
                 prev.name !== cat.name ||
                 (prev.openCoreId ?? null) !== (cat.openCoreId ?? null) ||
                 prev.sharedWithOrg !== sharedFlag
+            if (changed && prev) updatedCategoryIds.push(cat.id)
             tx.insert(schema.categories)
                 .values({
                     id: cat.id,
@@ -565,6 +581,8 @@ export const PUT: APIRoute = async ({ locals, request }) => {
             cat.subcategories.forEach((sub, si) => {
                 const psub = prevSubsById.get(sub.id)
                 const subChanged = !psub || psub.name !== sub.name || psub.categoryId !== cat.id
+                if (!psub) createdSubcategoryIds.push(sub.id)
+                else if (subChanged) updatedSubcategoryIds.push(sub.id)
                 tx.insert(schema.subcategories)
                     .values({
                         id: sub.id,
@@ -581,13 +599,29 @@ export const PUT: APIRoute = async ({ locals, request }) => {
         })
     })
 
-    for (const id of createdFilterIds) logEvent('filter_create', { userId: user.id, targetId: id })
-    for (const id of deletedFilterIds) logEvent('filter_delete', { userId: user.id, targetId: id })
+    for (const id of createdFilterIds)
+        logEvent('filter_create', { userId: user.id, userName: user.username, targetId: id })
+    for (const id of updatedFilterIds)
+        logEvent('filter_update', { userId: user.id, userName: user.username, targetId: id })
+    for (const id of deletedFilterIds)
+        logEvent('filter_delete', { userId: user.id, userName: user.username, targetId: id })
     for (const id of createdCategoryIds) {
-        logEvent('category_create', { userId: user.id, targetId: id })
+        logEvent('category_create', { userId: user.id, userName: user.username, targetId: id })
+    }
+    for (const id of updatedCategoryIds) {
+        logEvent('category_update', { userId: user.id, userName: user.username, targetId: id })
     }
     for (const id of deletedCategoryIds) {
-        logEvent('category_delete', { userId: user.id, targetId: id })
+        logEvent('category_delete', { userId: user.id, userName: user.username, targetId: id })
+    }
+    for (const id of createdSubcategoryIds) {
+        logEvent('subcategory_create', { userId: user.id, userName: user.username, targetId: id })
+    }
+    for (const id of updatedSubcategoryIds) {
+        logEvent('subcategory_update', { userId: user.id, userName: user.username, targetId: id })
+    }
+    for (const id of deletedSubcategoryIds) {
+        logEvent('subcategory_delete', { userId: user.id, userName: user.username, targetId: id })
     }
 
     return json({ ok: true, source: 'sqlite' })

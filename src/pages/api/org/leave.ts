@@ -38,6 +38,6 @@ export const POST: APIRoute = ({ locals, redirect }) => {
             .where(eq(schema.users.id, user.id))
             .run()
     })
-    logEvent('org_leave', { userId: user.id, targetId: leftOrgId })
+    logEvent('org_leave', { userId: user.id, userName: user.username, targetId: leftOrgId })
     return back(redirect)
 }

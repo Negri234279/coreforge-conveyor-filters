@@ -43,6 +43,6 @@ export const POST: APIRoute = ({ locals, redirect }) => {
             .run()
         tx.delete(schema.organizations).where(eq(schema.organizations.id, orgId)).run()
     })
-    logEvent('org_delete', { userId: user.id, targetId: orgId })
+    logEvent('org_delete', { userId: user.id, userName: user.username, targetId: orgId })
     return back(redirect)
 }

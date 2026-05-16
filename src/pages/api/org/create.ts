@@ -63,6 +63,11 @@ export const POST: APIRoute = async ({ locals, request, redirect }) => {
         if (/UNIQUE/i.test(msg)) return back(redirect, 'That clan name is taken.')
         throw err
     }
-    logEvent('org_create', { userId: user.id, targetId: orgId, metadata: { name: v.value } })
+    logEvent('org_create', {
+        userId: user.id,
+        userName: user.username,
+        targetId: orgId,
+        metadata: { name: v.value },
+    })
     return back(redirect)
 }

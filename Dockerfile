@@ -59,19 +59,26 @@ RUN mkdir -p /data && chown node:node /data
 COPY --from=deps  --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist          ./dist
 COPY              --chown=node:node package.json       ./
+# OpenTelemetry bootstrap. Kept outside src/ so Astro/Vite don't bundle it —
+# Node loads it as a plain ESM module via --import below. It's a no-op when
+# OTEL_EXPORTER_OTLP_ENDPOINT is unset, so removing the env still works.
+COPY              --chown=node:node otel               ./otel
 
 USER node
 EXPOSE 4321
 VOLUME ["/data"]
 
-# Hit a public route over loopback so the check doesn't depend on auth state.
-# Node 22+ ships fetch built-in; it follows redirects, but /login is a 200.
+# Dedicated liveness endpoint — no DB, no auth, no middleware work.
+# Node 22+ ships fetch built-in; we expect a literal "ok" body so a half-
+# broken proxy returning 200 with empty body still fails the check.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+    CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/api/healthz').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"
 
 # No bundled init: run with `--init` (docker run) or `init: true` (compose) so
 # signals are forwarded and zombies reaped. Keeps the image one layer leaner.
-CMD ["node", "dist/server/entry.mjs"]
+# --import preloads the OTel SDK so auto-instrumentation can patch http,
+# better-sqlite3, fetch, etc. before the app imports them.
+CMD ["node", "--import", "./otel/instrumentation.mjs", "dist/server/entry.mjs"]
 
 LABEL org.opencontainers.image.title="CoreForge — Conveyor Filters" \
       org.opencontainers.image.description="CoreForge web app for managing Rust industrial conveyor filter presets." \

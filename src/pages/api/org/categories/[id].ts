@@ -40,6 +40,7 @@ export const GET: APIRoute = ({ locals, params }) => {
     if (owner.id !== user.id) {
         logEvent('category_view_shared', {
             userId: user.id,
+            userName: user.username,
             targetId: cat.id,
             metadata: { ownerId: owner.id },
         })
