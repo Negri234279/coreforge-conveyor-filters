@@ -12,7 +12,7 @@ import { clearSessionCookie, getSessionToken, setSessionCookie } from './lib/aut
 import { loadSession, touchLastSeen } from './lib/auth/session'
 import type { SafeUser } from './env'
 
-const PUBLIC_PAGES = new Set(['/login', '/register', '/legal'])
+const PUBLIC_PAGES = new Set(['/', '/login', '/register', '/legal'])
 const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/auth/register', '/api/healthz']
 
 function isPublicPath(pathname: string): boolean {

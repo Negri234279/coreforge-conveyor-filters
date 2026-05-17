@@ -23,38 +23,46 @@ export default function ConfirmDeleteModal({
 
     const confirmClass =
         confirmTone === 'primary'
-            ? 'rounded-md bg-teal-500/90 px-3 py-1.5 text-sm font-semibold text-slate-950 hover:bg-teal-400'
-            : 'rounded-md bg-rose-500/90 px-3 py-1.5 text-sm font-semibold text-slate-50 hover:bg-rose-500'
+            ? 'rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400'
+            : 'rounded bg-rose-600 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-50 transition-colors hover:bg-rose-500'
 
     return (
         <div
-            class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+            class="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4"
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
                 if (e.target === e.currentTarget) onCancel()
             }}
         >
-            <div class="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 p-5 shadow-xl">
+            <div
+                class="w-full max-w-md rounded-lg border border-slate-800 p-5 shadow-xl"
+                style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
+            >
                 <div class="flex items-start justify-between gap-4">
-                    <h3 class="text-base font-semibold text-slate-100">{title}</h3>
+                    <h3
+                        class="text-xl text-slate-100"
+                        style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                    >
+                        {title}
+                    </h3>
                     <button
                         type="button"
                         onClick={onCancel}
-                        class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                        class="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                         aria-label="Close"
                     >
                         ✕
                     </button>
                 </div>
 
-                <p class="mt-3 text-sm text-slate-300">{message}</p>
+                <p class="mt-3 text-sm text-slate-400">{message}</p>
 
                 <div class="mt-5 flex items-center justify-end gap-2">
                     <button
                         type="button"
                         onClick={onCancel}
-                        class="rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                        class="rounded-md px-3 py-1.5 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                     >
                         {cancelLabel}
                     </button>

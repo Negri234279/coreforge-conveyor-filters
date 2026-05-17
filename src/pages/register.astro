@@ -8,13 +8,28 @@ const next = url.searchParams.get('next') ?? ''
 ---
 
 <Layout title="Create account – CoreForge" noindex activeNav="home" hideNav>
-    <div class="mx-auto max-w-md">
-        <h1 class="text-2xl font-bold tracking-tight text-slate-100">Create an account</h1>
-        <p class="mt-1 text-sm text-slate-400">
+    <div class="relative mx-auto max-w-md pt-4">
+        <!-- ambient glow -->
+        <div
+            class="pointer-events-none absolute -top-8 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full opacity-30"
+            style="background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 68%)"
+        >
+        </div>
+
+        <div class="mb-0.5 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+            Authentication
+        </div>
+        <h1
+            class="text-4xl text-slate-100"
+            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+        >
+            Create Account
+        </h1>
+        <p class="mt-2 text-sm text-slate-400">
             Already have one?
             <a
                 href={`/login${next ? `?next=${encodeURIComponent(next)}` : ''}`}
-                class="text-teal-300 hover:underline">Sign in</a
+                class="text-amber-400 transition-colors hover:text-amber-300">Sign in</a
             >.
         </p>
 
@@ -31,7 +46,7 @@ const next = url.searchParams.get('next') ?? ''
             <div>
                 <label
                     for="username"
-                    class="block text-xs font-semibold tracking-wider text-slate-400 uppercase"
+                    class="block font-mono text-[11px] uppercase tracking-widest text-slate-400"
                 >
                     Username
                 </label>
@@ -48,14 +63,14 @@ const next = url.searchParams.get('next') ?? ''
                     autocorrect="off"
                     spellcheck="false"
                     value={username}
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
                 />
                 <p class="mt-1 text-xs text-slate-500">3–32 chars: letters, digits, _ or -.</p>
             </div>
             <div>
                 <label
                     for="email"
-                    class="block text-xs font-semibold tracking-wider text-slate-400 uppercase"
+                    class="block font-mono text-[11px] uppercase tracking-widest text-slate-400"
                 >
                     Email <span class="text-slate-600 normal-case">(optional)</span>
                 </label>
@@ -67,13 +82,13 @@ const next = url.searchParams.get('next') ?? ''
                     autocapitalize="off"
                     autocorrect="off"
                     spellcheck="false"
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
                 />
             </div>
             <div>
                 <label
                     for="password"
-                    class="block text-xs font-semibold tracking-wider text-slate-400 uppercase"
+                    class="block font-mono text-[11px] uppercase tracking-widest text-slate-400"
                 >
                     Password
                 </label>
@@ -85,14 +100,14 @@ const next = url.searchParams.get('next') ?? ''
                     minlength="8"
                     maxlength="128"
                     autocomplete="new-password"
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
                 />
                 <p class="mt-1 text-xs text-slate-500">At least 8 characters.</p>
             </div>
             <div>
                 <label
                     for="password_confirm"
-                    class="block text-xs font-semibold tracking-wider text-slate-400 uppercase"
+                    class="block font-mono text-[11px] uppercase tracking-widest text-slate-400"
                 >
                     Confirm password
                 </label>
@@ -104,12 +119,12 @@ const next = url.searchParams.get('next') ?? ''
                     minlength="8"
                     maxlength="128"
                     autocomplete="new-password"
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
                 />
             </div>
             <button
                 type="submit"
-                class="w-full rounded-md bg-teal-500/90 px-4 py-2 text-sm font-semibold text-slate-950 shadow hover:bg-teal-400"
+                class="w-full rounded bg-amber-500 px-4 py-2.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
             >
                 Create account
             </button>

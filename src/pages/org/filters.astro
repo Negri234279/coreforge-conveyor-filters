@@ -3,7 +3,6 @@ import Layout from '../../layouts/Layout.astro'
 import OrgFiltersList from '../../components/OrgFiltersList'
 import ClanOpenCoresList from '../../components/ClanOpenCoresList'
 import ClanCategoriesList from '../../components/ClanCategoriesList'
-import CopyToast from '../../components/CopyToast'
 
 const user = Astro.locals.user!
 ---
@@ -11,7 +10,12 @@ const user = Astro.locals.user!
 <Layout title="Clan Filters – CoreForge" activeNav="orgFilters">
     <div class="mb-8 flex items-end justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-100">Clan Filters</h1>
+            <h1
+                class="text-3xl text-slate-100"
+                style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+            >
+                Clan Filters
+            </h1>
             <p class="mt-1 text-sm text-slate-400">
                 Open Cores and filters that members of your clan have chosen to share. Read-only —
                 clone any to your own space.
@@ -19,7 +23,7 @@ const user = Astro.locals.user!
         </div>
         <a
             href="/org"
-            class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+            class="rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400"
         >
             Clan settings
         </a>
@@ -28,9 +32,12 @@ const user = Astro.locals.user!
     {
         !user.orgId ? (
             <div class="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center">
-                <p class="text-sm text-slate-300">You're not in a clan yet.</p>
+                <p class="text-sm text-slate-400">You're not in a clan yet.</p>
                 <p class="mt-1 text-xs text-slate-500">
-                    <a href="/org" class="text-teal-300 hover:underline">
+                    <a
+                        href="/org"
+                        class="text-amber-400 underline decoration-amber-400/40 transition-colors hover:text-amber-300 hover:decoration-amber-400"
+                    >
                         Create one or join with an invite code.
                     </a>
                 </p>
@@ -38,19 +45,19 @@ const user = Astro.locals.user!
         ) : (
             <div class="space-y-10">
                 <section>
-                    <h2 class="mb-3 text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                    <h2 class="mb-3 font-mono text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
                         Shared Open Cores
                     </h2>
                     <ClanOpenCoresList client:only="preact" />
                 </section>
                 <section>
-                    <h2 class="mb-3 text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                    <h2 class="mb-3 font-mono text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
                         Shared categories
                     </h2>
                     <ClanCategoriesList client:only="preact" />
                 </section>
                 <section>
-                    <h2 class="mb-3 text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                    <h2 class="mb-3 font-mono text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
                         Shared filters
                     </h2>
                     <OrgFiltersList client:only="preact" />
@@ -59,5 +66,4 @@ const user = Astro.locals.user!
         )
     }
 
-    <CopyToast client:only="preact" />
 </Layout>

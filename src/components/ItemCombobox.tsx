@@ -18,7 +18,7 @@ export interface ComboboxEntry {
 function ChipFallback({ label }: { label: string }) {
     const letter = label.trim().charAt(0).toUpperCase() || '?'
     return (
-        <span class="flex h-full w-full items-center justify-center bg-gradient-to-br from-teal-500/30 to-indigo-500/30 text-[11px] font-bold tracking-wider text-teal-100 uppercase">
+        <span class="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-500/20 to-slate-700/40 text-[11px] font-bold tracking-wider text-amber-200 uppercase">
             {letter}
         </span>
     )
@@ -132,7 +132,7 @@ export default function ItemCombobox({
     return (
         <div class="relative" ref={wrapRef}>
             {selected && !resetOnSelect ? (
-                <div class="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1.5">
+                <div class="flex items-center gap-2 rounded border border-slate-800 bg-slate-900/60 px-2 py-1.5">
                     <div class="h-8 w-8 overflow-hidden rounded bg-slate-800">
                         {selected.imageUrl ? (
                             <img
@@ -149,7 +149,7 @@ export default function ItemCombobox({
                         <span class="flex items-center gap-1.5 truncate text-sm text-slate-100">
                             {selected.label}
                             {selected.badge ? (
-                                <span class="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-200 uppercase">
+                                <span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-semibold tracking-wider text-amber-400 uppercase">
                                     {selected.badge}
                                 </span>
                             ) : null}
@@ -162,7 +162,7 @@ export default function ItemCombobox({
                         <button
                             type="button"
                             onClick={onClear}
-                            class="rounded px-1.5 py-1 text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                            class="rounded px-1.5 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                             aria-label="Clear selection"
                         >
                             ✕
@@ -175,7 +175,7 @@ export default function ItemCombobox({
                             setQuery('')
                             setTimeout(() => inputRef.current?.focus(), 0)
                         }}
-                        class="rounded px-2 py-1 text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                        class="rounded px-2 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                     >
                         Change
                     </button>
@@ -184,7 +184,7 @@ export default function ItemCombobox({
                 <input
                     ref={inputRef}
                     type="text"
-                    class="w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                    class="w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-colors focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
                     placeholder={placeholder}
                     value={query}
                     onFocus={() => setOpen(true)}
@@ -198,7 +198,7 @@ export default function ItemCombobox({
             )}
 
             {open && (!selected || resetOnSelect) && (
-                <ul class="absolute z-30 mt-1 max-h-72 w-full overflow-auto rounded-md border border-slate-700 bg-slate-900 shadow-xl">
+                <ul class="absolute z-30 mt-1 max-h-72 w-full overflow-auto rounded border border-slate-800 bg-[#0d1117] shadow-xl">
                     {results.length === 0 ? (
                         <li class="px-3 py-2 text-sm text-slate-500">
                             {source.emptyText ?? 'No matches.'}
@@ -214,23 +214,19 @@ export default function ItemCombobox({
                                         type="button"
                                         onMouseEnter={() => setActive(i)}
                                         onClick={() => pick(entry)}
-                                        class={`flex w-full items-center gap-2 text-left ${
+                                        class={`flex w-full items-center gap-2 text-left transition-colors ${
                                             isHeader
                                                 ? `border-t border-slate-800 bg-slate-950/60 px-2 py-2 first:border-t-0 ${
                                                       isActive
-                                                          ? 'bg-slate-800'
+                                                          ? 'bg-amber-500/10'
                                                           : 'hover:bg-slate-800/60'
                                                   }`
                                                 : `${grouped ? 'pl-6' : 'px-2'} pr-2 py-1.5 ${
-                                                      isActive ? 'bg-slate-800' : ''
+                                                      isActive ? 'bg-amber-500/10' : 'hover:bg-slate-800/60'
                                                   }`
                                         }`}
                                     >
-                                        <div
-                                            class={`flex-shrink-0 overflow-hidden rounded bg-slate-800 ${
-                                                isHeader ? 'h-7 w-7' : 'h-7 w-7'
-                                            }`}
-                                        >
+                                        <div class="h-7 w-7 flex-shrink-0 overflow-hidden rounded bg-slate-800">
                                             {entry.imageUrl ? (
                                                 <img
                                                     src={entry.imageUrl}
@@ -246,13 +242,13 @@ export default function ItemCombobox({
                                             <span
                                                 class={`flex items-center gap-1.5 truncate text-sm ${
                                                     isHeader
-                                                        ? 'font-semibold tracking-wider text-teal-200 uppercase'
+                                                        ? 'font-mono text-[11px] font-semibold tracking-widest text-amber-400 uppercase'
                                                         : 'text-slate-100'
                                                 }`}
                                             >
                                                 {entry.label}
                                                 {entry.badge ? (
-                                                    <span class="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-200 uppercase">
+                                                    <span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-semibold tracking-wider text-amber-400 uppercase">
                                                         {entry.badge}
                                                     </span>
                                                 ) : null}

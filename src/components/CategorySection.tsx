@@ -41,7 +41,7 @@ function HeaderMenu({
             <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                class="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                class="rounded p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-amber-400"
                 aria-label="Section actions"
             >
                 <svg
@@ -58,7 +58,7 @@ function HeaderMenu({
             {open ? (
                 <div
                     role="menu"
-                    class="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl"
+                    class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-[0_0_20px_rgba(0,0,0,0.5),0_0_10px_rgba(245,158,11,0.04)]"
                 >
                     {items.map((it) => (
                         <button
@@ -68,10 +68,10 @@ function HeaderMenu({
                                 setOpen(false)
                                 it.onClick()
                             }}
-                            class={`block w-full px-3 py-2 text-left text-sm hover:bg-slate-800 ${
+                            class={`block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-slate-800 ${
                                 it.tone === 'danger'
-                                    ? 'text-rose-300 hover:bg-rose-500/10'
-                                    : 'text-slate-200'
+                                    ? 'text-rose-400 hover:bg-rose-500/10 hover:text-rose-300'
+                                    : 'text-slate-300 hover:text-amber-400'
                             }`}
                         >
                             {it.label}
@@ -181,26 +181,36 @@ export default function CategorySection({ category }: Props) {
     return (
         <section class="mb-12">
             <header class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div class="flex items-center gap-2">
-                    <h2 class="text-sm font-bold tracking-[0.18em] text-slate-100 uppercase">
-                        {category.name}
-                    </h2>
-                    {isShared ? (
-                        <span
-                            class="rounded bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-300 uppercase"
-                            title="Shared with your clan"
-                        >
-                            Shared
-                        </span>
-                    ) : null}
+                <div class="flex items-center gap-3">
+                    <div>
+                        <div class="mb-0.5 font-mono text-[11px] tracking-widest text-amber-500/40 uppercase">
+                            Category
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <h2
+                                class="text-xl text-slate-100"
+                                style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                            >
+                                {category.name}
+                            </h2>
+                            {isShared ? (
+                                <span
+                                    class="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-amber-400 uppercase"
+                                    title="Shared with your clan"
+                                >
+                                    Shared
+                                </span>
+                            ) : null}
+                        </div>
+                    </div>
                 </div>
                 <div class="flex items-center gap-1">
                     <button
                         type="button"
                         onClick={onAddSubcategory}
-                        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+                        class="flex items-center gap-1 rounded px-2 py-1 font-mono text-[11px] tracking-widest text-slate-500 uppercase transition-colors hover:bg-slate-800 hover:text-amber-400"
                     >
-                        <span aria-hidden="true">+</span> Add Subcategory
+                        <span aria-hidden="true">+</span> Subcategory
                     </button>
                     <HeaderMenu
                         items={[
@@ -216,9 +226,7 @@ export default function CategorySection({ category }: Props) {
                             ...(inOrg
                                 ? [
                                       {
-                                          label: isShared
-                                              ? 'Unshare from clan'
-                                              : 'Share with clan',
+                                          label: isShared ? 'Unshare from clan' : 'Share with clan',
                                           onClick: () => setConfirmShareOpen(true),
                                       },
                                   ]
@@ -298,7 +306,9 @@ export default function CategorySection({ category }: Props) {
             <div class="mt-4 space-y-8">
                 {/* Filters directly in category */}
                 {category.filters.length === 0 && category.subcategories.length === 0 ? (
-                    <p class="text-xs text-slate-500">No filters in this category.</p>
+                    <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                        No filters in this category.
+                    </p>
                 ) : null}
 
                 {category.filters.length > 0 ? (
@@ -310,14 +320,16 @@ export default function CategorySection({ category }: Props) {
                         </div>
                     </div>
                 ) : category.subcategories.length > 0 ? (
-                    <p class="text-xs text-slate-500">No filters in this category.</p>
+                    <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                        No filters in this category.
+                    </p>
                 ) : null}
 
                 {/* Subcategories */}
                 {category.subcategories.map((sub) => (
                     <div key={sub.id}>
-                        <header class="flex items-center justify-between border-b border-slate-800/70 pb-2">
-                            <h3 class="text-xs font-bold tracking-[0.18em] text-slate-200 uppercase">
+                        <header class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <h3 class="font-mono text-[11px] tracking-widest text-slate-500 uppercase">
                                 {sub.name}
                             </h3>
                             <HeaderMenu
@@ -344,7 +356,9 @@ export default function CategorySection({ category }: Props) {
                         </header>
                         <div class="mt-4">
                             {sub.filters.length === 0 ? (
-                                <p class="text-xs text-slate-500">No filters yet.</p>
+                                <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                                    No filters yet.
+                                </p>
                             ) : (
                                 <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                     {sub.filters.map((f) => (

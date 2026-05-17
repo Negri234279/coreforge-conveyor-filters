@@ -3,22 +3,50 @@ import Layout from '../layouts/Layout.astro'
 ---
 
 <Layout title="404 — Not Found | CoreForge" noindex={true}>
-    <div class="mx-auto max-w-md pt-12 text-center">
-        <p class="mb-2 font-mono text-sm font-semibold tracking-widest text-red-400 uppercase">
-            Error 404
+    <div class="relative mx-auto max-w-md overflow-hidden pt-16 text-center">
+        <!-- ambient glow -->
+        <div
+            class="pointer-events-none absolute -top-16 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full opacity-40"
+            style="background: radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 68%)"
+        >
+        </div>
+
+        <!-- eyebrow -->
+        <p class="mb-3 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+            System Error
         </p>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-100">Page not found</h1>
-        <p class="mt-2 text-sm text-slate-400">
+
+        <!-- big 404 -->
+        <div
+            class="mb-2 text-slate-100/10 select-none"
+            style="font-family:'Bebas Neue',sans-serif; font-size:clamp(6rem,24vw,10rem); line-height:1; letter-spacing:0.05em; text-shadow:0 0 80px rgba(245,158,11,0.15)"
+        >
+            404
+        </div>
+
+        <!-- title -->
+        <h1
+            class="mb-3 text-4xl text-slate-100"
+            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+        >
+            Page Not Found
+        </h1>
+
+        <!-- description -->
+        <p class="mx-auto max-w-xs text-sm leading-relaxed text-slate-400">
             That conveyor belt leads nowhere. The page you're looking for doesn't exist or has been
             moved.
         </p>
-        <div class="mt-6 flex justify-center">
-            <a
-                href="/"
-                class="inline-block rounded-md bg-teal-500/90 px-4 py-2 text-sm font-semibold text-slate-950 shadow hover:bg-teal-400"
-            >
-                Back to My Conveyors
-            </a>
-        </div>
+
+        <!-- divider -->
+        <div class="my-8 h-px bg-slate-800"></div>
+
+        <!-- CTA -->
+        <a
+            href="/"
+            class="inline-block rounded bg-amber-500 px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+        >
+            Back to Command Center
+        </a>
     </div>
 </Layout>

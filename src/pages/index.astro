@@ -1,28 +1,463 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import HomeDashboard from '../components/HomeDashboard'
 import MyConveyors from '../components/MyConveyors'
-import CopyToast from '../components/CopyToast'
+import { version as APP_VERSION } from '../../package.json'
+import '../styles/global.css'
+
+const user = Astro.locals.user
+
+const TICKER =
+    'AK-47 · Thompson · Semi-Auto Rifle · Metal Ore · Sulfur · HQM · C4 · Rocket · Explosive 5.56 · Metal Frags · Stone · Wood · Cloth · Low Grade Fuel · F1 Grenade · Satchel Charge · Medical Syringe · Custom SMG · Python · Revolver · Pump Shotgun · Bone Knife · Pickaxe · Hatchet · Silencer · Scope · Beancan · Auto Turret · Flame Turret · Tarp · Rope · Gear · '
 ---
 
-<Layout
-    title="CoreForge — Rust Conveyor Filter Presets"
-    description="Build, organise and share Rust industrial conveyor filter presets in your browser. Set Max/Buffer/Min for up to 30 items per slot and copy/paste the exact JSON the game expects."
-    activeNav="home"
->
-    <div class="mb-8 flex items-end justify-between">
-        <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-100">My Conveyors</h1>
-            <p class="mt-1 text-sm text-slate-400">
-                Manage industrial conveyor filter presets for Rust.
-            </p>
-        </div>
-        <a
-            href="/filters/new"
-            class="hidden rounded-md bg-teal-500/90 px-3 py-2 text-sm font-semibold text-slate-950 shadow hover:bg-teal-400 md:inline-block"
-            >+ New Filter</a
+{
+    user ? (
+        <Layout
+            title="My Arsenal — CoreForge"
+            description="Your Rust conveyor filter arsenal."
+            activeNav="home"
         >
-    </div>
+            <div class="mb-8">
+                <div class="mb-0.5 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                    Command Center
+                </div>
+                <div class="flex items-end justify-between gap-4">
+                    <h1
+                        class="text-4xl text-slate-100"
+                        style="font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em"
+                    >
+                        {user.username}
+                    </h1>
+                    <a
+                        href="/filters/new"
+                        class="rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                    >
+                        + New Filter
+                    </a>
+                </div>
+            </div>
 
-    <MyConveyors client:only="preact" />
-    <CopyToast client:only="preact" />
-</Layout>
+            <HomeDashboard
+                client:only="preact"
+                username={user.username}
+                orgId={user.orgId ?? null}
+            />
+
+            <div class="my-10 flex items-center gap-4">
+                <div class="h-px flex-1 bg-slate-800" />
+                <span class="font-mono text-[11px] uppercase tracking-widest text-slate-700">
+                    Arsenal
+                </span>
+                <div class="h-px flex-1 bg-slate-800" />
+            </div>
+
+            <MyConveyors client:only="preact" />
+        </Layout>
+    ) : (
+        <html lang="en" class="h-full">
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <title>CoreForge — Rust Conveyor Filter Arsenal</title>
+                <meta
+                    name="description"
+                    content="Design, organize and share Rust industrial conveyor filter presets. Copy/paste the exact JSON into the game."
+                />
+                <meta name="theme-color" content="#0a0e14" />
+                <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+                <link rel="icon" href="/favicon.ico" />
+                <link rel="preconnect" href="https://fonts.bunny.net" />
+                <link
+                    href="https://fonts.bunny.net/css?family=bebas-neue:400|jetbrains-mono:400,500"
+                    rel="stylesheet"
+                />
+                <style>{`
+                    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+                    a { text-decoration: none; color: inherit; }
+
+                    @keyframes cf-ticker {
+                        from { transform: translateX(0) }
+                        to   { transform: translateX(-50%) }
+                    }
+                    .cf-ticker { animation: cf-ticker 60s linear infinite; }
+                    .cf-ticker:hover { animation-play-state: paused; }
+
+                    @keyframes cf-pulse-dot {
+                        0%, 100% { box-shadow: 0 0 6px rgba(245,158,11,0.7); }
+                        50%       { box-shadow: 0 0 14px rgba(245,158,11,1), 0 0 28px rgba(245,158,11,0.4); }
+                    }
+                    .cf-pulse-dot { animation: cf-pulse-dot 2.4s ease-in-out infinite; }
+
+                    .cf-btn-primary:hover {
+                        background: #fbbf24 !important;
+                        box-shadow: 0 0 48px rgba(245,158,11,0.5) !important;
+                        transform: translateY(-1px);
+                    }
+                    .cf-btn-secondary:hover {
+                        border-color: rgba(148,163,184,0.5) !important;
+                        color: #f1f5f9 !important;
+                    }
+                    .cf-feature-card:hover {
+                        border-color: rgba(245,158,11,0.28) !important;
+                        box-shadow: 0 0 28px rgba(245,158,11,0.06) !important;
+                    }
+
+                    @media (max-width: 640px) {
+                        .cf-hide-sm { display: none !important; }
+                    }
+                `}</style>
+            </head>
+            <body
+                style="min-height: 100%; background-color: #0a0e14; color: #e2e8f0; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale"
+            >
+                {/* ── Sticky header ── */}
+                <header
+                    style="position: sticky; top: 0; z-index: 30; border-bottom: 1px solid rgba(30,41,59,0.7); background: rgba(10,14,20,0.96); backdrop-filter: blur(10px)"
+                >
+                    <div
+                        style="max-width: 72rem; margin: 0 auto; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem"
+                    >
+                        <a
+                            href="/"
+                            style="display: flex; align-items: center; gap: 0.5rem; color: #f1f5f9; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase"
+                        >
+                            <span
+                                class="cf-pulse-dot"
+                                style="display: inline-block; height: 8px; width: 8px; border-radius: 50%; background: #f59e0b; flex-shrink: 0"
+                            />
+                            <span>CoreForge</span>
+                            <span
+                                class="cf-hide-sm"
+                                style="color: #475569; font-weight: 400; font-size: 0.75rem; letter-spacing: normal; text-transform: none"
+                            >
+                                · Conveyor Filters
+                            </span>
+                        </a>
+                        <div
+                            style="display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0"
+                        >
+                            <a
+                                href="/login"
+                                class="cf-btn-secondary"
+                                style="padding: 0.4rem 1rem; border-radius: 4px; font-size: 0.8125rem; font-weight: 600; color: #94a3b8; border: 1px solid rgba(71,85,105,0.45); transition: all 0.18s"
+                            >
+                                Sign In
+                            </a>
+                            <a
+                                href="/register"
+                                class="cf-btn-primary"
+                                style="padding: 0.4rem 1rem; border-radius: 4px; font-size: 0.8125rem; font-weight: 700; background: #f59e0b; color: #0a0e14; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.18s; box-shadow: 0 0 20px rgba(245,158,11,0.22)"
+                            >
+                                Get Started
+                            </a>
+                        </div>
+                    </div>
+                </header>
+
+                <main>
+                    {/* ── Hero ── */}
+                    <section
+                        style="position: relative; min-height: calc(100vh - 57px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 5rem 1.5rem; overflow: hidden"
+                    >
+                        {/* Dot grid */}
+                        <div
+                            style="position: absolute; inset: 0; background-image: radial-gradient(rgba(245,158,11,0.055) 1px, transparent 1px); background-size: 24px 24px; pointer-events: none"
+                        />
+                        {/* Top-right amber glow */}
+                        <div
+                            style="position: absolute; top: -7rem; right: 6%; width: 38rem; height: 38rem; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 68%); pointer-events: none"
+                        />
+                        {/* Bottom-left orange glow */}
+                        <div
+                            style="position: absolute; bottom: -5rem; left: 8%; width: 30rem; height: 30rem; border-radius: 50%; background: radial-gradient(circle, rgba(234,88,12,0.05) 0%, transparent 68%); pointer-events: none"
+                        />
+
+                        <div
+                            style="position: relative; z-index: 10; max-width: 54rem; width: 100%"
+                        >
+                            {/* Status pill */}
+                            <div
+                                style="display: inline-flex; align-items: center; gap: 0.5rem; border: 1px solid rgba(245,158,11,0.22); background: rgba(245,158,11,0.05); border-radius: 9999px; padding: 0.3rem 1rem; margin-bottom: 2rem"
+                            >
+                                <span
+                                    style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 7px rgba(245,158,11,0.9); flex-shrink: 0"
+                                />
+                                <span
+                                    style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,158,11,0.8)"
+                                >
+                                    Rust Industrial
+                                </span>
+                            </div>
+
+                            {/* Main title */}
+                            <h1
+                                style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(5rem, 16vw, 9.5rem); line-height: 0.91; letter-spacing: 0.025em; margin-bottom: 1.25rem"
+                            >
+                                <span style="color: #f1f5f9">CORE</span>
+                                <span
+                                    style="color: #f59e0b; text-shadow: 0 0 80px rgba(245,158,11,0.45), 0 0 180px rgba(245,158,11,0.15)"
+                                >
+                                    FORGE
+                                </span>
+                            </h1>
+
+                            {/* Tagline */}
+                            <p
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(245,158,11,0.55); margin-bottom: 1.375rem"
+                            >
+                                Your Rust conveyor filter arsenal
+                            </p>
+
+                            {/* Description */}
+                            <p
+                                style="font-size: 1.0625rem; color: #94a3b8; line-height: 1.78; margin: 0 auto 2.75rem; max-width: 34rem"
+                            >
+                                Industrial conveyors in Rust sort items between containers — but
+                                managing those filter configs is a pain. CoreForge organizes your
+                                presets by category, keeps your squad in sync, and copies the exact
+                                JSON the game expects.
+                            </p>
+
+                            {/* CTAs */}
+                            <div
+                                style="display: flex; flex-wrap: wrap; gap: 0.875rem; justify-content: center; align-items: center"
+                            >
+                                <!-- <a
+                                    href="/api/auth/google"
+                                    class="cf-btn-primary"
+                                    style="display: inline-flex; align-items: center; gap: 0.625rem; padding: 0.8125rem 2rem; border-radius: 4px; background: #f59e0b; color: #0a0e14; font-weight: 700; font-size: 0.9375rem; text-transform: uppercase; letter-spacing: 0.07em; box-shadow: 0 0 40px rgba(245,158,11,0.3); transition: all 0.2s"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                    </svg>
+                                    Enter with Google
+                                </a> -->
+                                <a
+                                    href="/login"
+                                    class="cf-btn-secondary"
+                                    style="display: inline-block; padding: 0.8125rem 2rem; border-radius: 4px; border: 1px solid rgba(71,85,105,0.5); color: #cbd5e1; font-weight: 600; font-size: 0.9375rem; transition: all 0.2s"
+                                >
+                                    Sign In
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* ── Scrolling item ticker — the unforgettable detail ── */}
+                    <div
+                        style="border-top: 1px solid rgba(245,158,11,0.08); border-bottom: 1px solid rgba(245,158,11,0.08); background: rgba(245,158,11,0.016); overflow: hidden; padding: 0.65rem 0; cursor: default; user-select: none"
+                        title="Rust items supported by CoreForge"
+                    >
+                        <div
+                            class="cf-ticker"
+                            style="display: inline-flex; width: max-content; will-change: transform"
+                        >
+                            <span
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: rgba(245,158,11,0.32); letter-spacing: 0.07em; white-space: nowrap; padding-right: 2rem"
+                            >
+                                {TICKER}
+                            </span>
+                            <span
+                                aria-hidden="true"
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: rgba(245,158,11,0.32); letter-spacing: 0.07em; white-space: nowrap; padding-right: 2rem"
+                            >
+                                {TICKER}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* ── Features ── */}
+                    <section
+                        style="max-width: 72rem; margin: 0 auto; padding: 6rem 1.5rem"
+                    >
+                        <div style="text-align: center; margin-bottom: 3.5rem">
+                            <div
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,158,11,0.45); margin-bottom: 0.875rem"
+                            >
+                                Features
+                            </div>
+                            <h2
+                                style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.25rem, 6vw, 3.5rem); color: #f1f5f9; letter-spacing: 0.05em"
+                            >
+                                Built for the base builder
+                            </h2>
+                        </div>
+
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem"
+                        >
+                            {/* Organize */}
+                            <div
+                                class="cf-feature-card"
+                                style="border: 1px solid rgba(30,41,59,0.8); border-left: 2px solid rgba(245,158,11,0.32); background: rgba(15,23,42,0.4); border-radius: 8px; padding: 1.625rem; transition: all 0.22s"
+                            >
+                                <div
+                                    style="width: 36px; height: 36px; border-radius: 6px; background: rgba(245,158,11,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 1.125rem"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#f59e0b"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                                    </svg>
+                                </div>
+                                <h3
+                                    style="font-family: 'Bebas Neue', sans-serif; font-size: 1.375rem; color: #f1f5f9; letter-spacing: 0.07em; margin-bottom: 0.625rem"
+                                >
+                                    Organize by setup
+                                </h3>
+                                <p style="color: #64748b; font-size: 0.9rem; line-height: 1.68">
+                                    Sort filters into categories and subcategories — main base,
+                                    quarry, outpost, whatever your build calls for. Find any preset
+                                    in seconds.
+                                </p>
+                            </div>
+
+                            {/* Share */}
+                            <div
+                                class="cf-feature-card"
+                                style="border: 1px solid rgba(30,41,59,0.8); border-left: 2px solid rgba(245,158,11,0.32); background: rgba(15,23,42,0.4); border-radius: 8px; padding: 1.625rem; transition: all 0.22s"
+                            >
+                                <div
+                                    style="width: 36px; height: 36px; border-radius: 6px; background: rgba(245,158,11,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 1.125rem"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#f59e0b"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                    </svg>
+                                </div>
+                                <h3
+                                    style="font-family: 'Bebas Neue', sans-serif; font-size: 1.375rem; color: #f1f5f9; letter-spacing: 0.07em; margin-bottom: 0.625rem"
+                                >
+                                    Share with your clan
+                                </h3>
+                                <p style="color: #64748b; font-size: 0.9rem; line-height: 1.68">
+                                    Flag filters as clan-shared and your whole squad sees the setup
+                                    instantly. No more pasting configs in Discord at 2am during a
+                                    raid.
+                                </p>
+                            </div>
+
+                            {/* Deploy */}
+                            <div
+                                class="cf-feature-card"
+                                style="border: 1px solid rgba(30,41,59,0.8); border-left: 2px solid rgba(245,158,11,0.32); background: rgba(15,23,42,0.4); border-radius: 8px; padding: 1.625rem; transition: all 0.22s"
+                            >
+                                <div
+                                    style="width: 36px; height: 36px; border-radius: 6px; background: rgba(245,158,11,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 1.125rem"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#f59e0b"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                    </svg>
+                                </div>
+                                <h3
+                                    style="font-family: 'Bebas Neue', sans-serif; font-size: 1.375rem; color: #f1f5f9; letter-spacing: 0.07em; margin-bottom: 0.625rem"
+                                >
+                                    One-click JSON deploy
+                                </h3>
+                                <p style="color: #64748b; font-size: 0.9rem; line-height: 1.68">
+                                    Hit copy. Paste into the conveyor. CoreForge outputs the exact
+                                    JSON Rust expects — Max, Buffer, Min, all 30 slots — no manual
+                                    entry.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* ── Bottom CTA ── */}
+                    <section
+                        style="border-top: 1px solid rgba(30,41,59,0.45); text-align: center; padding: 5rem 1.5rem; background: linear-gradient(to bottom, transparent, rgba(245,158,11,0.012))"
+                    >
+                        <div
+                            style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,158,11,0.45); margin-bottom: 1rem"
+                        >
+                            Ready to deploy?
+                        </div>
+                        <h2
+                            style="font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.25rem, 6vw, 3.5rem); color: #f1f5f9; letter-spacing: 0.05em; margin-bottom: 1rem"
+                        >
+                            Forge your arsenal
+                        </h2>
+                        <p
+                            style="color: #64748b; max-width: 28rem; margin: 0 auto 2rem; font-size: 0.9375rem; line-height: 1.68"
+                        >
+                            Free to use. No ads. No trackers. Just your filter presets, organized
+                            and ready to paste.
+                        </p>
+                        <div
+                            style="display: flex; gap: 0.875rem; justify-content: center; flex-wrap: wrap"
+                        >
+                            <!-- a
+                                href="/api/auth/google"
+                                class="cf-btn-primary"
+                                style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8125rem 2.25rem; border-radius: 4px; background: #f59e0b; color: #0a0e14; font-weight: 700; font-size: 0.9375rem; text-transform: uppercase; letter-spacing: 0.07em; box-shadow: 0 0 32px rgba(245,158,11,0.22); transition: all 0.2s"
+                            >
+                                Enter with Google
+                            </a -->
+                            <a
+                                href="/register"
+                                class="cf-btn-secondary"
+                                style="display: inline-block; padding: 0.8125rem 2.25rem; border-radius: 4px; border: 1px solid rgba(71,85,105,0.5); color: #94a3b8; font-size: 0.9375rem; font-weight: 600; transition: all 0.2s"
+                            >
+                                Create Account
+                            </a>
+                        </div>
+                    </section>
+                </main>
+
+                <footer
+                    style="border-top: 1px solid rgba(30,41,59,0.4); padding: 2rem 1.5rem"
+                >
+                    <div
+                        style="max-width: 72rem; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; align-items: center; color: #334155; font-size: 0.75rem"
+                    >
+                        <span>© {new Date().getFullYear()} CoreForge — Conveyor Filters</span>
+                        <span>·</span>
+                        <a href="/legal" style="color: #475569">Legal</a>
+                        <span>· v{APP_VERSION}</span>
+                    </div>
+                </footer>
+            </body>
+        </html>
+    )
+}

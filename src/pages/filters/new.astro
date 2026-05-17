@@ -1,7 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import FilterForm from '../../components/FilterForm'
-import CopyToast from '../../components/CopyToast'
 ---
 
 <Layout title="New Filter – CoreForge" activeNav="new">
@@ -21,6 +20,4 @@ import CopyToast from '../../components/CopyToast'
     <div class="rounded-lg border border-slate-800 bg-slate-900/30 p-6 shadow-inner">
         <FilterForm client:only="preact" />
     </div>
-
-    <CopyToast client:only="preact" />
 </Layout>

@@ -70,7 +70,7 @@ export default function OrgFilterIsland({ openCoreId, categoryId, subcategoryId,
 
     if (loadError) {
         return (
-            <div class="rounded-md border border-rose-700 bg-rose-900/20 p-4 text-sm text-rose-300">
+            <div class="rounded border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
                 {loadError}
             </div>
         )

@@ -45,9 +45,12 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
     if (!hydrated) return <p class="text-sm text-slate-500">Loading…</p>
     if (!oc) {
         return (
-            <div class="rounded-md border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
+            <div class="rounded border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
                 Open Core not found.{' '}
-                <a href="/" class="underline">
+                <a
+                    href="/"
+                    class="text-amber-400 underline decoration-amber-400/40 transition-colors hover:text-amber-300 hover:decoration-amber-400"
+                >
                     Go home
                 </a>
                 .
@@ -99,15 +102,20 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
             <div class="mb-6">
                 <a
                     href="/"
-                    class="text-xs font-semibold tracking-wider text-slate-500 uppercase hover:text-slate-200"
+                    class="text-xs font-semibold tracking-wider text-slate-500 uppercase transition-colors hover:text-amber-400"
                 >
                     &larr; Back to My Conveyors
                 </a>
                 <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
-                        <h1 class="text-2xl font-bold tracking-tight text-slate-100">{oc.name}</h1>
+                        <h1
+                            class="text-3xl text-slate-100"
+                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                        >
+                            {oc.name}
+                        </h1>
                         {oc.sharedWithOrg ? (
-                            <span class="rounded bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-300 uppercase">
+                            <span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-semibold tracking-wider text-amber-400 uppercase">
                                 Shared
                             </span>
                         ) : null}
@@ -116,7 +124,7 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                         <button
                             type="button"
                             onClick={() => setRenameOpen(true)}
-                            class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                            class="rounded border border-slate-800 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400"
                         >
                             Rename
                         </button>
@@ -125,7 +133,7 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => setConfirmShareOpen(true)}
-                                    class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                                    class="rounded border border-slate-800 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400"
                                 >
                                     Unshare from clan
                                 </button>
@@ -134,7 +142,7 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                                     type="button"
                                     onClick={() => setConfirmShareOpen(true)}
                                     disabled={sharing}
-                                    class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                    class="rounded border border-slate-800 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {sharing ? 'Sharing…' : 'Share with clan'}
                                 </button>
@@ -143,7 +151,7 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                         <button
                             type="button"
                             onClick={() => setCatCreateOpen(true)}
-                            class="rounded-md bg-teal-500/90 px-3 py-1.5 text-sm font-semibold text-slate-950 hover:bg-teal-400"
+                            class="rounded bg-amber-500 px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
                         >
                             + Category
                         </button>
@@ -160,14 +168,14 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
             ) : null}
 
             {/* View toggle */}
-            <div class="mb-6 inline-flex rounded-md border border-slate-700 bg-slate-900/60 p-0.5 text-sm">
+            <div class="mb-6 inline-flex rounded border border-slate-800 bg-slate-900/40 p-0.5 text-sm">
                 <button
                     type="button"
                     onClick={() => setView('conveyors')}
-                    class={`rounded px-3 py-1.5 font-semibold ${
+                    class={`rounded px-3 py-1.5 font-semibold transition-colors ${
                         view === 'conveyors'
-                            ? 'bg-slate-700 text-slate-100'
-                            : 'text-slate-400 hover:text-slate-100'
+                            ? 'bg-amber-500/10 text-amber-400'
+                            : 'text-slate-400 hover:text-amber-400'
                     }`}
                 >
                     Conveyors
@@ -175,10 +183,10 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                 <button
                     type="button"
                     onClick={() => setView('boxes')}
-                    class={`rounded px-3 py-1.5 font-semibold ${
+                    class={`rounded px-3 py-1.5 font-semibold transition-colors ${
                         view === 'boxes'
-                            ? 'bg-slate-700 text-slate-100'
-                            : 'text-slate-400 hover:text-slate-100'
+                            ? 'bg-amber-500/10 text-amber-400'
+                            : 'text-slate-400 hover:text-amber-400'
                     }`}
                 >
                     Boxes
@@ -187,11 +195,11 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
 
             {cats.length === 0 ? (
                 <div class="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center">
-                    <p class="text-sm text-slate-300">This Open Core has no categories yet.</p>
+                    <p class="text-sm text-slate-400">This Open Core has no categories yet.</p>
                     <button
                         type="button"
                         onClick={() => setCatCreateOpen(true)}
-                        class="mt-4 rounded-md bg-teal-500/90 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-teal-400"
+                        class="mt-4 rounded bg-amber-500 px-3 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
                     >
                         + Add Category
                     </button>

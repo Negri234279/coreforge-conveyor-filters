@@ -7,6 +7,7 @@ import {
     deploymentTotalsForOpenCore,
     setOpenCoreShared,
 } from '../store/filters'
+import { shareOpenCoreWithClan } from '../store/org'
 import DeploymentTotals from './DeploymentTotals'
 import { itemImage } from '../store/items'
 import { getCurrentUser } from '../store/auth'
@@ -36,6 +37,7 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
     const [menuOpen, setMenuOpen] = useState(false)
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
     const [confirmShareOpen, setConfirmShareOpen] = useState(false)
+    const [sharing, setSharing] = useState(false)
     const menuRef = useRef<HTMLDivElement | null>(null)
     useEffect(() => {
         function onDoc(e: MouseEvent) {
@@ -61,9 +63,21 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
         setConfirmShareOpen(true)
     }
 
-    function confirmToggleShare() {
+    function confirmUnshare() {
         setConfirmShareOpen(false)
-        setOpenCoreShared(openCore.id, !openCore.sharedWithOrg)
+        setOpenCoreShared(openCore.id, false)
+    }
+
+    async function confirmShare() {
+        setConfirmShareOpen(false)
+        setSharing(true)
+        try {
+            await shareOpenCoreWithClan(openCore.id)
+        } catch (e) {
+            alert(e instanceof Error ? e.message : 'Share failed')
+        } finally {
+            setSharing(false)
+        }
     }
 
     function open() {
@@ -71,7 +85,7 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
     }
 
     return (
-        <div class="group relative flex flex-col rounded-lg border border-slate-700/80 bg-slate-900/40 transition hover:border-teal-500/60 hover:shadow-[0_0_0_1px_rgba(20,184,166,0.25)]">
+        <div class="group relative flex flex-col rounded-lg border border-slate-700/80 bg-slate-900/40 transition hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]">
             <button
                 type="button"
                 onClick={open}
@@ -112,7 +126,7 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
                     </h3>
                     {openCore.sharedWithOrg ? (
                         <span
-                            class="rounded bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-300 uppercase"
+                            class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-semibold tracking-wider text-amber-400 uppercase"
                             title="Shared with your clan"
                         >
                             Shared
@@ -130,7 +144,7 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
                 <button
                     type="button"
                     onClick={() => setMenuOpen((v) => !v)}
-                    class="rounded p-1.5 text-slate-400 opacity-0 transition group-hover:opacity-100 hover:bg-slate-800 hover:text-slate-100"
+                    class="rounded p-1.5 text-slate-400 opacity-0 transition group-hover:opacity-100 hover:bg-slate-800 hover:text-amber-400"
                     aria-label="Open Core actions"
                     aria-haspopup="menu"
                 >
@@ -174,9 +188,14 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
                             <button
                                 type="button"
                                 onClick={onToggleShare}
-                                class="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800"
+                                disabled={sharing}
+                                class="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                {openCore.sharedWithOrg ? 'Unshare from clan' : 'Share with clan'}
+                                {sharing
+                                    ? 'Sharing…'
+                                    : openCore.sharedWithOrg
+                                      ? 'Unshare from clan'
+                                      : 'Share with clan'}
                             </button>
                         ) : null}
                         <button
@@ -205,12 +224,12 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
                 message={
                     openCore.sharedWithOrg
                         ? `Stop sharing "${openCore.name}" with your clan? Clan members will no longer see it.`
-                        : `Share "${openCore.name}" with your clan? All clan members will be able to see it.`
+                        : `Create a clan copy of "${openCore.name}"? Your personal Open Core stays private and is not affected. Clan owners and admins will be able to edit the shared copy independently.`
                 }
                 confirmLabel={openCore.sharedWithOrg ? 'Unshare' : 'Share'}
                 confirmTone="primary"
                 onCancel={() => setConfirmShareOpen(false)}
-                onConfirm={confirmToggleShare}
+                onConfirm={openCore.sharedWithOrg ? confirmUnshare : confirmShare}
             />
         </div>
     )
