@@ -8,7 +8,7 @@ import { showToast } from './CopyToast'
 function FilterTile({ filter }: { filter: Filter }) {
     async function onCopy() {
         const ok = await copyToClipboard(JSON.stringify(buildConveyorJson(filter.items)))
-        showToast(ok ? 'Copied!' : 'Copy failed')
+        showToast(ok ? 'Copied · Shift in-game' : 'Copy failed')
     }
     const imgSrc = filter.boxImagePath
         ? boxImage(filter.boxImagePath)

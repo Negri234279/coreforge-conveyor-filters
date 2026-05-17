@@ -33,7 +33,7 @@ function FilterMiniCard({ filter }: { filter: Filter }) {
     async function handleCopy() {
         const json = JSON.stringify(buildConveyorJson(filter.items))
         const ok = await copyToClipboard(json)
-        showToast(ok ? 'Copied!' : 'Copy failed')
+        showToast(ok ? 'Copied · Shift in-game' : 'Copy failed')
     }
 
     return (
@@ -58,7 +58,7 @@ function FilterMiniCard({ filter }: { filter: Filter }) {
                 type="button"
                 onClick={handleCopy}
                 class="flex-shrink-0 rounded p-1.5 text-slate-600 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                title="Copy conveyor JSON"
+                title="Copy conveyor JSON — hold Shift in-game to paste"
             >
                 <CopyIcon />
             </button>

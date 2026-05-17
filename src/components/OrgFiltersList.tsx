@@ -22,7 +22,7 @@ export default function OrgFiltersList() {
 
     async function onCopy(f: OrgFilterView) {
         const ok = await copyToClipboard(JSON.stringify(buildConveyorJson(f.items)))
-        showToast(ok ? 'Copied!' : 'Copy failed')
+        showToast(ok ? 'Copied · Shift in-game' : 'Copy failed')
     }
     async function onClone(f: OrgFilterView) {
         try {

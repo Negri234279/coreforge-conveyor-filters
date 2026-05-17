@@ -254,7 +254,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
         }
         const json = JSON.stringify(buildConveyorJson(items))
         const ok = await copyToClipboard(json)
-        showToast(ok ? 'Conveyor config copied!' : 'Copy failed')
+        showToast(ok ? 'Copied · Shift in-game' : 'Copy failed')
         if (ok) {
             // Fire-and-forget usage beacon. Failure is non-fatal — server-side
             // logEvent already swallows its own errors.
@@ -748,7 +748,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         onClick={onExport}
                         disabled={items.length === 0}
                         class="inline-flex items-center gap-1.5 rounded border border-slate-700/50 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:border-slate-600 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
-                        title="Copy conveyor JSON to clipboard"
+                        title="Copy conveyor JSON to clipboard — hold Shift in-game to paste"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -766,6 +766,9 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         Export
                     </button>
                 </div>
+                <p class="font-mono text-[10px] uppercase tracking-widest text-slate-600">
+                    Hold <kbd class="rounded bg-slate-800 px-1 py-0.5 text-slate-500 not-italic">Shift</kbd> in-game to paste
+                </p>
                 <div class="flex items-center gap-3">
                     <a
                         href={cancelHref ?? '/'}

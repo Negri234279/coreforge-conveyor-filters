@@ -30,7 +30,7 @@ export default function FilterCard({ filter }: Props) {
     async function onCopy() {
         const json = JSON.stringify(buildConveyorJson(filter.items))
         const ok = await copyToClipboard(json)
-        showToast(ok ? 'Copied!' : 'Copy failed')
+        showToast(ok ? 'Copied · Shift in-game' : 'Copy failed')
     }
 
     function onDelete() {
@@ -101,7 +101,7 @@ export default function FilterCard({ filter }: Props) {
                 onClick={onCopy}
                 class="rounded p-2 text-slate-400 hover:bg-slate-800 hover:text-amber-400"
                 aria-label="Copy conveyor JSON"
-                title="Copy conveyor JSON"
+                title="Copy conveyor JSON — hold Shift in-game to paste"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
