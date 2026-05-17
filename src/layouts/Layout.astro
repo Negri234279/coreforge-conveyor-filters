@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css'
 import { version as APP_VERSION } from '../../package.json'
+import CopyToast from '../components/CopyToast'
 
 interface Props {
     title?: string
@@ -268,5 +269,6 @@ const clientUser = user
                 <span class="text-slate-700" title="App version">· v{APP_VERSION}</span>
             </footer>
         </div>
+        <CopyToast client:only="preact" />
     </body>
 </html>

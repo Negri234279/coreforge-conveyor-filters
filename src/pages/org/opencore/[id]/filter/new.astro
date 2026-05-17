@@ -1,7 +1,6 @@
 ---
 import Layout from '../../../../../layouts/Layout.astro'
 import OrgFilterIsland from '../../../../../components/OrgFilterIsland'
-import CopyToast from '../../../../../components/CopyToast'
 
 const user = Astro.locals.user!
 const { id } = Astro.params
@@ -39,6 +38,4 @@ if (!categoryId) return Astro.redirect(`/org/opencore/${id}`)
             subcategoryId={subcategoryId}
         />
     </div>
-
-    <CopyToast client:only="preact" />
 </Layout>

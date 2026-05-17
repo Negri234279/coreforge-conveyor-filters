@@ -1,7 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import EditFilterIsland from '../../components/EditFilterIsland'
-import CopyToast from '../../components/CopyToast'
 ---
 
 <Layout title="Edit Filter – CoreForge" activeNav="home">
@@ -18,6 +17,4 @@ import CopyToast from '../../components/CopyToast'
     <div class="rounded-lg border border-slate-800 bg-slate-900/30 p-6 shadow-inner">
         <EditFilterIsland client:only="preact" />
     </div>
-
-    <CopyToast client:only="preact" />
 </Layout>

@@ -2,7 +2,6 @@
 import Layout from '../layouts/Layout.astro'
 import HomeDashboard from '../components/HomeDashboard'
 import MyConveyors from '../components/MyConveyors'
-import CopyToast from '../components/CopyToast'
 import { version as APP_VERSION } from '../../package.json'
 import '../styles/global.css'
 
@@ -54,7 +53,6 @@ const TICKER =
             </div>
 
             <MyConveyors client:only="preact" />
-            <CopyToast client:only="preact" />
         </Layout>
     ) : (
         <html lang="en" class="h-full">

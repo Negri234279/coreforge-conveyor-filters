@@ -1,7 +1,6 @@
 ---
 import Layout from '../../../layouts/Layout.astro'
 import OrgOpenCoreDetail from '../../../components/OrgOpenCoreDetail'
-import CopyToast from '../../../components/CopyToast'
 
 const user = Astro.locals.user!
 const { id } = Astro.params
@@ -11,5 +10,4 @@ if (!user.orgId) return Astro.redirect('/org')
 
 <Layout title="Clan Open Core – CoreForge" activeNav="orgFilters">
     <OrgOpenCoreDetail client:only="preact" openCoreId={id} />
-    <CopyToast client:only="preact" />
 </Layout>
