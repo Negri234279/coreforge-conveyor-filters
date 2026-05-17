@@ -95,7 +95,7 @@ export default function DeploymentTotals({ totals, variant = 'chip', class: cls 
                 {ITEMS.map((it) => (
                     <div
                         key={it.key}
-                        class="flex items-center gap-2 rounded-md border border-slate-700/80 bg-slate-900/60 px-3 py-1.5"
+                        class="flex items-center gap-2 rounded border border-slate-800 bg-slate-900/60 px-3 py-1.5"
                         title={it.label}
                     >
                         <svg
@@ -106,19 +106,19 @@ export default function DeploymentTotals({ totals, variant = 'chip', class: cls 
                             stroke-width="1.8"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            class="h-4 w-4 text-teal-400"
+                            class="h-4 w-4 text-amber-500"
                         >
                             {it.path}
                         </svg>
-                        <span class="text-sm font-semibold text-slate-100">{totals[it.key]}</span>
-                        <span class="text-xs text-slate-500">{it.label}</span>
+                        <span class="text-sm font-semibold text-amber-400">{totals[it.key]}</span>
+                        <span class="font-mono text-[11px] uppercase tracking-widest text-slate-500">{it.label}</span>
                     </div>
                 ))}
             </div>
         )
     }
     return (
-        <div class={`flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 ${cls}`}>
+        <div class={`flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-slate-500 ${cls}`}>
             {ITEMS.map((it) => (
                 <span key={it.key} class="inline-flex items-center gap-1" title={it.label}>
                     <svg
@@ -129,11 +129,11 @@ export default function DeploymentTotals({ totals, variant = 'chip', class: cls 
                         stroke-width="1.8"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="h-3.5 w-3.5 text-slate-600"
+                        class="h-3.5 w-3.5 text-amber-500/40"
                     >
                         {it.path}
                     </svg>
-                    <span class="font-semibold text-slate-300">{totals[it.key]}</span>
+                    <span class="text-amber-400/70">{totals[it.key]}</span>
                     {it.label}
                 </span>
             ))}

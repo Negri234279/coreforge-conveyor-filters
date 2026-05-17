@@ -54,7 +54,7 @@ export default function FilterCard({ filter }: Props) {
     }
 
     return (
-        <div class="group flex items-center gap-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2 pr-2 transition hover:border-teal-500/60 hover:shadow-[0_0_0_1px_rgba(20,184,166,0.25)]">
+        <div class="group flex items-center gap-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2 pr-2 transition hover:border-amber-500/60 hover:shadow-[0_0_0_1px_rgba(245,158,11,0.2)]">
             <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-slate-800/80">
                 <img
                     src={itemImage(filter.coverItemShortname)}
@@ -79,7 +79,7 @@ export default function FilterCard({ filter }: Props) {
                     </span>
                     {filter.sharedWithOrg ? (
                         <span
-                            class="rounded bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-300 uppercase"
+                            class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-semibold tracking-wider text-amber-400 uppercase"
                             title="Shared with your clan"
                         >
                             Shared
@@ -99,7 +99,7 @@ export default function FilterCard({ filter }: Props) {
             <button
                 type="button"
                 onClick={onCopy}
-                class="rounded p-2 text-slate-400 hover:bg-slate-800 hover:text-teal-300"
+                class="rounded p-2 text-slate-400 hover:bg-slate-800 hover:text-amber-400"
                 aria-label="Copy conveyor JSON"
                 title="Copy conveyor JSON"
             >
@@ -204,7 +204,7 @@ export default function FilterCard({ filter }: Props) {
                                                     class="h-10 w-10 sm:h-12 sm:w-12 rounded bg-slate-800 object-contain"
                                                     loading="lazy"
                                                 />
-                                                <div class="text-[9px] sm:text-[10px] font-semibold text-slate-200 line-clamp-2">
+                                                <div class="text-[9px] sm:text-[11px] font-semibold text-slate-200 line-clamp-2">
                                                     {itemName}
                                                 </div>
                                                 <div class="w-full text-[8px] sm:text-[9px] text-slate-400">

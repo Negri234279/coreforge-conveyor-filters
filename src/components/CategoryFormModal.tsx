@@ -71,7 +71,7 @@ export default function CategoryFormModal({
 
     return (
         <div
-            class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+            class="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
@@ -80,24 +80,34 @@ export default function CategoryFormModal({
         >
             <form
                 onSubmit={submit}
-                class="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 p-5 shadow-xl"
+                class="w-full max-w-md rounded-lg border border-slate-800 border-l-2 border-l-amber-500/30 bg-[#0d1117] p-5 shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_30px_rgba(245,158,11,0.05)]"
             >
+                {/* Header */}
                 <div class="flex items-start justify-between gap-4">
-                    <h3 class="text-base font-semibold text-slate-100">
-                        {mode === 'create' ? 'New category' : 'Edit category'}
-                    </h3>
+                    <div>
+                        <div class="mb-0.5 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                            {mode === 'create' ? 'New' : 'Edit'}
+                        </div>
+                        <h3
+                            class="text-2xl text-slate-100"
+                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                        >
+                            Category
+                        </h3>
+                    </div>
                     <button
                         type="button"
                         onClick={onCancel}
-                        class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                        class="rounded p-1 text-slate-500 transition-colors hover:bg-slate-800 hover:text-amber-400"
                         aria-label="Close"
                     >
                         ✕
                     </button>
                 </div>
 
-                <div class="mt-4">
-                    <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                {/* Name */}
+                <div class="mt-5">
+                    <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                         Name <span class="text-rose-400">*</span>
                     </label>
                     <input
@@ -106,20 +116,21 @@ export default function CategoryFormModal({
                         autoFocus
                         value={name}
                         onInput={(e) => setName((e.target as HTMLInputElement).value)}
-                        class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                        class="mt-1.5 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
                         placeholder="e.g. Metal, Components"
                     />
                 </div>
 
+                {/* Open Core picker */}
                 {!locked ? (
                     <div class="mt-4">
-                        <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                        <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                             Open Core
                         </label>
                         <select
                             value={openCoreId}
                             onChange={(e) => setOpenCoreId((e.target as HTMLSelectElement).value)}
-                            class="mt-1 w-full appearance-none rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                            class="mt-1.5 w-full appearance-none rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
                         >
                             <option value="">— None (loose category) —</option>
                             {openCores.map((oc) => (
@@ -128,26 +139,27 @@ export default function CategoryFormModal({
                                 </option>
                             ))}
                         </select>
-                        <p class="mt-1 text-xs text-slate-500">
+                        <p class="mt-1 font-mono text-[11px] text-slate-600">
                             Group this category under an Open Core, or leave it loose.
                         </p>
                     </div>
                 ) : null}
 
+                {/* Share with clan */}
                 {canShareWithOrg ? (
                     <div class="mt-4">
-                        <label class="flex cursor-pointer items-start gap-2 text-sm text-slate-200">
+                        <label class="flex cursor-pointer items-start gap-2.5 text-sm text-slate-300">
                             <input
                                 type="checkbox"
                                 checked={shared}
                                 onChange={(e) =>
                                     setShared((e.target as HTMLInputElement).checked)
                                 }
-                                class="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 text-teal-500 focus:ring-teal-500/40"
+                                class="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 accent-amber-500 focus:ring-1 focus:ring-amber-500/30"
                             />
                             <span>
                                 Share with clan
-                                <span class="mt-0.5 block text-xs text-slate-500">
+                                <span class="mt-0.5 block font-mono text-[11px] text-slate-600">
                                     All clan members will see this category and can clone it.
                                 </span>
                             </span>
@@ -155,23 +167,25 @@ export default function CategoryFormModal({
                     </div>
                 ) : null}
 
+                {/* Validation error */}
                 {error ? (
-                    <div class="mt-3 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+                    <div class="mt-3 rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 font-mono text-[11px] text-rose-300">
                         {error}
                     </div>
                 ) : null}
 
+                {/* Actions */}
                 <div class="mt-5 flex items-center justify-end gap-2">
                     <button
                         type="button"
                         onClick={onCancel}
-                        class="rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                        class="rounded px-3 py-1.5 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        class="rounded-md bg-teal-500/90 px-3 py-1.5 text-sm font-semibold text-slate-950 hover:bg-teal-400"
+                        class="rounded bg-amber-500 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
                     >
                         {mode === 'create' ? 'Create' : 'Save'}
                     </button>

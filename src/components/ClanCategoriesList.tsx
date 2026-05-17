@@ -28,15 +28,21 @@ export default function ClanCategoriesList() {
 
     if (error) {
         return (
-            <div class="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+            <div class="rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 font-mono text-[11px] text-rose-300">
                 {error}
             </div>
         )
     }
-    if (!hydrated) return <p class="text-sm text-slate-500">Loading clan categories…</p>
+    if (!hydrated) {
+        return (
+            <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                Loading clan categories…
+            </p>
+        )
+    }
     if (cats.length === 0) {
         return (
-            <p class="text-xs text-slate-500">
+            <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">
                 No shared categories yet. A member can share one from its section on My Conveyors.
             </p>
         )
@@ -47,12 +53,15 @@ export default function ClanCategoriesList() {
             {cats.map((c) => (
                 <div
                     key={c.id}
-                    class="flex flex-col rounded-lg border border-slate-700/80 bg-slate-900/40 p-4"
+                    class="flex flex-col rounded-lg border border-slate-800 border-l-2 border-l-amber-500/30 bg-slate-900/30 p-4 transition-all duration-[220ms] hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]"
                 >
-                    <h3 class="truncate text-base font-bold tracking-wide text-slate-100 uppercase">
+                    <h3
+                        class="truncate text-xl text-slate-100"
+                        style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                    >
                         {c.name}
                     </h3>
-                    <p class="mt-1 text-xs text-slate-500">
+                    <p class="mt-1 font-mono text-[11px] text-slate-500">
                         {c.subcategoryCount}{' '}
                         {c.subcategoryCount === 1 ? 'subcategory' : 'subcategories'} ·{' '}
                         {c.filterCount} {c.filterCount === 1 ? 'filter' : 'filters'} · by{' '}
@@ -81,7 +90,7 @@ export default function ClanCategoriesList() {
                     <div class="mt-3 flex items-center gap-2">
                         <a
                             href={`/org/category/${encodeURIComponent(c.id)}`}
-                            class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                            class="rounded border border-slate-700/50 px-3 py-1.5 text-xs font-semibold text-slate-400 transition-colors hover:border-slate-600 hover:text-amber-400"
                         >
                             View
                         </a>
@@ -89,7 +98,7 @@ export default function ClanCategoriesList() {
                             type="button"
                             onClick={() => onClone(c)}
                             disabled={busy}
-                            class="rounded-md bg-teal-500/90 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="rounded bg-amber-500 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Clone category
                         </button>

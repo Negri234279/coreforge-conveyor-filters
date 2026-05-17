@@ -72,6 +72,12 @@ const clientUser = user
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" href="/favicon.ico" />
 
+        <link rel="preconnect" href="https://fonts.bunny.net" />
+        <link
+            href="https://fonts.bunny.net/css?family=bebas-neue:400|jetbrains-mono:400,500"
+            rel="stylesheet"
+        />
+
         <!-- Open Graph -->
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content={SITE_NAME} />
@@ -114,11 +120,11 @@ const clientUser = user
                     class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4"
                 >
                     <a
-                        href={user ? '/' : '/login'}
+                        href="/"
                         class="flex min-w-0 items-center gap-2 text-sm font-bold tracking-[0.18em] text-slate-100 uppercase"
                     >
                         <span
-                            class="inline-block h-2 w-2 shrink-0 rounded-full bg-teal-400 shadow-[0_0_10px_rgba(45,212,191,0.7)]"
+                            class="inline-block h-2 w-2 shrink-0 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.7)]"
                         ></span>
                         <span class="truncate">CoreForge</span>
                         <span
@@ -133,7 +139,7 @@ const clientUser = user
                                 <button
                                     type="button"
                                     id="nav-toggle"
-                                    class="inline-flex items-center justify-center rounded p-2 text-slate-300 hover:bg-slate-800 hover:text-slate-100 md:hidden"
+                                    class="inline-flex items-center justify-center rounded p-2 text-slate-300 hover:bg-slate-800 hover:text-amber-400 md:hidden"
                                     aria-controls="primary-nav"
                                     aria-expanded="false"
                                     aria-label="Toggle navigation"
@@ -163,8 +169,8 @@ const clientUser = user
                                         class:list={[
                                             'rounded px-3 py-2 md:py-1.5',
                                             activeNav === 'home'
-                                                ? 'bg-slate-800 text-slate-100'
-                                                : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100',
+                                                ? 'bg-amber-500/10 text-amber-400'
+                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-amber-400',
                                         ]}
                                     >
                                         My Conveyors
@@ -174,8 +180,8 @@ const clientUser = user
                                         class:list={[
                                             'rounded px-3 py-2 md:py-1.5',
                                             activeNav === 'orgFilters'
-                                                ? 'bg-slate-800 text-slate-100'
-                                                : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100',
+                                                ? 'bg-amber-500/10 text-amber-400'
+                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-amber-400',
                                         ]}
                                     >
                                         Clan Filters
@@ -185,8 +191,8 @@ const clientUser = user
                                         class:list={[
                                             'rounded px-3 py-2 md:py-1.5',
                                             activeNav === 'org'
-                                                ? 'bg-slate-800 text-slate-100'
-                                                : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100',
+                                                ? 'bg-amber-500/10 text-amber-400'
+                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-amber-400',
                                         ]}
                                     >
                                         Clan
@@ -213,8 +219,8 @@ const clientUser = user
                                             class:list={[
                                                 'rounded px-3 py-2 text-xs md:px-2 md:py-1.5',
                                                 activeNav === 'account'
-                                                    ? 'bg-slate-800 text-slate-100'
-                                                    : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100',
+                                                    ? 'bg-amber-500/10 text-amber-400'
+                                                    : 'text-slate-300 hover:bg-slate-800/60 hover:text-amber-400',
                                             ]}
                                             title="Account"
                                         >
@@ -223,7 +229,7 @@ const clientUser = user
                                         <form method="POST" action="/api/auth/logout" class="m-0">
                                             <button
                                                 type="submit"
-                                                class="rounded px-3 py-2 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-100 md:px-2 md:py-1.5"
+                                                class="rounded px-3 py-2 text-xs text-slate-500 hover:bg-slate-800/60 hover:text-amber-400 md:px-2 md:py-1.5"
                                                 title="Sign out"
                                             >
                                                 Sign out

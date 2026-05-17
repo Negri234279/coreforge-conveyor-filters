@@ -35,7 +35,7 @@ export default function OrgFiltersList() {
 
     if (error) {
         return (
-            <div class="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+            <div class="rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
                 {error}
             </div>
         )
@@ -46,9 +46,9 @@ export default function OrgFiltersList() {
     if (filters.length === 0) {
         return (
             <div class="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center">
-                <p class="text-sm text-slate-300">No shared filters yet.</p>
+                <p class="text-sm text-slate-400">No shared filters yet.</p>
                 <p class="mt-1 text-xs text-slate-500">
-                    Members can mark any of their filters as “Share with my clan” to appear here.
+                    Members can mark any of their filters as "Share with my clan" to appear here.
                 </p>
             </div>
         )
@@ -66,16 +66,16 @@ export default function OrgFiltersList() {
         <div class="space-y-6">
             {Array.from(groups.entries()).map(([catName, list]) => (
                 <section key={catName}>
-                    <h2 class="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                    <h2 class="font-mono text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
                         {catName}
                     </h2>
                     <ul class="mt-2 grid gap-3 sm:grid-cols-2">
                         {list.map((f) => (
                             <li
                                 key={f.id}
-                                class="flex items-center gap-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2"
+                                class="flex items-center gap-3 rounded border border-slate-800 bg-slate-900/30 p-2"
                             >
-                                <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-slate-800/80">
+                                <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-slate-800">
                                     <img
                                         src={itemImage(f.coverItemShortname)}
                                         alt=""
@@ -86,7 +86,7 @@ export default function OrgFiltersList() {
                                         <img
                                             src={boxImage(f.boxImagePath)}
                                             alt=""
-                                            class="absolute right-0.5 bottom-0.5 h-7 w-7 rounded border border-slate-700 bg-slate-900/90 object-contain p-0.5"
+                                            class="absolute right-0.5 bottom-0.5 h-7 w-7 rounded border border-slate-800 bg-slate-900/90 object-contain p-0.5"
                                             loading="lazy"
                                         />
                                     ) : null}
@@ -104,7 +104,7 @@ export default function OrgFiltersList() {
                                 <button
                                     type="button"
                                     onClick={() => onCopy(f)}
-                                    class="rounded p-2 text-slate-400 hover:bg-slate-800 hover:text-teal-300"
+                                    class="rounded p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                                     aria-label="Copy conveyor JSON"
                                     title="Copy conveyor JSON"
                                 >
@@ -126,7 +126,7 @@ export default function OrgFiltersList() {
                                     type="button"
                                     onClick={() => onClone(f)}
                                     disabled={busy}
-                                    class="rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1.5 text-xs font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                    class="rounded border border-slate-800 bg-slate-900/60 px-2 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                                     title="Clone to your filters"
                                 >
                                     Clone

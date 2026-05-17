@@ -88,14 +88,14 @@ export default function MyConveyors() {
                     <button
                         type="button"
                         onClick={() => setOcCreateOpen(true)}
-                        class="inline-flex items-center gap-1 rounded-md bg-teal-500/90 px-3 py-1.5 text-sm font-semibold text-slate-950 hover:bg-teal-400"
+                        class="inline-flex items-center gap-1 rounded-md bg-amber-500 px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
                     >
                         <span aria-hidden="true">+</span> Open Core
                     </button>
                     <button
                         type="button"
                         onClick={() => setCatCreateOpen(true)}
-                        class="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                        class="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-300 transition-colors hover:border-amber-500/40 hover:text-amber-400"
                     >
                         <span aria-hidden="true">+</span> Category
                     </button>
@@ -117,10 +117,10 @@ export default function MyConveyors() {
                         <button
                             type="button"
                             onClick={() => setView('opencores')}
-                            class={`rounded px-3 py-1.5 font-semibold ${
+                            class={`rounded px-3 py-1.5 font-semibold transition-colors ${
                                 view === 'opencores'
-                                    ? 'bg-slate-700 text-slate-100'
-                                    : 'text-slate-400 hover:text-slate-100'
+                                    ? 'bg-amber-500/10 text-amber-400'
+                                    : 'text-slate-400 hover:text-amber-400'
                             }`}
                         >
                             Open Cores
@@ -128,10 +128,10 @@ export default function MyConveyors() {
                         <button
                             type="button"
                             onClick={() => setView('categories')}
-                            class={`rounded px-3 py-1.5 font-semibold ${
+                            class={`rounded px-3 py-1.5 font-semibold transition-colors ${
                                 view === 'categories'
-                                    ? 'bg-slate-700 text-slate-100'
-                                    : 'text-slate-400 hover:text-slate-100'
+                                    ? 'bg-amber-500/10 text-amber-400'
+                                    : 'text-slate-400 hover:text-amber-400'
                             }`}
                         >
                             Other categories
@@ -149,7 +149,7 @@ export default function MyConveyors() {
                                 <button
                                     type="button"
                                     onClick={() => setOcCreateOpen(true)}
-                                    class="mt-4 rounded-md bg-teal-500/90 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-teal-400"
+                                    class="mt-4 rounded-md bg-amber-500 px-3 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
                                 >
                                     + Create Open Core
                                 </button>
@@ -179,13 +179,13 @@ export default function MyConveyors() {
                                     <button
                                         type="button"
                                         onClick={() => setCatCreateOpen(true)}
-                                        class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                                        class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-300 transition-colors hover:border-amber-500/40 hover:text-amber-400"
                                     >
                                         + Add Category
                                     </button>
                                     <a
                                         href="/filters/new"
-                                        class="rounded-md bg-teal-500/90 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-teal-400"
+                                        class="rounded-md bg-amber-500 px-3 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
                                     >
                                         + New Filter
                                     </a>

@@ -47,7 +47,7 @@ export default function OpenCoreFormModal({
 
     return (
         <div
-            class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+            class="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4"
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
@@ -56,16 +56,20 @@ export default function OpenCoreFormModal({
         >
             <form
                 onSubmit={submit}
-                class="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 p-5 shadow-xl"
+                class="w-full max-w-md rounded-lg border border-slate-800 p-5 shadow-xl"
+                style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
             >
                 <div class="flex items-start justify-between gap-4">
-                    <h3 class="text-base font-semibold text-slate-100">
+                    <h3
+                        class="text-xl text-slate-100"
+                        style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                    >
                         {mode === 'create' ? 'New Open Core' : 'Rename Open Core'}
                     </h3>
                     <button
                         type="button"
                         onClick={onCancel}
-                        class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                        class="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                         aria-label="Close"
                     >
                         ✕
@@ -73,7 +77,7 @@ export default function OpenCoreFormModal({
                 </div>
 
                 <div class="mt-4">
-                    <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                    <label class="block font-mono text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
                         Name <span class="text-rose-400">*</span>
                     </label>
                     <input
@@ -82,13 +86,13 @@ export default function OpenCoreFormModal({
                         autoFocus
                         value={name}
                         onInput={(e) => setName((e.target as HTMLInputElement).value)}
-                        class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                        class="mt-1 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-colors focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
                         placeholder="e.g. Main Base, Outpost Farm"
                     />
                 </div>
 
                 {error ? (
-                    <div class="mt-3 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+                    <div class="mt-3 rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
                         {error}
                     </div>
                 ) : null}
@@ -97,13 +101,13 @@ export default function OpenCoreFormModal({
                     <button
                         type="button"
                         onClick={onCancel}
-                        class="rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                        class="rounded px-3 py-1.5 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        class="rounded-md bg-teal-500/90 px-3 py-1.5 text-sm font-semibold text-slate-950 hover:bg-teal-400"
+                        class="rounded bg-amber-500 px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
                     >
                         {mode === 'create' ? 'Create' : 'Save'}
                     </button>

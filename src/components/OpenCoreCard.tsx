@@ -71,7 +71,7 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
     }
 
     return (
-        <div class="group relative flex flex-col rounded-lg border border-slate-700/80 bg-slate-900/40 transition hover:border-teal-500/60 hover:shadow-[0_0_0_1px_rgba(20,184,166,0.25)]">
+        <div class="group relative flex flex-col rounded-lg border border-slate-700/80 bg-slate-900/40 transition hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]">
             <button
                 type="button"
                 onClick={open}
@@ -112,7 +112,7 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
                     </h3>
                     {openCore.sharedWithOrg ? (
                         <span
-                            class="rounded bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-300 uppercase"
+                            class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-semibold tracking-wider text-amber-400 uppercase"
                             title="Shared with your clan"
                         >
                             Shared
@@ -130,7 +130,7 @@ export default function OpenCoreCard({ openCore, onRename }: Props) {
                 <button
                     type="button"
                     onClick={() => setMenuOpen((v) => !v)}
-                    class="rounded p-1.5 text-slate-400 opacity-0 transition group-hover:opacity-100 hover:bg-slate-800 hover:text-slate-100"
+                    class="rounded p-1.5 text-slate-400 opacity-0 transition group-hover:opacity-100 hover:bg-slate-800 hover:text-amber-400"
                     aria-label="Open Core actions"
                     aria-haspopup="menu"
                 >

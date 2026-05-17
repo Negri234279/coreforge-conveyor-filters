@@ -392,15 +392,19 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
         }
     }
 
-    if ((editing && !orgMode) && !loaded) {
-        return <p class="text-sm text-slate-400">Loading filter…</p>
+    if (editing && !orgMode && !loaded) {
+        return (
+            <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                Loading filter…
+            </p>
+        )
     }
 
-    if ((editing && !orgMode) && loaded && !findFilter(filterId!)) {
+    if (editing && !orgMode && loaded && !findFilter(filterId!)) {
         return (
-            <div class="rounded-md border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
+            <div class="rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 font-mono text-[11px] text-rose-300">
                 Filter not found.{' '}
-                <a href="/" class="underline">
+                <a href="/" class="underline hover:text-rose-200">
                     Go home
                 </a>
                 .
@@ -413,13 +417,14 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
     return (
         <form onSubmit={onSubmit} class="space-y-6">
             {error ? (
-                <div class="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                <div class="rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 font-mono text-[11px] text-rose-300">
                     {error}
                 </div>
             ) : null}
 
+            {/* Name */}
             <div>
-                <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                     Name <span class="text-rose-400">*</span>
                 </label>
                 <input
@@ -427,30 +432,32 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                     required
                     value={name}
                     onInput={(e) => setName((e.target as HTMLInputElement).value)}
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                    class="mt-1.5 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
                     placeholder="e.g. HQ, Cloth & Leather, Frags"
                 />
             </div>
 
+            {/* Description */}
             <div>
-                <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                     Description
                 </label>
                 <input
                     type="text"
                     value={description}
                     onInput={(e) => setDescription((e.target as HTMLInputElement).value)}
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                    class="mt-1.5 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
                     placeholder="Optional"
                 />
             </div>
 
+            {/* Cover image + Box picker */}
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                    <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                    <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                         Cover Image <span class="text-rose-400">*</span>
                     </label>
-                    <div class="mt-1">
+                    <div class="mt-1.5">
                         <ItemCombobox
                             value={coverItem || undefined}
                             onSelect={setCoverItem}
@@ -462,14 +469,14 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                 </div>
                 <div>
                     <div class="flex flex-wrap items-baseline gap-2">
-                        <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                        <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                             Box / Container
                         </label>
-                        <span class="text-[10px] tracking-normal text-slate-500 normal-case">
+                        <span class="font-mono text-[11px] text-slate-600 normal-case tracking-normal">
                             Select the box this conveyor feeds into
                         </span>
                     </div>
-                    <div class="mt-1">
+                    <div class="mt-1.5">
                         <ItemCombobox
                             value={boxImagePath || undefined}
                             onSelect={setBoxImagePath}
@@ -481,11 +488,12 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                 </div>
             </div>
 
+            {/* Deployment counts */}
             <div>
-                <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                     Deployment
                 </label>
-                <p class="mt-1 text-xs text-slate-500">
+                <p class="mt-1 font-mono text-[11px] text-slate-600">
                     How many of each you run with this filter. Used for the totals shown on the Open
                     Core.
                 </p>
@@ -499,9 +507,9 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                     ).map(([label, value, setter]) => (
                         <label
                             key={label}
-                            class="flex items-stretch overflow-hidden rounded-md border border-slate-700 bg-slate-900/60 focus-within:border-teal-500/60 focus-within:ring-1 focus-within:ring-teal-500/40"
+                            class="flex items-stretch overflow-hidden rounded border border-slate-800 bg-slate-900/60 focus-within:border-amber-500/60 focus-within:ring-1 focus-within:ring-amber-500/30"
                         >
-                            <span class="flex flex-1 items-center bg-slate-800/60 px-3 py-2 text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <span class="flex flex-1 items-center bg-slate-800/60 px-3 py-2 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                                 {label}
                             </span>
                             <input
@@ -523,17 +531,18 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                 </div>
             </div>
 
+            {/* Share with clan */}
             {inOrg && !orgMode ? (
-                <label class="flex cursor-pointer items-start gap-3 rounded-md border border-slate-800 bg-slate-900/40 p-3 hover:border-teal-500/40">
+                <label class="flex cursor-pointer items-start gap-3 rounded border border-slate-800 bg-slate-900/30 p-3 transition-colors hover:border-amber-500/40">
                     <input
                         type="checkbox"
                         checked={sharedWithOrg}
                         onChange={(e) => setSharedWithOrg((e.target as HTMLInputElement).checked)}
-                        class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900"
+                        class="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 accent-amber-500"
                     />
                     <span class="flex flex-col">
                         <span class="text-sm font-medium text-slate-200">Share with my clan</span>
-                        <span class="text-xs text-slate-500">
+                        <span class="mt-0.5 font-mono text-[11px] text-slate-600">
                             Other members will see this filter (read-only) on the Clan Filters page
                             and can clone it to their own space.
                         </span>
@@ -541,12 +550,13 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                 </label>
             ) : null}
 
+            {/* Category picker */}
             {!orgMode ? (
                 <div>
-                    <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                    <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                         Category <span class="text-rose-400">*</span>
                     </label>
-                    <p class="mt-1 text-xs text-slate-500">
+                    <p class="mt-1 font-mono text-[11px] text-slate-600">
                         Pick a parent category, or one of its subcategories.
                     </p>
                     <select
@@ -554,7 +564,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         value={selection}
                         disabled={noCategories}
                         onChange={(e) => setSelection((e.target as HTMLSelectElement).value)}
-                        class="mt-1 w-full appearance-none rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+                        class="mt-1.5 w-full appearance-none rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <option value="">— Select a category —</option>
                         {cats.map((cat) => (
@@ -562,7 +572,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                 <option value={cat.id}>{cat.name} (no subcategory)</option>
                                 {cat.subcategories.map((sub) => (
                                     <option key={sub.id} value={encodeSelection(cat.id, sub.id)}>
-                                        {'  ↳ '}
+                                        {'  ↳ '}
                                         {sub.name}
                                     </option>
                                 ))}
@@ -570,9 +580,9 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         ))}
                     </select>
                     {noCategories ? (
-                        <p class="mt-2 text-xs text-amber-300">
+                        <p class="mt-2 font-mono text-[11px] text-amber-400/70">
                             No categories yet.{' '}
-                            <a href="/" class="underline">
+                            <a href="/" class="underline hover:text-amber-400">
                                 Create one from the home page
                             </a>{' '}
                             first.
@@ -581,16 +591,17 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                 </div>
             ) : null}
 
+            {/* Filter items */}
             <div>
                 <div class="flex items-center justify-between">
-                    <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                    <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                         Conveyor Filter Items
                     </label>
-                    <span class="text-xs text-slate-500">
+                    <span class="font-mono text-[11px] text-slate-600">
                         {items.length}/{MAX_ITEMS} filters
                     </span>
                 </div>
-                <div class="mt-1">
+                <div class="mt-1.5">
                     <ItemCombobox
                         onSelect={addItem}
                         placeholder={
@@ -613,12 +624,12 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                             return (
                                 <li
                                     key={it.shortname}
-                                    class="w-full max-w-[280px] flex-1 basis-[280px] rounded-md border border-slate-800 bg-slate-900/40 p-3"
+                                    class="w-full max-w-[280px] flex-1 basis-[280px] rounded border border-slate-800 bg-slate-900/30 p-3 transition-all duration-[220ms] hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]"
                                 >
                                     <div class="flex items-start gap-3">
                                         <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded bg-slate-800">
                                             {meta.isCategory ? (
-                                                <span class="flex h-full w-full items-center justify-center bg-gradient-to-br from-teal-500/30 to-indigo-500/30 text-base font-bold tracking-wider text-teal-100 uppercase">
+                                                <span class="flex h-full w-full items-center justify-center bg-amber-500/10 text-base font-bold uppercase tracking-wider text-amber-200">
                                                     {letter}
                                                 </span>
                                             ) : (
@@ -634,19 +645,19 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                             <span class="flex items-center gap-1.5 truncate text-sm font-medium text-slate-100">
                                                 {meta.label}
                                                 {meta.isCategory ? (
-                                                    <span class="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-teal-200 uppercase">
+                                                    <span class="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-amber-400">
                                                         Category
                                                     </span>
                                                 ) : null}
                                             </span>
-                                            <span class="truncate text-xs text-slate-500">
+                                            <span class="truncate font-mono text-[11px] text-slate-600">
                                                 {meta.hint ?? it.shortname}
                                             </span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => removeItem(it.shortname)}
-                                            class="rounded p-1.5 text-slate-400 hover:bg-rose-500/10 hover:text-rose-300"
+                                            class="rounded p-1.5 text-slate-500 transition-colors hover:bg-rose-500/10 hover:text-rose-400"
                                             aria-label={`Remove ${it.shortname}`}
                                             title="Remove"
                                         >
@@ -670,9 +681,9 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                         {(['max', 'buffer', 'min'] as const).map((field) => (
                                             <label
                                                 key={field}
-                                                class="flex items-stretch overflow-hidden rounded-md border border-slate-700 bg-slate-900/60 focus-within:border-teal-500/60 focus-within:ring-1 focus-within:ring-teal-500/40"
+                                                class="flex items-stretch overflow-hidden rounded border border-slate-800 bg-slate-900/60 focus-within:border-amber-500/60 focus-within:ring-1 focus-within:ring-amber-500/30"
                                             >
-                                                <span class="flex w-20 flex-shrink-0 items-center justify-center bg-slate-800/60 px-2 py-1.5 text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                                                <span class="flex w-20 flex-shrink-0 items-center justify-center bg-slate-800/60 px-2 py-1.5 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
                                                     {field}
                                                 </span>
                                                 <input
@@ -701,18 +712,19 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         })}
                     </ul>
                 ) : (
-                    <p class="mt-3 text-xs text-slate-500">
+                    <p class="mt-3 font-mono text-[11px] uppercase tracking-widest text-slate-600">
                         No items yet. Add up to {MAX_ITEMS} items to this filter.
                     </p>
                 )}
             </div>
 
+            {/* Form actions */}
             <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-4">
                 <div class="flex items-center gap-2">
                     <button
                         type="button"
                         onClick={openImport}
-                        class="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                        class="inline-flex items-center gap-1.5 rounded border border-slate-700/50 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:border-slate-600 hover:text-amber-400"
                         title="Import conveyor JSON"
                     >
                         <svg
@@ -735,7 +747,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         type="button"
                         onClick={onExport}
                         disabled={items.length === 0}
-                        class="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200 disabled:cursor-not-allowed disabled:opacity-50"
+                        class="inline-flex items-center gap-1.5 rounded border border-slate-700/50 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:border-slate-600 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                         title="Copy conveyor JSON to clipboard"
                     >
                         <svg
@@ -757,36 +769,43 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                 <div class="flex items-center gap-3">
                     <a
                         href={cancelHref ?? '/'}
-                        class="rounded-md px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                        class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                     >
                         Cancel
                     </a>
                     <button
                         type="submit"
                         disabled={submitting || noCategories}
-                        class="rounded-md bg-teal-500/90 px-4 py-2 text-sm font-semibold text-slate-950 shadow hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
+                        class="rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {submitting ? 'Saving…' : editing ? 'Save Filter' : 'Create Filter'}
                     </button>
                 </div>
             </div>
 
+            {/* Import modal */}
             {importOpen ? (
                 <div
-                    class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+                    class="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
                     role="dialog"
                     aria-modal="true"
                     onClick={(e) => {
                         if (e.target === e.currentTarget) setImportOpen(false)
                     }}
                 >
-                    <div class="w-full max-w-xl rounded-lg border border-slate-700 bg-slate-900 p-5 shadow-xl">
+                    <div class="w-full max-w-xl rounded-lg border border-slate-800 border-l-2 border-l-amber-500/30 bg-[#0d1117] p-5 shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_30px_rgba(245,158,11,0.05)]">
                         <div class="flex items-start justify-between gap-4">
                             <div>
-                                <h3 class="text-base font-semibold text-slate-100">
-                                    Import conveyor config
+                                <div class="mb-0.5 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                                    Import
+                                </div>
+                                <h3
+                                    class="text-2xl text-slate-100"
+                                    style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                                >
+                                    Conveyor Config
                                 </h3>
-                                <p class="mt-1 text-xs text-slate-500">
+                                <p class="mt-1 font-mono text-[11px] text-slate-600">
                                     Paste a Rust industrial conveyor JSON array. Item slots
                                     (TargetItemName) and category slots (TargetCategory) are both
                                     supported. Up to {MAX_ITEMS} slots.
@@ -795,7 +814,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                             <button
                                 type="button"
                                 onClick={() => setImportOpen(false)}
-                                class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                                class="rounded p-1 text-slate-500 transition-colors hover:bg-slate-800 hover:text-amber-400"
                                 aria-label="Close"
                             >
                                 ✕
@@ -808,24 +827,24 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                             spellcheck={false}
                             rows={10}
                             placeholder='[{"TargetItemName":"metal.fragments","MaxAmountInOutput":0,"BufferAmount":0,"MinAmountInInput":0, ...}]'
-                            class="mt-3 w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 font-mono text-xs text-slate-100 placeholder-slate-600 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40"
+                            class="mt-4 w-full rounded border border-slate-800 bg-slate-950/60 px-3 py-2 font-mono text-xs text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
                         />
 
                         {importError ? (
-                            <div class="mt-2 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+                            <div class="mt-2 rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 font-mono text-[11px] text-rose-300">
                                 {importError}
                             </div>
                         ) : null}
 
-                        <div class="mt-3 flex items-center justify-between gap-3">
-                            <label class="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-400">
+                        <div class="mt-4 flex items-center justify-between gap-3">
+                            <label class="inline-flex cursor-pointer items-center gap-2 font-mono text-[11px] text-slate-500">
                                 <input
                                     type="checkbox"
                                     checked={importReplace}
                                     onChange={(e) =>
                                         setImportReplace((e.target as HTMLInputElement).checked)
                                     }
-                                    class="h-3.5 w-3.5 rounded border-slate-600 bg-slate-900"
+                                    class="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 accent-amber-500"
                                 />
                                 Replace current items
                             </label>
@@ -833,7 +852,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                 <button
                                     type="button"
                                     onClick={() => setImportOpen(false)}
-                                    class="rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                                    class="rounded px-3 py-1.5 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                                 >
                                     Cancel
                                 </button>
@@ -841,7 +860,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                     type="button"
                                     onClick={applyImport}
                                     disabled={!importText.trim()}
-                                    class="rounded-md bg-teal-500/90 px-3 py-1.5 text-sm font-semibold text-slate-950 hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-50"
+                                    class="rounded bg-amber-500 px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Import
                                 </button>

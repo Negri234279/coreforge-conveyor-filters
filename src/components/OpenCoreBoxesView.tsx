@@ -17,7 +17,7 @@ function FilterTile({ filter }: { filter: Filter }) {
         <button
             type="button"
             onClick={onCopy}
-            class="flex w-24 flex-shrink-0 flex-col items-center gap-1.5 rounded-md border border-slate-700/70 bg-slate-900/50 p-2 text-center hover:border-teal-500/60"
+            class="flex w-24 flex-shrink-0 flex-col items-center gap-1.5 rounded border border-slate-800 bg-slate-900/30 p-2 text-center transition hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]"
             title="Copy conveyor JSON"
         >
             <img
@@ -36,18 +36,18 @@ function FilterTile({ filter }: { filter: Filter }) {
 function Row({ label, indent, filters }: { label: string; indent?: boolean; filters: Filter[] }) {
     return (
         <div
-            class={`flex items-start gap-4 border-b border-slate-800/70 p-3 ${indent ? 'pl-4' : ''}`}
+            class={`flex items-start gap-4 border-b border-slate-800 p-3 ${indent ? 'pl-4' : ''}`}
         >
             <div class="w-36 flex-shrink-0 pl-1 text-left">
                 <span
-                    class={`block truncate text-xs font-bold tracking-[0.16em] uppercase ${
-                        indent ? 'text-slate-300' : 'text-slate-100'
+                    class={`block truncate font-mono text-[11px] font-bold tracking-widest uppercase ${
+                        indent ? 'text-slate-400' : 'text-slate-100'
                     }`}
                 >
                     {indent ? '↳ ' : ''}
                     {label}
                 </span>
-                <span class="text-[10px] text-slate-500">
+                <span class="text-[11px] text-slate-500">
                     {filters.length} {filters.length === 1 ? 'filter' : 'filters'}
                 </span>
             </div>

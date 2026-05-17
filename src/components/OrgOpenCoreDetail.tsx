@@ -78,8 +78,8 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
     }
 
     return (
-        <li class="flex items-center gap-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
-            <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-slate-800/80">
+        <li class="flex items-center gap-3 rounded border border-slate-800 bg-slate-900/30 p-2">
+            <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-slate-800">
                 <img
                     src={itemImage(filter.coverItemShortname)}
                     alt=""
@@ -90,7 +90,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                     <img
                         src={boxImage(filter.boxImagePath)}
                         alt=""
-                        class="absolute right-0.5 bottom-0.5 h-7 w-7 rounded border border-slate-700 bg-slate-900/90 object-contain p-0.5"
+                        class="absolute right-0.5 bottom-0.5 h-7 w-7 rounded border border-slate-800 bg-slate-900/90 object-contain p-0.5"
                         loading="lazy"
                     />
                 ) : null}
@@ -111,7 +111,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
             <button
                 type="button"
                 onClick={onCopy}
-                class="rounded p-2 text-slate-400 hover:bg-slate-800 hover:text-teal-300"
+                class="rounded p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                 aria-label="Copy conveyor JSON"
                 title="Copy conveyor JSON"
             >
@@ -134,7 +134,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                 <button
                     type="button"
                     onClick={() => setMenuOpen((v) => !v)}
-                    class="rounded p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                    class="rounded p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                     aria-label="More actions"
                     aria-haspopup="menu"
                     aria-expanded={menuOpen}
@@ -153,12 +153,12 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                 {menuOpen ? (
                     <div
                         role="menu"
-                        class="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl"
+                        class="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-xl"
                     >
                         <button
                             type="button"
                             onClick={onViewItems}
-                            class="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800"
+                            class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
                         >
                             View items
                         </button>
@@ -167,14 +167,14 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                                 <button
                                     type="button"
                                     onClick={onEditFilter}
-                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800"
+                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
                                 >
                                     Edit
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => { setMenuOpen(false); setConfirmDelete(true) }}
-                                    class="block w-full px-3 py-2 text-left text-sm text-rose-400 hover:bg-slate-800"
+                                    class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
                                 >
                                     Delete
                                 </button>
@@ -185,10 +185,18 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
             </div>
 
             {itemsModalOpen ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
-                    <div class="w-full max-h-[90vh] max-w-4xl rounded-lg border border-slate-700 bg-slate-900 shadow-xl flex flex-col">
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4">
+                    <div
+                        class="w-full max-h-[90vh] max-w-4xl rounded-lg border border-slate-800 shadow-xl flex flex-col"
+                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
+                    >
                         <div class="border-b border-slate-800 px-4 py-3 sm:px-6 sm:py-4">
-                            <h2 class="text-lg font-semibold text-slate-100">{filter.name}</h2>
+                            <h2
+                                class="text-2xl text-slate-100"
+                                style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                            >
+                                {filter.name}
+                            </h2>
                             <p class="mt-1 text-xs text-slate-400">
                                 {filter.items.length} {filter.items.length === 1 ? 'item' : 'items'}
                             </p>
@@ -204,7 +212,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                                         return (
                                             <div
                                                 key={idx}
-                                                class="flex flex-col items-center gap-1 rounded border border-slate-700/50 bg-slate-800/40 p-1.5 sm:p-2 text-center"
+                                                class="flex flex-col items-center gap-1 rounded border border-slate-800/50 bg-slate-800/30 p-1.5 sm:p-2 text-center"
                                             >
                                                 <img
                                                     src={itemImage(item.shortname)}
@@ -212,7 +220,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                                                     class="h-10 w-10 sm:h-12 sm:w-12 rounded bg-slate-800 object-contain"
                                                     loading="lazy"
                                                 />
-                                                <div class="text-[9px] sm:text-[10px] font-semibold text-slate-200 line-clamp-2">
+                                                <div class="text-[9px] sm:text-[11px] font-semibold text-slate-200 line-clamp-2">
                                                     {itemName}
                                                 </div>
                                                 <div class="w-full text-[8px] sm:text-[9px] text-slate-400">
@@ -232,7 +240,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                             <button
                                 type="button"
                                 onClick={() => setItemsModalOpen(false)}
-                                class="w-full rounded bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-slate-600"
+                                class="w-full rounded bg-amber-500 px-3 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
                             >
                                 Close
                             </button>
@@ -242,9 +250,17 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
             ) : null}
 
             {confirmDelete ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                    <div class="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl">
-                        <h2 class="text-base font-semibold text-slate-100">Delete filter?</h2>
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div
+                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
+                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
+                    >
+                        <h2
+                            class="text-xl text-slate-100"
+                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                        >
+                            Delete filter?
+                        </h2>
                         <p class="mt-2 text-sm text-slate-400">
                             "{filter.name}" will be permanently removed.
                         </p>
@@ -252,7 +268,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                             <button
                                 type="button"
                                 onClick={() => setConfirmDelete(false)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 hover:bg-slate-800"
+                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                             >
                                 Cancel
                             </button>
@@ -260,7 +276,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                                 type="button"
                                 onClick={onDeleteFilter}
                                 disabled={deleting}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-50 transition-colors hover:bg-rose-500 disabled:opacity-60"
                             >
                                 {deleting ? 'Deleting…' : 'Delete'}
                             </button>
@@ -401,9 +417,12 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
     if (!loaded) return <p class="text-sm text-slate-500">Loading…</p>
     if (error || !detail) {
         return (
-            <div class="rounded-md border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
+            <div class="rounded border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
                 {error ?? 'Open Core not available.'}{' '}
-                <a href="/org/filters" class="underline">
+                <a
+                    href="/org/filters"
+                    class="text-amber-400 underline decoration-amber-400/40 transition-colors hover:text-amber-300 hover:decoration-amber-400"
+                >
                     Back to Clan Filters
                 </a>
             </div>
@@ -421,19 +440,22 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
             <div class="mb-6">
                 <a
                     href="/org/filters"
-                    class="text-xs font-semibold tracking-wider text-slate-500 uppercase hover:text-slate-200"
+                    class="text-xs font-semibold tracking-wider text-slate-500 uppercase transition-colors hover:text-amber-400"
                 >
                     &larr; Back to Clan Filters
                 </a>
                 <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h1 class="text-2xl font-bold tracking-tight text-slate-100">
+                        <h1
+                            class="text-3xl text-slate-100"
+                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                        >
                             {detail.name}
                         </h1>
                         <p class="mt-1 text-sm text-slate-400">
                             Shared by <span class="text-slate-200">{detail.owner.username}</span>
                             {canEdit ? (
-                                <span class="ml-2 rounded bg-teal-900/40 px-1.5 py-0.5 text-xs font-semibold text-teal-300">
+                                <span class="ml-2 rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-semibold text-amber-400">
                                     editable
                                 </span>
                             ) : (
@@ -446,7 +468,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             <button
                                 type="button"
                                 onClick={() => { setAddCatName(''); setAddCatOpen(true) }}
-                                class="rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                                class="rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400"
                             >
                                 + Category
                             </button>
@@ -455,7 +477,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             <button
                                 type="button"
                                 onClick={() => setConfirmDeleteOc(true)}
-                                class="rounded-md border border-rose-700/60 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-rose-400 hover:border-rose-500 hover:text-rose-300"
+                                class="rounded border border-rose-500/40 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-rose-400 transition-colors hover:border-rose-500/60 hover:text-rose-300"
                             >
                                 Delete from clan
                             </button>
@@ -464,7 +486,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             type="button"
                             onClick={onClone}
                             disabled={busy}
-                            class="rounded-md bg-teal-500/90 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Clone entire Open Core
                         </button>
@@ -476,14 +498,14 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                 <DeploymentTotals totals={totals} variant="stat" class="mb-6" />
             ) : null}
 
-            <div class="mb-6 inline-flex rounded-md border border-slate-700 bg-slate-900/60 p-0.5 text-sm">
+            <div class="mb-6 inline-flex rounded border border-slate-800 bg-slate-900/40 p-0.5 text-sm">
                 <button
                     type="button"
                     onClick={() => setView('conveyors')}
-                    class={`rounded px-3 py-1.5 font-semibold ${
+                    class={`rounded px-3 py-1.5 font-semibold transition-colors ${
                         view === 'conveyors'
-                            ? 'bg-slate-700 text-slate-100'
-                            : 'text-slate-400 hover:text-slate-100'
+                            ? 'bg-amber-500/10 text-amber-400'
+                            : 'text-slate-400 hover:text-amber-400'
                     }`}
                 >
                     Conveyors
@@ -491,10 +513,10 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                 <button
                     type="button"
                     onClick={() => setView('boxes')}
-                    class={`rounded px-3 py-1.5 font-semibold ${
+                    class={`rounded px-3 py-1.5 font-semibold transition-colors ${
                         view === 'boxes'
-                            ? 'bg-slate-700 text-slate-100'
-                            : 'text-slate-400 hover:text-slate-100'
+                            ? 'bg-amber-500/10 text-amber-400'
+                            : 'text-slate-400 hover:text-amber-400'
                     }`}
                 >
                     Boxes
@@ -508,7 +530,10 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                     {detail.categories.map((cat) => (
                         <section key={cat.id} class="mb-4">
                             <div class="mb-3 flex items-center justify-between border-b border-slate-800 pb-3">
-                                <h2 class="text-sm font-bold tracking-[0.18em] text-slate-100 uppercase">
+                                <h2
+                                    class="text-lg text-slate-100"
+                                    style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                                >
                                     {cat.name}
                                 </h2>
                                 {canEdit ? (
@@ -516,7 +541,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                         <button
                                             type="button"
                                             onClick={() => setCatMenuOpen(catMenuOpen === cat.id ? null : cat.id)}
-                                            class="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                                            class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                                             aria-label="Category actions"
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
@@ -526,25 +551,25 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                             </svg>
                                         </button>
                                         {catMenuOpen === cat.id ? (
-                                            <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl">
+                                            <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-xl">
                                                 <button
                                                     type="button"
                                                     onClick={() => { setCatMenuOpen(null); window.location.href = `/org/opencore/${openCoreId}/filter/new?categoryId=${encodeURIComponent(cat.id)}` }}
-                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800"
+                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
                                                 >
                                                     New Filter
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => { setCatMenuOpen(null); setAddSubCatId(cat.id); setAddSubName(''); setAddSubOpen(true) }}
-                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800"
+                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
                                                 >
                                                     + Subcategory
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => { setCatMenuOpen(null); setConfirmDeleteCat({ id: cat.id, name: cat.name }) }}
-                                                    class="block w-full px-3 py-2 text-left text-sm text-rose-400 hover:bg-slate-800"
+                                                    class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
                                                 >
                                                     Delete
                                                 </button>
@@ -572,7 +597,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             {cat.subcategories.map((sub) => (
                                 <div key={sub.id} class="mt-6">
                                     <div class="mb-2 flex items-center justify-between border-b border-slate-800/70 pb-2">
-                                        <h3 class="text-xs font-bold tracking-[0.18em] text-slate-200 uppercase">
+                                        <h3 class="font-mono text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             {sub.name}
                                         </h3>
                                         {canEdit ? (
@@ -580,7 +605,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                 <button
                                                     type="button"
                                                     onClick={() => setSubMenuOpen(subMenuOpen === sub.id ? null : sub.id)}
-                                                    class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                                                    class="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                                                     aria-label="Subcategory actions"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5">
@@ -590,18 +615,18 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                     </svg>
                                                 </button>
                                                 {subMenuOpen === sub.id ? (
-                                                    <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl">
+                                                    <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-xl">
                                                         <button
                                                             type="button"
                                                             onClick={() => { setSubMenuOpen(null); window.location.href = `/org/opencore/${openCoreId}/filter/new?categoryId=${encodeURIComponent(cat.id)}&subcategoryId=${encodeURIComponent(sub.id)}` }}
-                                                            class="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800"
+                                                            class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
                                                         >
                                                             New Filter
                                                         </button>
                                                         <button
                                                             type="button"
                                                             onClick={() => { setSubMenuOpen(null); setConfirmDeleteSub({ id: sub.id, name: sub.name }) }}
-                                                            class="block w-full px-3 py-2 text-left text-sm text-rose-400 hover:bg-slate-800"
+                                                            class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
                                                         >
                                                             Delete
                                                         </button>
@@ -639,15 +664,23 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
 
             {/* Add Category modal */}
             {addCatOpen ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                    <div class="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl">
-                        <h2 class="text-base font-semibold text-slate-100">New Category</h2>
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div
+                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
+                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
+                    >
+                        <h2
+                            class="text-xl text-slate-100"
+                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                        >
+                            New Category
+                        </h2>
                         <input
                             type="text"
                             value={addCatName}
                             onInput={(e) => setAddCatName((e.target as HTMLInputElement).value)}
                             placeholder="Category name"
-                            class="mt-3 w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-teal-500/60"
+                            class="mt-3 w-full rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
                             onKeyDown={(e) => { if (e.key === 'Enter') void onAddCategory() }}
                             autoFocus
                         />
@@ -655,7 +688,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             <button
                                 type="button"
                                 onClick={() => setAddCatOpen(false)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 hover:bg-slate-800"
+                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                             >
                                 Cancel
                             </button>
@@ -663,7 +696,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 type="button"
                                 onClick={onAddCategory}
                                 disabled={addCatBusy || !addCatName.trim()}
-                                class="rounded bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-500 disabled:opacity-60"
+                                class="rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:opacity-60"
                             >
                                 {addCatBusy ? 'Creating…' : 'Create'}
                             </button>
@@ -674,15 +707,23 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
 
             {/* Add Subcategory modal */}
             {addSubOpen ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                    <div class="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl">
-                        <h2 class="text-base font-semibold text-slate-100">New Subcategory</h2>
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div
+                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
+                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
+                    >
+                        <h2
+                            class="text-xl text-slate-100"
+                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                        >
+                            New Subcategory
+                        </h2>
                         <input
                             type="text"
                             value={addSubName}
                             onInput={(e) => setAddSubName((e.target as HTMLInputElement).value)}
                             placeholder="Subcategory name"
-                            class="mt-3 w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-teal-500/60"
+                            class="mt-3 w-full rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
                             onKeyDown={(e) => { if (e.key === 'Enter') void onAddSubcategory() }}
                             autoFocus
                         />
@@ -690,7 +731,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             <button
                                 type="button"
                                 onClick={() => setAddSubOpen(false)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 hover:bg-slate-800"
+                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                             >
                                 Cancel
                             </button>
@@ -698,7 +739,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 type="button"
                                 onClick={onAddSubcategory}
                                 disabled={addSubBusy || !addSubName.trim()}
-                                class="rounded bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-500 disabled:opacity-60"
+                                class="rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:opacity-60"
                             >
                                 {addSubBusy ? 'Creating…' : 'Create'}
                             </button>
@@ -709,9 +750,17 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
 
             {/* Confirm delete category */}
             {confirmDeleteCat ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                    <div class="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl">
-                        <h2 class="text-base font-semibold text-slate-100">Delete category?</h2>
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div
+                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
+                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
+                    >
+                        <h2
+                            class="text-xl text-slate-100"
+                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                        >
+                            Delete category?
+                        </h2>
                         <p class="mt-2 text-sm text-slate-400">
                             "{confirmDeleteCat.name}" and all its filters will be permanently removed.
                         </p>
@@ -719,7 +768,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             <button
                                 type="button"
                                 onClick={() => setConfirmDeleteCat(null)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 hover:bg-slate-800"
+                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                             >
                                 Cancel
                             </button>
@@ -727,7 +776,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 type="button"
                                 onClick={onDeleteCat}
                                 disabled={deletingCat}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-50 transition-colors hover:bg-rose-500 disabled:opacity-60"
                             >
                                 {deletingCat ? 'Deleting…' : 'Delete'}
                             </button>
@@ -738,9 +787,17 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
 
             {/* Confirm delete subcategory */}
             {confirmDeleteSub ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                    <div class="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl">
-                        <h2 class="text-base font-semibold text-slate-100">Delete subcategory?</h2>
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div
+                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
+                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
+                    >
+                        <h2
+                            class="text-xl text-slate-100"
+                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                        >
+                            Delete subcategory?
+                        </h2>
                         <p class="mt-2 text-sm text-slate-400">
                             "{confirmDeleteSub.name}" will be removed. Filters in it will be moved up to the parent category.
                         </p>
@@ -748,7 +805,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             <button
                                 type="button"
                                 onClick={() => setConfirmDeleteSub(null)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 hover:bg-slate-800"
+                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                             >
                                 Cancel
                             </button>
@@ -756,7 +813,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 type="button"
                                 onClick={onDeleteSub}
                                 disabled={deletingSub}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-50 transition-colors hover:bg-rose-500 disabled:opacity-60"
                             >
                                 {deletingSub ? 'Deleting…' : 'Delete'}
                             </button>
@@ -767,9 +824,17 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
 
             {/* Confirm delete clan Open Core */}
             {confirmDeleteOc ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                    <div class="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-xl">
-                        <h2 class="text-base font-semibold text-slate-100">Delete from clan?</h2>
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div
+                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
+                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
+                    >
+                        <h2
+                            class="text-xl text-slate-100"
+                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                        >
+                            Delete from clan?
+                        </h2>
                         <p class="mt-2 text-sm text-slate-400">
                             "{detail.name}" will be permanently removed from the clan. This does not affect
                             anyone's personal copies.
@@ -778,7 +843,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             <button
                                 type="button"
                                 onClick={() => setConfirmDeleteOc(false)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 hover:bg-slate-800"
+                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                             >
                                 Cancel
                             </button>
@@ -786,7 +851,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 type="button"
                                 onClick={onDeleteOc}
                                 disabled={deletingOc}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-50 transition-colors hover:bg-rose-500 disabled:opacity-60"
                             >
                                 {deletingOc ? 'Deleting…' : 'Delete'}
                             </button>
