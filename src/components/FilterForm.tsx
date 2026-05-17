@@ -376,6 +376,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                 boxCount,
                 conveyorCount,
                 storageAdaptorCount,
+                openCoreId: cat.openCoreId ?? null,
             }
 
             if (editing && filterId) {
