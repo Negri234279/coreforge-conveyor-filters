@@ -53,17 +53,20 @@ export const GET: APIRoute = ({ locals }) => {
     }
 
     const categoryIds = Array.from(new Set(filterRows.map((f) => f.categoryId)))
+    const catRows = db
+        .select({ id: schema.categories.id, name: schema.categories.name, openCoreId: schema.categories.openCoreId })
+        .from(schema.categories)
+        .where(inArray(schema.categories.id, categoryIds))
+        .all()
+    // Exclude filters that belong to an OC category — those are only visible via the OC.
+    const ocCatIds = new Set(catRows.filter((c) => c.openCoreId).map((c) => c.id))
+    const standaloneFilters = filterRows.filter((f) => !ocCatIds.has(f.categoryId))
+    if (standaloneFilters.length === 0) return json({ filters: [] })
+
     const subIds = Array.from(
-        new Set(filterRows.map((f) => f.subcategoryId).filter((x): x is string => !!x)),
+        new Set(standaloneFilters.map((f) => f.subcategoryId).filter((x): x is string => !!x)),
     )
-    const catNames = new Map(
-        db
-            .select({ id: schema.categories.id, name: schema.categories.name })
-            .from(schema.categories)
-            .where(inArray(schema.categories.id, categoryIds))
-            .all()
-            .map((c) => [c.id, c.name]),
-    )
+    const catNames = new Map(catRows.map((c) => [c.id, c.name]))
     const subNames = subIds.length
         ? new Map(
               db
@@ -75,7 +78,7 @@ export const GET: APIRoute = ({ locals }) => {
           )
         : new Map<string, string>()
 
-    const out: OrgFilterView[] = filterRows.map((f) => {
+    const out: OrgFilterView[] = standaloneFilters.map((f) => {
         const owner = memberById.get(f.userId)!
         return {
             id: f.id,

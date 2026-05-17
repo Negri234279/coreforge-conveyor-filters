@@ -312,7 +312,11 @@ function ensureCategoryByNameMutable(
     openCoreId: string | null = null,
 ): Category {
     const trimmed = name.trim()
-    const existing = next.find((c) => c.name.trim().toLowerCase() === trimmed.toLowerCase())
+    const existing = next.find(
+        (c) =>
+            c.name.trim().toLowerCase() === trimmed.toLowerCase() &&
+            (c.openCoreId ?? null) === (openCoreId ?? null),
+    )
     if (existing) return existing
     const created: Category = {
         id: nanoid(),

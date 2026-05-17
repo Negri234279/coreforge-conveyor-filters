@@ -40,6 +40,34 @@ import type { FilterItem } from '../types'
 
 interface Props {
     filterId?: string
+    /** Pre-populate and lock category in org-mode. */
+    initialData?: {
+        name: string
+        description?: string
+        coverItemShortname: string
+        boxImagePath?: string
+        categoryId: string
+        subcategoryId?: string
+        boxCount: number
+        conveyorCount: number
+        storageAdaptorCount: number
+        items: FilterItem[]
+    }
+    /** When provided, replaces createFilter/updateFilter with custom save logic (org-mode). */
+    onSave?: (draft: {
+        name: string
+        description?: string
+        coverItemShortname: string
+        boxImagePath?: string
+        categoryId: string
+        subcategoryId?: string
+        boxCount: number
+        conveyorCount: number
+        storageAdaptorCount: number
+        items: FilterItem[]
+    }) => Promise<void>
+    /** Where Cancel/back redirects to (org-mode). Defaults to '/'. */
+    cancelHref?: string
 }
 
 const MAX_ITEMS = 30
@@ -123,8 +151,9 @@ function decodeSelection(value: string): { catId: string; subId?: string } | nul
     return { catId, subId: subId || undefined }
 }
 
-export default function FilterForm({ filterId }: Props) {
-    const editing = !!filterId
+export default function FilterForm({ filterId, initialData, onSave, cancelHref }: Props) {
+    const editing = !!filterId || !!initialData
+    const orgMode = !!onSave
     const cats = categories.value
 
     const me = getCurrentUser()
@@ -151,7 +180,21 @@ export default function FilterForm({ filterId }: Props) {
 
     // When editing, hydrate from API once data is loaded.
     useEffect(() => {
-        if (!editing) {
+        // org-mode: pre-fill from initialData directly
+        if (initialData) {
+            setName(initialData.name)
+            setDescription(initialData.description ?? '')
+            setCoverItem(initialData.coverItemShortname)
+            setBoxImagePath(initialData.boxImagePath ?? '')
+            setSelection(encodeSelection(initialData.categoryId, initialData.subcategoryId))
+            setItems([...initialData.items])
+            setBoxCount(initialData.boxCount)
+            setConveyorCount(initialData.conveyorCount)
+            setStorageAdaptorCount(initialData.storageAdaptorCount)
+            setLoaded(true)
+            return
+        }
+        if (!filterId) {
             if (typeof window !== 'undefined') {
                 const params = new URLSearchParams(window.location.search)
                 const catId = params.get('categoryId')
@@ -187,7 +230,7 @@ export default function FilterForm({ filterId }: Props) {
         return () => {
             cancelled = true
         }
-    }, [editing, filterId])
+    }, [filterId, initialData])
 
     function addItem(shortname: string) {
         if (items.length >= MAX_ITEMS) return
@@ -284,37 +327,57 @@ export default function FilterForm({ filterId }: Props) {
             setError('Category is required.')
             return
         }
-        const cat = cats.find((c) => c.id === decoded.catId)
-        if (!cat) {
-            setError('Selected category no longer exists.')
-            return
-        }
-        let subName: string | undefined
-        if (decoded.subId) {
-            const sub = cat.subcategories.find((s) => s.id === decoded.subId)
-            if (!sub) {
-                setError('Selected subcategory no longer exists.')
-                return
-            }
-            subName = sub.name
-        }
-
-        const draft: FilterDraft = {
-            name: name.trim(),
-            description: description.trim() || undefined,
-            coverItemShortname: coverItem,
-            boxImagePath: boxImagePath || undefined,
-            categoryName: cat.name,
-            subcategoryName: subName,
-            items,
-            sharedWithOrg: inOrg ? sharedWithOrg : false,
-            boxCount,
-            conveyorCount,
-            storageAdaptorCount,
-        }
 
         setSubmitting(true)
         try {
+            if (orgMode && onSave) {
+                await onSave({
+                    name: name.trim(),
+                    description: description.trim() || undefined,
+                    coverItemShortname: coverItem,
+                    boxImagePath: boxImagePath || undefined,
+                    categoryId: decoded.catId,
+                    subcategoryId: decoded.subId,
+                    boxCount,
+                    conveyorCount,
+                    storageAdaptorCount,
+                    items,
+                })
+                window.location.href = cancelHref ?? (document.referrer || '/org/filters')
+                return
+            }
+
+            const cat = cats.find((c) => c.id === decoded.catId)
+            if (!cat) {
+                setError('Selected category no longer exists.')
+                setSubmitting(false)
+                return
+            }
+            let subName: string | undefined
+            if (decoded.subId) {
+                const sub = cat.subcategories.find((s) => s.id === decoded.subId)
+                if (!sub) {
+                    setError('Selected subcategory no longer exists.')
+                    setSubmitting(false)
+                    return
+                }
+                subName = sub.name
+            }
+
+            const draft: FilterDraft = {
+                name: name.trim(),
+                description: description.trim() || undefined,
+                coverItemShortname: coverItem,
+                boxImagePath: boxImagePath || undefined,
+                categoryName: cat.name,
+                subcategoryName: subName,
+                items,
+                sharedWithOrg: inOrg ? sharedWithOrg : false,
+                boxCount,
+                conveyorCount,
+                storageAdaptorCount,
+            }
+
             if (editing && filterId) {
                 await updateFilter(filterId, draft)
             } else {
@@ -329,11 +392,11 @@ export default function FilterForm({ filterId }: Props) {
         }
     }
 
-    if (editing && !loaded) {
+    if ((editing && !orgMode) && !loaded) {
         return <p class="text-sm text-slate-400">Loading filter…</p>
     }
 
-    if (editing && loaded && !findFilter(filterId!)) {
+    if ((editing && !orgMode) && loaded && !findFilter(filterId!)) {
         return (
             <div class="rounded-md border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
                 Filter not found.{' '}
@@ -345,7 +408,7 @@ export default function FilterForm({ filterId }: Props) {
         )
     }
 
-    const noCategories = cats.length === 0
+    const noCategories = !orgMode && cats.length === 0
 
     return (
         <form onSubmit={onSubmit} class="space-y-6">
@@ -460,7 +523,7 @@ export default function FilterForm({ filterId }: Props) {
                 </div>
             </div>
 
-            {inOrg ? (
+            {inOrg && !orgMode ? (
                 <label class="flex cursor-pointer items-start gap-3 rounded-md border border-slate-800 bg-slate-900/40 p-3 hover:border-teal-500/40">
                     <input
                         type="checkbox"
@@ -478,43 +541,45 @@ export default function FilterForm({ filterId }: Props) {
                 </label>
             ) : null}
 
-            <div>
-                <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                    Category <span class="text-rose-400">*</span>
-                </label>
-                <p class="mt-1 text-xs text-slate-500">
-                    Pick a parent category, or one of its subcategories.
-                </p>
-                <select
-                    required
-                    value={selection}
-                    disabled={noCategories}
-                    onChange={(e) => setSelection((e.target as HTMLSelectElement).value)}
-                    class="mt-1 w-full appearance-none rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    <option value="">— Select a category —</option>
-                    {cats.map((cat) => (
-                        <optgroup key={cat.id} label={cat.name}>
-                            <option value={cat.id}>{cat.name} (no subcategory)</option>
-                            {cat.subcategories.map((sub) => (
-                                <option key={sub.id} value={encodeSelection(cat.id, sub.id)}>
-                                    {'  ↳ '}
-                                    {sub.name}
-                                </option>
-                            ))}
-                        </optgroup>
-                    ))}
-                </select>
-                {noCategories ? (
-                    <p class="mt-2 text-xs text-amber-300">
-                        No categories yet.{' '}
-                        <a href="/" class="underline">
-                            Create one from the home page
-                        </a>{' '}
-                        first.
+            {!orgMode ? (
+                <div>
+                    <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                        Category <span class="text-rose-400">*</span>
+                    </label>
+                    <p class="mt-1 text-xs text-slate-500">
+                        Pick a parent category, or one of its subcategories.
                     </p>
-                ) : null}
-            </div>
+                    <select
+                        required
+                        value={selection}
+                        disabled={noCategories}
+                        onChange={(e) => setSelection((e.target as HTMLSelectElement).value)}
+                        class="mt-1 w-full appearance-none rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <option value="">— Select a category —</option>
+                        {cats.map((cat) => (
+                            <optgroup key={cat.id} label={cat.name}>
+                                <option value={cat.id}>{cat.name} (no subcategory)</option>
+                                {cat.subcategories.map((sub) => (
+                                    <option key={sub.id} value={encodeSelection(cat.id, sub.id)}>
+                                        {'  ↳ '}
+                                        {sub.name}
+                                    </option>
+                                ))}
+                            </optgroup>
+                        ))}
+                    </select>
+                    {noCategories ? (
+                        <p class="mt-2 text-xs text-amber-300">
+                            No categories yet.{' '}
+                            <a href="/" class="underline">
+                                Create one from the home page
+                            </a>{' '}
+                            first.
+                        </p>
+                    ) : null}
+                </div>
+            ) : null}
 
             <div>
                 <div class="flex items-center justify-between">
@@ -691,7 +756,7 @@ export default function FilterForm({ filterId }: Props) {
                 </div>
                 <div class="flex items-center gap-3">
                     <a
-                        href="/"
+                        href={cancelHref ?? '/'}
                         class="rounded-md px-4 py-2 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
                     >
                         Cancel

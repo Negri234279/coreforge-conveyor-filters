@@ -21,6 +21,7 @@ export type EventType =
     | 'user_login'
     | 'category_clone'
     | 'filter_clone'
+    | 'opencore_clone'
     | 'filter_create'
     | 'filter_update'
     | 'filter_delete'

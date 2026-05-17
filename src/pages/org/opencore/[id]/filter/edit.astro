@@ -1,0 +1,37 @@
+---
+import Layout from '../../../../../layouts/Layout.astro'
+import OrgFilterIsland from '../../../../../components/OrgFilterIsland'
+import CopyToast from '../../../../../components/CopyToast'
+
+const user = Astro.locals.user!
+const { id } = Astro.params
+if (!id) return Astro.redirect('/org/filters')
+if (!user.orgId) return Astro.redirect('/org')
+if (user.orgRole !== 'owner' && user.orgRole !== 'admin') return Astro.redirect(`/org/opencore/${id}`)
+
+const url = new URL(Astro.request.url)
+const filterId = url.searchParams.get('filterId') ?? undefined
+if (!filterId) return Astro.redirect(`/org/opencore/${id}`)
+---
+
+<Layout title="Edit Clan Filter – CoreForge" activeNav="orgFilters">
+    <div class="mb-8">
+        <a
+            href={`/org/opencore/${id}`}
+            class="text-xs font-semibold tracking-wider text-slate-500 uppercase hover:text-slate-200"
+            >&larr; Back to Open Core</a
+        >
+        <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-100">Edit Clan Filter</h1>
+        <p class="mt-1 text-sm text-slate-400">Update a filter in the shared Open Core.</p>
+    </div>
+
+    <div class="rounded-lg border border-slate-800 bg-slate-900/30 p-6 shadow-inner">
+        <OrgFilterIsland
+            client:only="preact"
+            openCoreId={id}
+            filterId={filterId}
+        />
+    </div>
+
+    <CopyToast client:only="preact" />
+</Layout>

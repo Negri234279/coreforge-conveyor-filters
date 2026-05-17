@@ -7,7 +7,7 @@ export interface ClientUser {
     id: string
     username: string
     orgId: string | null
-    orgRole: 'owner' | 'member' | null
+    orgRole: 'owner' | 'admin' | 'member' | null
 }
 
 export function getCurrentUser(): ClientUser | null {
