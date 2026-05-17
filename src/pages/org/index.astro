@@ -131,9 +131,21 @@ const isOwner = user.orgRole === 'owner'
                             old one.
                         </p>
                         <div class="mt-3 flex flex-wrap items-center gap-3">
-                            <code class="rounded border border-slate-800 bg-slate-950/80 px-3 py-2 font-mono text-base tracking-[0.2em] text-amber-400">
+                            <code id="org-invite-code" class="rounded border border-slate-800 bg-slate-950/80 px-3 py-2 font-mono text-base tracking-[0.2em] text-amber-400">
                                 {org.inviteCode}
                             </code>
+                            <button
+                                id="copy-invite-code"
+                                type="button"
+                                class="rounded p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
+                                aria-label="Copy invite code"
+                                title="Copy invite code"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                            </button>
                             <form method="POST" action="/api/org/invite/rotate" class="m-0">
                                 <button
                                     type="submit"
@@ -221,6 +233,20 @@ const isOwner = user.orgRole === 'owner'
                         if (!select) continue
                         select.addEventListener('change', () => {
                             ;(form as HTMLFormElement).submit()
+                        })
+                    }
+
+                    // Copy invite code button.
+                    const copyBtn = document.getElementById('copy-invite-code')
+                    const inviteCode = document.getElementById('org-invite-code')
+                    if (copyBtn && inviteCode) {
+                        copyBtn.addEventListener('click', async () => {
+                            try {
+                                await navigator.clipboard.writeText(inviteCode.textContent?.trim() ?? '')
+                                const orig = copyBtn.innerHTML
+                                copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-amber-400"><polyline points="20 6 9 17 4 12"/></svg>`
+                                setTimeout(() => { copyBtn.innerHTML = orig }, 1200)
+                            } catch {}
                         })
                     }
                 </script>
