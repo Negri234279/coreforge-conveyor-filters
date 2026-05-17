@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { cloneOrgCategory, fetchOrgCategoryDetail, orgIsBusy } from '../store/org'
 import { deploymentTotals } from '../store/filters'
-import { itemImage } from '../store/items'
+import { itemImage, getItem } from '../store/items'
 import { boxImage } from '../store/boxes'
 import { buildConveyorJson } from '../lib/conveyor'
 import { copyToClipboard } from '../lib/clipboard'
@@ -14,9 +14,27 @@ interface Props {
 }
 
 function FilterRow({ filter }: { filter: Filter }) {
+    const [menuOpen, setMenuOpen] = useState(false)
+    const [itemsModalOpen, setItemsModalOpen] = useState(false)
+    const menuRef = useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+        function onDoc(e: MouseEvent) {
+            if (!menuRef.current) return
+            if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+        }
+        document.addEventListener('mousedown', onDoc)
+        return () => document.removeEventListener('mousedown', onDoc)
+    }, [])
+
     async function onCopy() {
         const ok = await copyToClipboard(JSON.stringify(buildConveyorJson(filter.items)))
         showToast(ok ? 'Copied!' : 'Copy failed')
+    }
+
+    function onViewItems() {
+        setMenuOpen(false)
+        setItemsModalOpen(true)
     }
     return (
         <li class="flex items-center gap-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2">
@@ -70,6 +88,99 @@ function FilterRow({ filter }: { filter: Filter }) {
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                 </svg>
             </button>
+
+            <div class="relative" ref={menuRef}>
+                <button
+                    type="button"
+                    onClick={() => setMenuOpen((v) => !v)}
+                    class="rounded p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                    aria-label="More actions"
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen}
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        class="h-4 w-4"
+                    >
+                        <circle cx="12" cy="5" r="1.7" />
+                        <circle cx="12" cy="12" r="1.7" />
+                        <circle cx="12" cy="19" r="1.7" />
+                    </svg>
+                </button>
+                {menuOpen ? (
+                    <div
+                        role="menu"
+                        class="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl"
+                    >
+                        <button
+                            type="button"
+                            onClick={onViewItems}
+                            class="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800"
+                        >
+                            View items
+                        </button>
+                    </div>
+                ) : null}
+            </div>
+
+            {itemsModalOpen ? (
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
+                    <div class="w-full max-h-[90vh] max-w-4xl rounded-lg border border-slate-700 bg-slate-900 shadow-xl flex flex-col">
+                        <div class="border-b border-slate-800 px-4 py-3 sm:px-6 sm:py-4">
+                            <h2 class="text-lg font-semibold text-slate-100">{filter.name}</h2>
+                            <p class="mt-1 text-xs text-slate-400">
+                                {filter.items.length} {filter.items.length === 1 ? 'item' : 'items'}
+                            </p>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-2 sm:p-3">
+                            {filter.items.length === 0 ? (
+                                <p class="text-sm text-slate-400">No items in this filter.</p>
+                            ) : (
+                                <div class="grid grid-cols-3 gap-1.5 sm:gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+                                    {filter.items.map((item, idx) => {
+                                        const itemData = getItem(item.shortname)
+                                        const itemName = itemData?.name ?? item.shortname
+                                        return (
+                                            <div
+                                                key={idx}
+                                                class="flex flex-col items-center gap-1 rounded border border-slate-700/50 bg-slate-800/40 p-1.5 sm:p-2 text-center"
+                                            >
+                                                <img
+                                                    src={itemImage(item.shortname)}
+                                                    alt={itemName}
+                                                    class="h-10 w-10 sm:h-12 sm:w-12 rounded bg-slate-800 object-contain"
+                                                    loading="lazy"
+                                                />
+                                                <div class="text-[9px] sm:text-[10px] font-semibold text-slate-200 line-clamp-2">
+                                                    {itemName}
+                                                </div>
+                                                <div class="w-full text-[8px] sm:text-[9px] text-slate-400">
+                                                    <div class="flex justify-between gap-0.5 sm:gap-1">
+                                                        <span title="Max">M:{item.max}</span>
+                                                        <span title="Buffer">B:{item.buffer}</span>
+                                                        <span title="Min">m:{item.min}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                        <div class="border-t border-slate-800 px-4 py-2 sm:px-6 sm:py-3">
+                            <button
+                                type="button"
+                                onClick={() => setItemsModalOpen(false)}
+                                class="w-full rounded bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-slate-600"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
         </li>
     )
 }

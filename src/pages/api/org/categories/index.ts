@@ -2,7 +2,7 @@
 // and deployment totals. Sister endpoint to /api/org/opencores.
 
 import type { APIRoute } from 'astro'
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { db, schema } from '../../../../db/client'
 import { classifyBox } from '../../../../lib/boxKind'
 import type { OrgCategoryView } from '../../../../types'
@@ -36,6 +36,7 @@ export const GET: APIRoute = ({ locals }) => {
             and(
                 inArray(schema.categories.userId, memberIds),
                 eq(schema.categories.sharedWithOrg, 1),
+                isNull(schema.categories.openCoreId),
             ),
         )
         .all()

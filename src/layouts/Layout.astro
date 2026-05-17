@@ -191,18 +191,7 @@ const clientUser = user
                                     >
                                         Clan
                                     </a>
-                                    <a
-                                        href="/filters/new"
-                                        class:list={[
-                                            'rounded px-3 py-2 font-semibold md:py-1.5',
-                                            activeNav === 'new'
-                                                ? 'bg-teal-500/90 text-slate-950'
-                                                : 'bg-teal-500/80 text-slate-950 hover:bg-teal-400',
-                                        ]}
-                                    >
-                                        + New Filter
-                                    </a>
-                                    {
+{
                                         user.isAdmin && (
                                             <a
                                                 href="/admin"

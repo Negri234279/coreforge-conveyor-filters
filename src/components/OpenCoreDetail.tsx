@@ -11,6 +11,7 @@ import {
     renameOpenCore,
     setOpenCoreShared,
 } from '../store/filters'
+import { shareOpenCoreWithClan } from '../store/org'
 import { getCurrentUser } from '../store/auth'
 import CategorySection from './CategorySection'
 import DeploymentTotals from './DeploymentTotals'
@@ -39,6 +40,7 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
     const [catCreateOpen, setCatCreateOpen] = useState(false)
     const [renameOpen, setRenameOpen] = useState(false)
     const [confirmShareOpen, setConfirmShareOpen] = useState(false)
+    const [sharing, setSharing] = useState(false)
 
     if (!hydrated) return <p class="text-sm text-slate-500">Loading…</p>
     if (!oc) {
@@ -79,6 +81,19 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
         if (oc) setOpenCoreShared(openCoreId, !oc.sharedWithOrg)
     }
 
+    async function confirmShareWithClan() {
+        setConfirmShareOpen(false)
+        setSharing(true)
+        try {
+            await shareOpenCoreWithClan(openCoreId)
+        } catch (e) {
+            // Re-open with no built-in toast component here — show via alert as fallback.
+            alert(e instanceof Error ? e.message : 'Share failed')
+        } finally {
+            setSharing(false)
+        }
+    }
+
     return (
         <div>
             <div class="mb-6">
@@ -106,13 +121,24 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                             Rename
                         </button>
                         {inOrg ? (
-                            <button
-                                type="button"
-                                onClick={() => setConfirmShareOpen(true)}
-                                class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
-                            >
-                                {oc.sharedWithOrg ? 'Unshare from clan' : 'Share with clan'}
-                            </button>
+                            oc.sharedWithOrg ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setConfirmShareOpen(true)}
+                                    class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200"
+                                >
+                                    Unshare from clan
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setConfirmShareOpen(true)}
+                                    disabled={sharing}
+                                    class="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-sm font-semibold text-slate-200 hover:border-teal-500/60 hover:text-teal-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {sharing ? 'Sharing…' : 'Share with clan'}
+                                </button>
+                            )
                         ) : null}
                         <button
                             type="button"
@@ -199,12 +225,12 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                 message={
                     oc.sharedWithOrg
                         ? `Stop sharing "${oc.name}" with your clan? Clan members will no longer see it.`
-                        : `Share "${oc.name}" with your clan? All clan members will be able to see it.`
+                        : `Create a clan copy of "${oc.name}"? Your personal Open Core stays private and is not affected. Clan owners and admins will be able to edit the shared copy independently.`
                 }
                 confirmLabel={oc.sharedWithOrg ? 'Unshare' : 'Share'}
                 confirmTone="primary"
                 onCancel={() => setConfirmShareOpen(false)}
-                onConfirm={confirmToggleShare}
+                onConfirm={oc.sharedWithOrg ? confirmToggleShare : confirmShareWithClan}
             />
         </div>
     )

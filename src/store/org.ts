@@ -3,6 +3,7 @@
 
 import { signal } from '@preact/signals'
 import type {
+    FilterItem,
     OrgCategoryDetail,
     OrgCategoryView,
     OrgFilterView,
@@ -174,4 +175,81 @@ export async function cloneOrgOpenCore(id: string): Promise<{ id: string; name: 
     } finally {
         orgIsBusy.value = false
     }
+}
+
+// ---- org Open Core mutation (owner/admin only) --------------------------
+
+async function managePost(path: string, body: unknown): Promise<unknown> {
+    const res = await fetch(`/api/org/manage/${path}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        throw new Error(text || `Request failed (${res.status})`)
+    }
+    return res.json()
+}
+
+export async function createOrgCategory(
+    openCoreId: string,
+    name: string,
+): Promise<{ id: string; name: string }> {
+    return managePost('add-category', { openCoreId, name }) as Promise<{ id: string; name: string }>
+}
+
+export async function deleteOrgCategory(categoryId: string): Promise<void> {
+    await managePost('del-category', { categoryId })
+}
+
+export async function createOrgSubcategory(
+    categoryId: string,
+    name: string,
+): Promise<{ id: string; name: string }> {
+    return managePost('add-subcategory', { categoryId, name }) as Promise<{
+        id: string
+        name: string
+    }>
+}
+
+export async function deleteOrgSubcategory(subcategoryId: string): Promise<void> {
+    await managePost('del-subcategory', { subcategoryId })
+}
+
+export interface OrgFilterDraft {
+    categoryId: string
+    subcategoryId?: string
+    name: string
+    description?: string
+    coverItemShortname: string
+    boxImagePath?: string
+    boxCount: number
+    conveyorCount: number
+    storageAdaptorCount: number
+    items: FilterItem[]
+}
+
+export async function createOrgFilter(
+    draft: OrgFilterDraft,
+): Promise<{ id: string; categoryId: string }> {
+    return managePost('add-filter', draft) as Promise<{ id: string; categoryId: string }>
+}
+
+export async function updateOrgFilter(filterId: string, draft: OrgFilterDraft): Promise<void> {
+    await managePost('update-filter', { filterId, ...draft })
+}
+
+export async function deleteOrgFilter(filterId: string): Promise<void> {
+    await managePost('del-filter', { filterId })
+}
+
+export async function shareOpenCoreWithClan(
+    openCoreId: string,
+): Promise<{ id: string; name: string }> {
+    return managePost('share-opencore', { openCoreId }) as Promise<{ id: string; name: string }>
+}
+
+export async function deleteOrgOpenCore(openCoreId: string): Promise<void> {
+    await managePost('del-opencore', { openCoreId })
 }

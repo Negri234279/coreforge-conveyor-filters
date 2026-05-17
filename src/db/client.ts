@@ -77,6 +77,14 @@ function migrate(sqlite: Database.Database): void {
         }
         sqlite.exec(`UPDATE ${table} SET updated_at = created_at WHERE updated_at = 0`)
     }
+
+    // Migrate legacy "direct sharing": personal Open Cores that were shared by
+    // simply flipping sharedWithOrg=1 on the user's own record. The new flow
+    // clones them into an independent clan copy on share, so the personal OC
+    // must stay private (sharedWithOrg=0). This runs on every boot but is a
+    // no-op once migrated, since the new share endpoint never sets
+    // sharedWithOrg=1 on personal OCs.
+    sqlite.exec(`UPDATE open_cores SET shared_with_org = 0 WHERE shared_with_org = 1`)
 }
 
 function bootstrap(): Database.Database {
