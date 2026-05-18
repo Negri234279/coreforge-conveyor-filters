@@ -38,6 +38,7 @@ export type EventType =
     | 'org_join'
     | 'org_leave'
     | 'org_delete'
+    | 'landing_google_cta'
 
 export function logEvent(
     type: EventType,
