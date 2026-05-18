@@ -1,6 +1,7 @@
 // POST /api/events/log — client-side event beacon. Strict allowlist of event
 // types so a malicious client can't fill the table with garbage. Optional
 // targetId points at the entity the event is about (filter id, category id…).
+// Anonymous-safe events (ANON_ALLOWED) are accepted without a session.
 
 import type { APIRoute } from 'astro'
 import { logEvent, type EventType } from '../../../lib/events'
@@ -12,6 +13,9 @@ const CLIENT_ALLOWED: ReadonlySet<EventType> = new Set([
     'filter_view_shared',
 ])
 
+// Events that don't require a logged-in user (landing page beacons).
+const ANON_ALLOWED: ReadonlySet<EventType> = new Set(['landing_google_cta'])
+
 function json(body: unknown, status = 200): Response {
     return new Response(JSON.stringify(body), {
         status,
@@ -20,7 +24,7 @@ function json(body: unknown, status = 200): Response {
 }
 
 export const POST: APIRoute = async ({ locals, request }) => {
-    const user = locals.user!
+    const user = locals.user
     let body: unknown
     try {
         body = await request.json()
@@ -29,7 +33,11 @@ export const POST: APIRoute = async ({ locals, request }) => {
     }
     const p = (body ?? {}) as { type?: unknown; targetId?: unknown; metadata?: unknown }
     const type = typeof p.type === 'string' ? (p.type as EventType) : null
-    if (!type || !CLIENT_ALLOWED.has(type)) return json({ error: 'Unknown event type' }, 400)
+    if (!type) return json({ error: 'Unknown event type' }, 400)
+
+    const isAnon = ANON_ALLOWED.has(type)
+    if (!isAnon && !user) return json({ error: 'Authentication required' }, 401)
+    if (!isAnon && !CLIENT_ALLOWED.has(type)) return json({ error: 'Unknown event type' }, 400)
 
     const targetId =
         typeof p.targetId === 'string' && p.targetId.length <= 64 ? p.targetId : null
@@ -41,6 +49,11 @@ export const POST: APIRoute = async ({ locals, request }) => {
         if (s.length <= 1000) metadata = p.metadata
     }
 
-    logEvent(type, { userId: user.id, userName: user.username, targetId, metadata })
+    logEvent(type, {
+        userId: user?.id ?? null,
+        userName: user?.username ?? null,
+        targetId,
+        metadata,
+    })
     return json({ ok: true })
 }

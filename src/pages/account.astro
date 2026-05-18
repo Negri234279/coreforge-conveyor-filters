@@ -1,13 +1,29 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import { db } from '../db/client'
+import { users } from '../db/schema'
+import { eq } from 'drizzle-orm'
+import ChangePasswordForm from '../components/ChangePasswordForm'
+import ChangeUsernameForm from '../components/ChangeUsernameForm'
+import GoogleAccountSection from '../components/GoogleAccountSection'
 
 const user = Astro.locals.user!
+const row = db
+    .select({ passwordHash: users.passwordHash, googleId: users.googleId })
+    .from(users)
+    .where(eq(users.id, user.id))
+    .get()
+const hasPassword = !!row?.passwordHash
+const isGoogleLinked = !!row?.googleId
+
+const linkedSuccess = Astro.url.searchParams.get('linked') === 'true'
+const linkError = Astro.url.searchParams.get('link_error')
 ---
 
 <Layout title="Account – CoreForge" noindex activeNav="account">
     <div class="mx-auto max-w-xl space-y-6">
         <header class="mb-8">
-            <div class="mb-0.5 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+            <div class="mb-0.5 font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                 Command Center
             </div>
             <h1
@@ -17,18 +33,67 @@ const user = Astro.locals.user!
                 Account
             </h1>
             <p class="mt-2 text-sm text-slate-400">
-                Signed in as <span class="text-slate-200">{user.username}</span>.
+                Signed in as <span id="header-username" class="text-slate-200">{user.username}</span
+                >.
             </p>
         </header>
+
+        {
+            linkedSuccess && (
+                <div
+                    id="flash-success"
+                    class="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 shrink-0"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                    Google account linked successfully.
+                </div>
+            )
+        }
+
+        {
+            linkError && (
+                <div
+                    id="flash-error"
+                    class="flex items-center gap-2 rounded-lg border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-400"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 shrink-0"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                    {linkError === 'already_used'
+                        ? 'This Google account is already linked to another user.'
+                        : 'Google linking failed. Please try again.'}
+                </div>
+            )
+        }
 
         <section
             class="rounded-lg border border-slate-800 bg-slate-900/30 p-5 transition-all hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]"
         >
-            <h2 class="font-mono text-[11px] uppercase tracking-widest text-slate-400">Profile</h2>
+            <h2 class="font-mono text-[11px] tracking-widest text-slate-400 uppercase">Profile</h2>
             <dl class="mt-3 space-y-2 text-sm">
                 <div class="flex justify-between gap-4">
                     <dt class="text-slate-500">Username</dt>
-                    <dd class="text-slate-200">{user.username}</dd>
+                    <dd id="profile-username" class="text-slate-200">{user.username}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
                     <dt class="text-slate-500">Email</dt>
@@ -61,10 +126,16 @@ const user = Astro.locals.user!
             </dl>
         </section>
 
+        <div><GoogleAccountSection isLinked={isGoogleLinked} client:only="preact" /></div>
+
+        <div><ChangeUsernameForm currentUsername={user.username} client:only="preact" /></div>
+
+        <div><ChangePasswordForm hasPassword={hasPassword} client:only="preact" /></div>
+
         <section
             class="rounded-lg border border-slate-800 bg-slate-900/30 p-5 transition-all hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]"
         >
-            <h2 class="font-mono text-[11px] uppercase tracking-widest text-slate-400">Session</h2>
+            <h2 class="font-mono text-[11px] tracking-widest text-slate-400 uppercase">Session</h2>
             <form method="POST" action="/api/auth/logout" class="mt-3">
                 <button
                     type="submit"
@@ -76,3 +147,11 @@ const user = Astro.locals.user!
         </section>
     </div>
 </Layout>
+
+<script>
+    // Auto-dismiss flash banners after 5 s
+    for (const id of ['flash-success', 'flash-error']) {
+        const el = document.getElementById(id)
+        if (el) setTimeout(() => el.remove(), 5000)
+    }
+</script>

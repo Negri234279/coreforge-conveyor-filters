@@ -16,7 +16,7 @@ const next = url.searchParams.get('next') ?? ''
         >
         </div>
 
-        <div class="mb-0.5 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+        <div class="mb-0.5 font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
             Authentication
         </div>
         <h1
@@ -46,7 +46,7 @@ const next = url.searchParams.get('next') ?? ''
             <div>
                 <label
                     for="username"
-                    class="block font-mono text-[11px] uppercase tracking-widest text-slate-400"
+                    class="block font-mono text-[11px] tracking-widest text-slate-400 uppercase"
                 >
                     Username
                 </label>
@@ -63,14 +63,14 @@ const next = url.searchParams.get('next') ?? ''
                     autocorrect="off"
                     spellcheck="false"
                     value={username}
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
+                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 transition-all outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
                 />
                 <p class="mt-1 text-xs text-slate-500">3–32 chars: letters, digits, _ or -.</p>
             </div>
             <div>
                 <label
                     for="email"
-                    class="block font-mono text-[11px] uppercase tracking-widest text-slate-400"
+                    class="block font-mono text-[11px] tracking-widest text-slate-400 uppercase"
                 >
                     Email <span class="text-slate-600 normal-case">(optional)</span>
                 </label>
@@ -82,13 +82,13 @@ const next = url.searchParams.get('next') ?? ''
                     autocapitalize="off"
                     autocorrect="off"
                     spellcheck="false"
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
+                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 transition-all outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
                 />
             </div>
             <div>
                 <label
                     for="password"
-                    class="block font-mono text-[11px] uppercase tracking-widest text-slate-400"
+                    class="block font-mono text-[11px] tracking-widest text-slate-400 uppercase"
                 >
                     Password
                 </label>
@@ -100,14 +100,14 @@ const next = url.searchParams.get('next') ?? ''
                     minlength="8"
                     maxlength="128"
                     autocomplete="new-password"
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
+                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 transition-all outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
                 />
                 <p class="mt-1 text-xs text-slate-500">At least 8 characters.</p>
             </div>
             <div>
                 <label
                     for="password_confirm"
-                    class="block font-mono text-[11px] uppercase tracking-widest text-slate-400"
+                    class="block font-mono text-[11px] tracking-widest text-slate-400 uppercase"
                 >
                     Confirm password
                 </label>
@@ -119,15 +119,42 @@ const next = url.searchParams.get('next') ?? ''
                     minlength="8"
                     maxlength="128"
                     autocomplete="new-password"
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
+                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 transition-all outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40"
                 />
             </div>
             <button
                 type="submit"
-                class="w-full rounded bg-amber-500 px-4 py-2.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                class="w-full rounded bg-amber-500 px-4 py-2.5 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
             >
                 Create account
             </button>
         </form>
+        
+        <div class="mt-6 flex items-center gap-3">
+            <div class="h-px flex-1 bg-slate-800"></div>
+            <span class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">or</span>
+            <div class="h-px flex-1 bg-slate-800"></div>
+        </div>
+
+        <a
+            href="/api/auth/google"
+            class="mt-4 flex w-full items-center justify-center gap-2.5 rounded border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-amber-500/40 hover:text-amber-400"
+        >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path
+                    d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908C16.658 14.13 17.64 11.862 17.64 9.2z"
+                    fill="#4285F4"></path>
+                <path
+                    d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+                    fill="#34A853"></path>
+                <path
+                    d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"
+                    fill="#FBBC05"></path>
+                <path
+                    d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.163 6.656 3.58 9 3.58z"
+                    fill="#EA4335"></path>
+            </svg>
+            Continue with Google
+        </a>
     </div>
 </Layout>

@@ -6,7 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
     username        TEXT NOT NULL,
     username_lower  TEXT NOT NULL,
     email           TEXT,
-    password_hash   TEXT NOT NULL,
+    password_hash   TEXT,
+    google_id       TEXT,
+    avatar_url      TEXT,
     org_id          TEXT,
     org_role        TEXT, -- 'owner' | 'admin' | 'member' | NULL
     is_admin        INTEGER NOT NULL DEFAULT 0, -- app-wide super-admin (dashboard access)
@@ -14,7 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
     created_at      INTEGER NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_uq ON users(username_lower);
--- users_last_seen_idx is created in migrate() (after the ALTER for legacy DBs).
+-- users_google_id_uq and users_last_seen_idx are created in migrate() (after any
+-- ALTER/recreate on legacy DBs, so the columns are guaranteed to exist).
 
 CREATE TABLE IF NOT EXISTS sessions (
     id          TEXT PRIMARY KEY, -- sha256(token)

@@ -12,7 +12,9 @@ export const users = sqliteTable(
         username: text('username').notNull(),
         usernameLower: text('username_lower').notNull(),
         email: text('email'),
-        passwordHash: text('password_hash').notNull(),
+        passwordHash: text('password_hash'),
+        googleId: text('google_id'),
+        avatarUrl: text('avatar_url'),
         orgId: text('org_id'),
         orgRole: text('org_role'), // 'owner' | 'admin' | 'member' | null
         // App-wide super-admin (dashboard access). Independent from org_role.
@@ -21,7 +23,10 @@ export const users = sqliteTable(
         lastSeenAt: integer('last_seen_at'),
         createdAt: integer('created_at').notNull(),
     },
-    (t) => [uniqueIndex('users_username_lower_uq').on(t.usernameLower)],
+    (t) => [
+        uniqueIndex('users_username_lower_uq').on(t.usernameLower),
+        uniqueIndex('users_google_id_uq').on(t.googleId),
+    ],
 )
 
 export const sessions = sqliteTable('sessions', {
