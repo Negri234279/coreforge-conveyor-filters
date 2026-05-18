@@ -85,6 +85,71 @@ function migrate(sqlite: Database.Database): void {
     // no-op once migrated, since the new share endpoint never sets
     // sharedWithOrg=1 on personal OCs.
     sqlite.exec(`UPDATE open_cores SET shared_with_org = 0 WHERE shared_with_org = 1`)
+
+    // Google OAuth: make password_hash nullable, add google_id + avatar_url.
+    // SQLite can't DROP NOT NULL in-place, so we recreate the users table when
+    // the constraint is still present (legacy DBs). Fresh DBs already have the
+    // correct schema from schema.sql and skip this branch.
+    const userCols = sqlite.prepare(`PRAGMA table_info(users)`).all() as {
+        name: string
+        notnull: number
+    }[]
+    const pwdCol = userCols.find((r) => r.name === 'password_hash')
+    if (pwdCol?.notnull === 1) {
+        sqlite
+            .transaction(() => {
+                sqlite.exec(`ALTER TABLE users RENAME TO _users_pre_google`)
+                sqlite.exec(`
+                    CREATE TABLE users (
+                        id              TEXT PRIMARY KEY,
+                        username        TEXT NOT NULL,
+                        username_lower  TEXT NOT NULL,
+                        email           TEXT,
+                        password_hash   TEXT,
+                        google_id       TEXT,
+                        avatar_url      TEXT,
+                        org_id          TEXT,
+                        org_role        TEXT,
+                        is_admin        INTEGER NOT NULL DEFAULT 0,
+                        last_seen_at    INTEGER,
+                        created_at      INTEGER NOT NULL
+                    )
+                `)
+                sqlite.exec(`
+                    INSERT INTO users
+                        (id, username, username_lower, email, password_hash,
+                         org_id, org_role, is_admin, last_seen_at, created_at)
+                    SELECT
+                        id, username, username_lower, email, password_hash,
+                        org_id, org_role, is_admin, last_seen_at, created_at
+                    FROM _users_pre_google
+                `)
+                sqlite.exec(`DROP TABLE _users_pre_google`)
+                sqlite.exec(
+                    `CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_uq ON users(username_lower)`,
+                )
+                sqlite.exec(
+                    `CREATE UNIQUE INDEX IF NOT EXISTS users_google_id_uq ON users(google_id)`,
+                )
+                sqlite.exec(
+                    `CREATE INDEX IF NOT EXISTS users_last_seen_idx ON users(last_seen_at)`,
+                )
+                sqlite.exec(`UPDATE users SET is_admin = 1 WHERE username_lower = 'negri234279'`)
+            })
+            .call(sqlite)
+    } else {
+        // Table already migrated; add columns individually if still missing
+        // (covers DBs that were recreated but never had google_id/avatar_url).
+        if (!hasColumn('users', 'google_id')) {
+            sqlite.exec(`ALTER TABLE users ADD COLUMN google_id TEXT`)
+        }
+        if (!hasColumn('users', 'avatar_url')) {
+            sqlite.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT`)
+        }
+        // Always run with IF NOT EXISTS — safe for both old DBs (column just
+        // added above) and fresh DBs (column came from schema.sql, no index yet).
+        sqlite.exec(`CREATE UNIQUE INDEX IF NOT EXISTS users_google_id_uq ON users(google_id)`)
+    }
 }
 
 function bootstrap(): Database.Database {

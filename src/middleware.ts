@@ -13,7 +13,14 @@ import { loadSession, touchLastSeen } from './lib/auth/session'
 import type { SafeUser } from './env'
 
 const PUBLIC_PAGES = new Set(['/', '/login', '/register', '/legal'])
-const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/auth/register', '/api/healthz']
+const PUBLIC_API_PREFIXES = [
+    '/api/auth/login',
+    '/api/auth/register',
+    '/api/auth/google',
+    '/api/auth/google/callback',
+    '/api/events/log',
+    '/api/healthz',
+]
 
 function isPublicPath(pathname: string): boolean {
     if (PUBLIC_PAGES.has(pathname)) return true
@@ -88,6 +95,7 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
               email: session.user.email ?? null,
               orgId: session.user.orgId ?? null,
               orgRole: session.user.orgRole ?? null,
+              avatarUrl: session.user.avatarUrl ?? null,
               isAdmin: session.user.isAdmin === 1,
           }
         : null
