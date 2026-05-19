@@ -25,6 +25,7 @@ jobs:
         outputs:
             publish: ${{ steps.check.outputs.publish }}
             version: ${{ steps.check.outputs.version }}
+            description: ${{ steps.check.outputs.description }}
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -36,6 +37,9 @@ jobs:
               run: |
                   CURRENT=$(jq -r .version package.json)
                   echo "version=$CURRENT" >> "$GITHUB_OUTPUT"
+
+                  DESCRIPTION=$(jq -r '.description // ""' package.json)
+                  echo "description=$DESCRIPTION" >> "$GITHUB_OUTPUT"
 
                   BEFORE='${{ github.event.before }}'
                   if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
@@ -120,6 +124,11 @@ jobs:
                   provenance: false
                   cache-from: type=gha,scope=${{ env.PLATFORM_PAIR }}
                   cache-to: type=gha,mode=max,scope=${{ env.PLATFORM_PAIR }}
+                  build-args: |
+                      VERSION=${{ needs.gate.outputs.version }}
+                      VCS_REF=${{ github.sha }}
+                      BUILD_DATE=${{ github.event.head_commit.timestamp }}
+                      DESCRIPTION=${{ needs.gate.outputs.description }}
 
             - name: Export digest
               run: |
@@ -169,6 +178,7 @@ jobs:
                       type=raw,value=${{ env.VERSION }}
                   labels: |
                       org.opencontainers.image.title=CoreForge — Conveyor Filters
+                      org.opencontainers.image.description=${{ needs.gate.outputs.description }}
                       org.opencontainers.image.version=${{ env.VERSION }}
                       org.opencontainers.image.revision=${{ github.sha }}
                       org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}

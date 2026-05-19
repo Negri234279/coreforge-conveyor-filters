@@ -1,7 +1,8 @@
 {
     "name": "coreforge-conveyor-filters",
+    "description": "Web app for designing and sharing Rust industrial conveyor filter presets",
     "type": "module",
-    "version": "1.11.0",
+    "version": "1.12.0",
     "engines": {
         "node": ">=22.12.0"
     },
