@@ -50,18 +50,30 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
                 return redirect('/account?link_error=already_used', 303)
             }
 
+            const currentUser = db
+                .select({ username: schema.users.username })
+                .from(schema.users)
+                .where(eq(schema.users.id, linkUserId))
+                .get()
+
             const updates: Record<string, string | null> = { googleId, avatarUrl }
             // Only set email if the account doesn't already have one
             if (email) {
-                const currentUser = db
+                const currentEmail = db
                     .select({ email: schema.users.email })
                     .from(schema.users)
                     .where(eq(schema.users.id, linkUserId))
                     .get()
-                if (!currentUser?.email) updates.email = email
+                if (!currentEmail?.email) updates.email = email
             }
 
             db.update(schema.users).set(updates).where(eq(schema.users.id, linkUserId)).run()
+            logEvent('user_link_google', {
+                userId: linkUserId,
+                userName: currentUser?.username ?? null,
+                targetId: googleId,
+                metadata: { provider: 'google' },
+            })
 
             return redirect('/account?linked=true', 303)
         } catch (err) {
@@ -146,6 +158,12 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
 
         const session = createSession(user.id)
         setSessionCookie(cookies, session.token, session.expiresAt)
+        logEvent('user_login_google', {
+            userId: user.id,
+            userName: user.username,
+            targetId: googleId,
+            metadata: { provider: 'google' },
+        })
         logEvent('user_login', { userId: user.id, userName: user.username })
 
         return redirect('/', 303)
