@@ -1,7 +1,9 @@
 import { Google } from 'arctic'
 
+import { serverEnv } from './env/server'
+
 export const google = new Google(
-    import.meta.env.GOOGLE_CLIENT_ID ?? '',
-    import.meta.env.GOOGLE_CLIENT_SECRET ?? '',
-    import.meta.env.GOOGLE_REDIRECT_URI ?? 'http://localhost:3000/api/auth/google/callback',
+    serverEnv.GOOGLE_CLIENT_ID,
+    serverEnv.GOOGLE_CLIENT_SECRET,
+    serverEnv.GOOGLE_REDIRECT_URI,
 )
