@@ -45,6 +45,11 @@ RUN npm run build
 FROM ${NODE_IMAGE} AS runner
 WORKDIR /app
 
+ARG VERSION="unknown"
+ARG VCS_REF="unknown"
+ARG BUILD_DATE="unknown"
+ARG DESCRIPTION="Web app for designing and sharing Rust industrial conveyor filter presets"
+
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=4321 \
@@ -81,6 +86,9 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 CMD ["node", "--import", "./otel/instrumentation.mjs", "dist/server/entry.mjs"]
 
 LABEL org.opencontainers.image.title="CoreForge — Conveyor Filters" \
-      org.opencontainers.image.description="CoreForge web app for managing Rust industrial conveyor filter presets." \
+      org.opencontainers.image.description="${DESCRIPTION}" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.source="" \
       org.opencontainers.image.licenses=""
