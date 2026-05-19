@@ -252,7 +252,7 @@ services:
             # Soft dep: the SDK retries OTLP exports, so the app boots even
             # if the collector is still migrating ClickHouse. `service_started`
             # is enough — `service_healthy` would block ~30s on first up.
-            otel-collector:
+             otel-collector:
                 condition: service_started
 
         # Host port 8081 (vs prod's 8080) so the two coexist on the same host.
@@ -288,6 +288,9 @@ services:
             # 3302 (loopback by default). Override if you proxy
             # signoz.staging.<domain> through NPM.
             SIGNOZ_URL: ${SIGNOZ_URL:-http://127.0.0.1:3302}
+        
+        env_file:
+            - path: .env
 
         volumes:
             # Separate volume — staging's SQLite is throwaway, never mix with
