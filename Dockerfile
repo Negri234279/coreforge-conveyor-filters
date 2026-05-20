@@ -68,6 +68,11 @@ COPY              --chown=node:node package.json       ./
 # Node loads it as a plain ESM module via --import below. It's a no-op when
 # OTEL_EXPORTER_OTLP_ENDPOINT is unset, so removing the env still works.
 COPY              --chown=node:node otel               ./otel
+# Versioned one-shot migrations. run-migration.mjs checks if a
+# migration-{version}.mjs exists, runs it once, and records it in
+# _applied_migrations before Astro starts. Safe to re-run: skipped if already applied.
+COPY --from=build --chown=node:node /app/src/db/migrations ./src/db/migrations
+COPY --from=build --chown=node:node /app/scripts/run-migration.mjs ./scripts/run-migration.mjs
 
 USER node
 EXPOSE 4321
@@ -83,12 +88,12 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 # signals are forwarded and zombies reaped. Keeps the image one layer leaner.
 # --import preloads the OTel SDK so auto-instrumentation can patch http,
 # better-sqlite3, fetch, etc. before the app imports them.
-CMD ["node", "--import", "./otel/instrumentation.mjs", "dist/server/entry.mjs"]
+CMD ["/bin/sh", "-c", "node scripts/run-migration.mjs && exec node --import ./otel/instrumentation.mjs dist/server/entry.mjs"]
 
 LABEL org.opencontainers.image.title="CoreForge — Conveyor Filters" \
-      org.opencontainers.image.description="${DESCRIPTION}" \
-      org.opencontainers.image.version="${VERSION}" \
-      org.opencontainers.image.revision="${VCS_REF}" \
-      org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.source="" \
-      org.opencontainers.image.licenses=""
+    org.opencontainers.image.description="${DESCRIPTION}" \
+    org.opencontainers.image.version="${VERSION}" \
+    org.opencontainers.image.revision="${VCS_REF}" \
+    org.opencontainers.image.created="${BUILD_DATE}" \
+    org.opencontainers.image.source="" \
+    org.opencontainers.image.licenses=""
