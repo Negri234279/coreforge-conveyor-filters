@@ -17,14 +17,15 @@ if (!existsSync(DB_PATH)) {
     process.exit(0)
 }
 
-const sqlite = new Database(DB_PATH)
+let sqlite = new Database(DB_PATH)
 
-sqlite.exec(`
+const TRACKING_DDL = `
     CREATE TABLE IF NOT EXISTS _applied_migrations (
         name       TEXT PRIMARY KEY,
         applied_at INTEGER NOT NULL
     )
-`)
+`
+sqlite.exec(TRACKING_DDL)
 
 const migrationName = `migration-${version}`
 const migrationFile = resolve(__dirname, `../src/db/migrations/${migrationName}.mjs`)
@@ -47,7 +48,14 @@ if (!existsSync(migrationFile)) {
 
 console.log(`[migration] running ${migrationName}`)
 const mod = await import(pathToFileURL(migrationFile).href)
-mod.default(sqlite)
+const result = mod.default(sqlite, { dbPath: DB_PATH })
+
+// A migration may close the DB and replace the file on disk (e.g. VACUUM).
+// Detect this via the return value or by checking sqlite.open, then reopen.
+if (result?.dbReplaced || !sqlite.open) {
+    sqlite = new Database(DB_PATH)
+    sqlite.exec(TRACKING_DDL)
+}
 
 sqlite
     .prepare('INSERT INTO _applied_migrations (name, applied_at) VALUES (?, ?)')
