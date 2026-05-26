@@ -97,7 +97,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                 coverItemShortname: b.coverItemShortname as string,
                 boxImagePath:
                     typeof b.boxImagePath === 'string' && b.boxImagePath ? b.boxImagePath : null,
-                sharedWithOrg: 1,
+                sharedWithOrg: 0,
                 boxCount: typeof b.boxCount === 'number' && b.boxCount >= 1 ? b.boxCount : 1,
                 conveyorCount:
                     typeof b.conveyorCount === 'number' && b.conveyorCount >= 1
