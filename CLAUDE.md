@@ -112,6 +112,59 @@ Uses `Layout.astro` + two islands:
 1. `HomeDashboard` (`client:only="preact"`) — stat tiles (Filters / Categories / Clan) + recent-6 filter grid + ASCII empty state
 2. `MyConveyors` (`client:only="preact"`) — full arsenal management, below an "ARSENAL" divider
 
+## Code style
+
+**Control flow**
+- Prefer an anonymous object map over `switch` whenever the branches map a key to a value/handler. Fall back to `switch` only when cases need fall-through or complex guards.
+- Use `try / catch` with `async / await`. Don't chain `.then().catch()`; don't pass a `.catch(handler)` callback as the error path.
+- Early-return on guard conditions; avoid `else` after `return`.
+- No nested ternaries — extract to a variable or an object map.
+
+**Async**
+- Top-level async work must be inside `try / catch`; never let a promise reject silently.
+- Run independent awaits in parallel with `Promise.all` — never sequential `await`s when there's no data dependency.
+- No `async` functions without an `await` inside.
+
+**Errors & logging**
+- Throw real `Error` instances (or a subclass), never strings or plain objects.
+- Catch at the boundary that can actually handle it (API route, signal commit, event handler). Don't `try / catch` just to re-throw.
+- In `catch`, type the error as `unknown` and narrow before use.
+- `console.error` only at the outermost boundary; lower layers throw.
+
+**Usage events (`logEvent`)**
+- Any business-meaningful action (user/auth lifecycle, create/update/delete of filters/categories/subcategories/orgs, clones, shared views, exports, landing CTAs) MUST be recorded via `logEvent` from `src/lib/events.ts`. Never `db.insert(schema.events)` directly and never emit a parallel `log.info` for the same business action — `logEvent` already writes the row, annotates the active OTel span, and emits the structured log line.
+- Call it from the server-side boundary that actually performed the action (API route handler, server endpoint, auth flow), after the work has succeeded — not from Preact islands and not before the mutation commits.
+- Pick the `EventType` from the union in `src/lib/events.ts`. If a new action needs tracking, extend that union first; don't pass an ad-hoc string.
+- Pass `userId` / `userName` from the authenticated session, `targetId` as the primary entity id (filter/category/org id, etc.), and put any extra context in `metadata` as a small JSON-serializable object. Keep `metadata` short — the `events` table is append-only.
+- `logEvent` is fire-and-forget and swallows its own errors; do not wrap the call in `try / catch` and do not `await` it.
+
+**Types (TypeScript)**
+- `type` for unions, primitives, and function shapes; `interface` only when declaration merging is needed (rare here).
+- Never `any`. Use `unknown` + narrowing, or a precise type.
+- No non-null `!` assertions — narrow with a guard or early return.
+- Use `as const` for literal tuples and lookup maps so keys stay typed.
+- Shared domain types live in `src/types/index.ts` — don't redeclare them in components.
+
+**Naming**
+- `camelCase` for variables, functions, signals. `PascalCase` for components, types, and classes. `SCREAMING_SNAKE_CASE` for true constants (e.g. `MAX_ITEMS_PER_FILTER`).
+- Files: `PascalCase.tsx` for Preact components, `kebab-case.ts` for everything else, `.astro` pages mirror the route.
+- Boolean names start with `is` / `has` / `can` / `should`.
+- Event handlers: `onX` for props, `handleX` for the local function.
+
+**File / import structure**
+- Import order: node builtins → external packages → `src/...` absolute → relative `./` / `../`. Blank line between groups.
+- Use the configured aliases over deep `../../../` chains.
+- One default export per file at most; prefer named exports for everything else.
+- Co-locate component-private helpers in the same file; promote to `src/lib/` only when reused.
+
+**Preact / Astro / signals**
+- Astro pages stay thin shells — all interactivity in Preact islands mounted with `client:only="preact"`.
+- Read signals with `.value` inside components; never destructure a signal.
+- Mutations to the filters tree go through `src/store/filters.ts` (clone → mutate → commit). Never mutate `categories.value` in place from a component.
+- Don't introduce a second state library (Zustand/Redux/etc.) — signals are the store.
+- Keep components pure: side effects in `useEffect` or in store actions, never at module top level.
+- Props: destructure in the signature, type them with a local `type Props = { ... }`.
+
 ## Production deploy
 
 `Dockerfile` is a multi-stage Node 24 slim image (base → deps → build → runner), runs as the unprivileged `node` user, and serves `node dist/server/entry.mjs` on `PORT` (4321). The only writable path at runtime is the `/data` volume, which holds the SQLite DB (`coreforge.prod.db` + `-wal`/`-shm`); `DATA_DIR` defaults to `/data`. `better-sqlite3` and `@node-rs/argon2` install from prebuilt binaries, so no compiler toolchain is in the image. There's no bundled init — run with `--init` / `init: true`. `docker-compose.yml` pulls the published image `negrii/coreforge-conveyor-filters:latest` (no `build:`), runs just that one container published on host port `8080` → `4321`, hardened with `read_only: true` (+ tmpfs for `/tmp` and `/app/.astro`), `no-new-privileges`, `cap_drop: ALL`, a memory/cpu limit, and a `/login` healthcheck. The app does its own session auth, CSRF (Origin checks) and security headers (`src/middleware.ts`), so there is no reverse-proxy sidecar — point an existing TLS-terminating proxy (e.g. Nginx Proxy Manager owning 80/443) at it.
