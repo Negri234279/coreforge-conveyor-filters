@@ -22,7 +22,10 @@ export default function MyConveyors() {
     const hydrated = isHydrated.value
     const syncing = isSyncing.value
     const error = lastError.value
-    const ocs = openCores.value
+    // Only show personal (non-shared) Open Cores here. The shared clones created
+    // by share-opencore.ts live in the clan view (/org/filters) and are managed
+    // by clan owner/admin from there.
+    const ocs = openCores.value.filter((oc) => !oc.sharedWithOrg)
     // Touch the categories signal so this component re-renders on category changes.
     categories.value
     const loose = looseCategories()
