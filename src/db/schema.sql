@@ -125,3 +125,13 @@ CREATE INDEX IF NOT EXISTS events_type_idx ON events(type);
 CREATE INDEX IF NOT EXISTS events_user_id_idx ON events(user_id);
 CREATE INDEX IF NOT EXISTS events_created_at_idx ON events(created_at);
 CREATE INDEX IF NOT EXISTS events_type_created_at_idx ON events(type, created_at);
+
+-- Tracks which named forward-migrations from src/db/client.ts::migrate() have
+-- already been applied to this DB. One INSERT OR IGNORE per step on boot, so
+-- existing prod DBs backfill their history the first time after this lands.
+-- Surfaced read-only in the admin dashboard for "what schema is this box on".
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    name        TEXT PRIMARY KEY,
+    applied_at  INTEGER NOT NULL,
+    app_version TEXT
+);

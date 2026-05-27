@@ -53,6 +53,11 @@ interface RecentEvent {
     metadata: string | null
     createdAt: number
 }
+interface Migration {
+    name: string
+    appliedAt: number
+    appVersion: string | null
+}
 
 interface Stats {
     generatedAt: number
@@ -97,6 +102,7 @@ interface Stats {
         countsMonth: EventCount[]
         recent: RecentEvent[]
     }
+    migrations: Migration[]
 }
 
 function fmt(n: number): string {
@@ -713,6 +719,46 @@ export default function AdminDashboard() {
                     </div>
                 ) : (
                     <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">No events yet.</p>
+                )}
+            </Card>
+
+            {/* ------- Schema migrations ------- */}
+            <Card
+                title={`Schema migrations · ${fmt(s.migrations.length)} applied`}
+                tip="Forward-only DB migrations declared in src/db/client.ts. Each row is one named step recorded in schema_migrations after it ran. 'Historic' means the step landed before migration tracking was added — exact time unknown."
+            >
+                {s.migrations.length ? (
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                                    <th class="py-1">Migration</th>
+                                    <th class="py-1">Applied</th>
+                                    <th class="py-1">App version</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {s.migrations.map((m) => (
+                                    <tr
+                                        key={m.name}
+                                        class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30"
+                                    >
+                                        <td class="py-1 font-mono text-xs text-amber-400/70">
+                                            {m.name}
+                                        </td>
+                                        <td class="py-1 whitespace-nowrap font-mono text-xs text-slate-500">
+                                            {m.appliedAt > 0 ? relTime(m.appliedAt) : 'historic'}
+                                        </td>
+                                        <td class="py-1 font-mono text-xs text-slate-600">
+                                            {m.appVersion ?? '—'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">No migrations recorded.</p>
                 )}
             </Card>
         </div>

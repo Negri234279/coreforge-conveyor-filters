@@ -3,9 +3,9 @@ import { existsSync, renameSync, unlinkSync } from 'node:fs'
 
 /**
  * @param {import('better-sqlite3').Database} sqlite
- * @param {{ dbPath: string }} ctx
+ * @param {{ dbPath: string, log: { info: (m: string, a?: object) => void, warn: (m: string, a?: object) => void, error: (m: string, a?: object) => void }, version: string }} ctx
  */
-export default function migrate(sqlite, { dbPath }) {
+export default function migrate(sqlite, { dbPath, log }) {
     const tmpPath = dbPath + '.vacuum.tmp'
 
     // Remove leftover tmp file from a previous interrupted run.
@@ -14,7 +14,10 @@ export default function migrate(sqlite, { dbPath }) {
     // VACUUM INTO rebuilds the entire file from scratch, copying only reachable
     // data. This repairs the corrupted filter_items pages introduced by the
     // buggy re-running migration that was removed in v1.11.0.
-    console.log('[migration] VACUUM INTO to repair corrupted filter_items pages...')
+    log.info('VACUUM INTO to repair corrupted filter_items pages', {
+        'app.migration.step': 'vacuum_into',
+    })
+
     sqlite.exec(`VACUUM INTO '${tmpPath}'`)
     sqlite.close()
 
@@ -29,11 +32,15 @@ export default function migrate(sqlite, { dbPath }) {
         const r3 = clean.prepare(`DELETE FROM subcategories`).run()
         const r4 = clean.prepare(`DELETE FROM categories`).run()
         const r5 = clean.prepare(`DELETE FROM open_cores`).run()
-        
-        console.log(
-            `[migration] purged: filter_items=${r1.changes} filters=${r2.changes} ` +
-                `subcategories=${r3.changes} categories=${r4.changes} open_cores=${r5.changes}`,
-        )
+
+        log.info('purged corrupted content tables', {
+            'app.migration.step': 'purge',
+            'app.migration.purged.filter_items': r1.changes,
+            'app.migration.purged.filters': r2.changes,
+            'app.migration.purged.subcategories': r3.changes,
+            'app.migration.purged.categories': r4.changes,
+            'app.migration.purged.open_cores': r5.changes,
+        })
     })
 
     purge()
@@ -63,8 +70,12 @@ export default function migrate(sqlite, { dbPath }) {
     } catch {
         // best-effort; if it fails the rename below will throw a clear error
     }
+
     renameSync(tmpPath, dbPath)
-    console.log('[migration] database replaced with clean copy')
+
+    log.info('database replaced with clean copy', {
+        'app.migration.step': 'replace_db_file',
+    })
 
     return { dbReplaced: true }
 }
