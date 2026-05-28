@@ -62,7 +62,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
             name: b.name.trim(),
             openCoreId: b.openCoreId,
             isOpenCoreFilter: 0,
-            sharedWithOrg: 1,
+            sharedWithOrg: 0,
             position: existingCats.length,
             createdAt: now,
             updatedAt: now,

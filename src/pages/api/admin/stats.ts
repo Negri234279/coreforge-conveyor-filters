@@ -230,6 +230,18 @@ export const GET: APIRoute = ({ locals }) => {
     const totalEvents =
         row<{ n: number }>(sql`SELECT COUNT(*) as n FROM events`)?.n ?? 0
 
+    // ----- Schema migrations --------------------------------------------
+    // Pre-tracking rows are backfilled with applied_at = 0; surface them as
+    // such so the UI can render "historic" instead of a bogus epoch date.
+    const migrations = rows<{
+        name: string
+        appliedAt: number
+        appVersion: string | null
+    }>(
+        sql`SELECT name, applied_at as appliedAt, app_version as appVersion
+            FROM schema_migrations ORDER BY applied_at ASC, name ASC`,
+    )
+
     return json({
         generatedAt: now,
         users: {
@@ -276,5 +288,6 @@ export const GET: APIRoute = ({ locals }) => {
             countsMonth: eventCountsMonth,
             recent: recentEvents,
         },
+        migrations,
     })
 }

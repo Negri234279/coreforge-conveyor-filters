@@ -2,7 +2,7 @@
     "name": "coreforge-conveyor-filters",
     "description": "Web app for designing and sharing Rust industrial conveyor filter presets",
     "type": "module",
-    "version": "1.12.3",
+    "version": "1.12.4",
     "engines": {
         "node": ">=22.12.0"
     },
@@ -52,7 +52,7 @@
         "@tailwindcss/vite": "4.2.4",
         "arctic": "3.7.0",
         "astro": "^6.3.0",
-        "better-sqlite3": "12.9.0",
+        "better-sqlite3": "12.10.0",
         "drizzle-orm": "0.45.2",
         "nanoid": "5.1.11",
         "preact": "10.29.1",

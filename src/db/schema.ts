@@ -127,6 +127,12 @@ export const events = sqliteTable('events', {
     createdAt: integer('created_at').notNull(),
 })
 
+export const schemaMigrations = sqliteTable('schema_migrations', {
+    name: text('name').primaryKey(),
+    appliedAt: integer('applied_at').notNull(),
+    appVersion: text('app_version'),
+})
+
 export type DbUser = typeof users.$inferSelect
 export type DbSession = typeof sessions.$inferSelect
 export type DbOrganization = typeof organizations.$inferSelect
@@ -136,6 +142,7 @@ export type DbSubcategory = typeof subcategories.$inferSelect
 export type DbFilter = typeof filters.$inferSelect
 export type DbFilterItem = typeof filterItems.$inferSelect
 export type DbEvent = typeof events.$inferSelect
+export type DbSchemaMigration = typeof schemaMigrations.$inferSelect
 
 // Marker used so TS doesn't drop `sql` import in case we add raw statements.
 export const _markerSql = sql`SELECT 1`
