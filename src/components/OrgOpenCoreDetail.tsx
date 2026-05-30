@@ -774,7 +774,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                     </p>
                                                 ) : null}
                                                 {cat.filters.length > 0 ? (
-                                                    <ul class="grid gap-3 sm:grid-cols-2">
+                                                    <ul class="grid gap-3 sm:grid-cols-3">
                                                         {cat.filters.map((f) => (
                                                             <FilterRow
                                                                 key={f.id}
@@ -871,7 +871,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                 No filters.
                                                             </p>
                                                         ) : (
-                                                            <ul class="grid gap-3 sm:grid-cols-2">
+                                                            <ul class="grid gap-3 sm:grid-cols-3">
                                                                 {sub.filters.map((f) => (
                                                                     <FilterRow
                                                                         key={f.id}
