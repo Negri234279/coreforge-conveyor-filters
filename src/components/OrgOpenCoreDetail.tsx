@@ -19,7 +19,7 @@ import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
 import OpenCoreBoxesView from './OpenCoreBoxesView'
 import DeploymentTotals from './DeploymentTotals'
-import type { Filter, OrgOpenCoreDetail as Detail } from '../types'
+import type { Category, Filter, OrgOpenCoreDetail as Detail } from '../types'
 
 type View = 'conveyors' | 'boxes'
 
@@ -173,7 +173,10 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => { setMenuOpen(false); setConfirmDelete(true) }}
+                                    onClick={() => {
+                                        setMenuOpen(false)
+                                        setConfirmDelete(true)
+                                    }}
                                     class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
                                 >
                                     Delete
@@ -187,7 +190,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
             {itemsModalOpen ? (
                 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4">
                     <div
-                        class="w-full max-h-[90vh] max-w-4xl rounded-lg border border-slate-800 shadow-xl flex flex-col"
+                        class="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-lg border border-slate-800 shadow-xl"
                         style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
                     >
                         <div class="border-b border-slate-800 px-4 py-3 sm:px-6 sm:py-4">
@@ -205,25 +208,25 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                             {filter.items.length === 0 ? (
                                 <p class="text-sm text-slate-400">No items in this filter.</p>
                             ) : (
-                                <div class="grid grid-cols-3 gap-1.5 sm:gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+                                <div class="grid grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-5 lg:grid-cols-6">
                                     {filter.items.map((item, idx) => {
                                         const itemData = getItem(item.shortname)
                                         const itemName = itemData?.name ?? item.shortname
                                         return (
                                             <div
                                                 key={idx}
-                                                class="flex flex-col items-center gap-1 rounded border border-slate-800/50 bg-slate-800/30 p-1.5 sm:p-2 text-center"
+                                                class="flex flex-col items-center gap-1 rounded border border-slate-800/50 bg-slate-800/30 p-1.5 text-center sm:p-2"
                                             >
                                                 <img
                                                     src={itemImage(item.shortname)}
                                                     alt={itemName}
-                                                    class="h-10 w-10 sm:h-12 sm:w-12 rounded bg-slate-800 object-contain"
+                                                    class="h-10 w-10 rounded bg-slate-800 object-contain sm:h-12 sm:w-12"
                                                     loading="lazy"
                                                 />
-                                                <div class="text-[9px] sm:text-[11px] font-semibold text-slate-200 line-clamp-2">
+                                                <div class="line-clamp-2 text-[9px] font-semibold text-slate-200 sm:text-[11px]">
                                                     {itemName}
                                                 </div>
-                                                <div class="w-full text-[8px] sm:text-[9px] text-slate-400">
+                                                <div class="w-full text-[8px] text-slate-400 sm:text-[9px]">
                                                     <div class="flex justify-between gap-0.5 sm:gap-1">
                                                         <span title="Max">M:{item.max}</span>
                                                         <span title="Buffer">B:{item.buffer}</span>
@@ -240,7 +243,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                             <button
                                 type="button"
                                 onClick={() => setItemsModalOpen(false)}
-                                class="w-full rounded bg-amber-500 px-3 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                                class="w-full rounded bg-amber-500 px-3 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
                             >
                                 Close
                             </button>
@@ -276,7 +279,7 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
                                 type="button"
                                 onClick={onDeleteFilter}
                                 disabled={deleting}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-50 transition-colors hover:bg-rose-500 disabled:opacity-60"
+                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold tracking-wide text-slate-50 uppercase transition-colors hover:bg-rose-500 disabled:opacity-60"
                             >
                                 {deleting ? 'Deleting…' : 'Delete'}
                             </button>
@@ -286,6 +289,31 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
             ) : null}
         </li>
     )
+}
+
+function filterMatches(f: Filter, q: string): boolean {
+    if (f.name.toLowerCase().includes(q)) return true
+
+    return f.items.some((item) => {
+        if (item.shortname.toLowerCase().includes(q)) return true
+
+        const resolved = getItem(item.shortname)
+        return resolved?.name.toLowerCase().includes(q) ?? false
+    })
+}
+
+function applySearch(cats: Category[], q: string): Category[] {
+    if (!q) return cats
+
+    return cats
+        .map((cat) => ({
+            ...cat,
+            filters: cat.filters.filter((f) => filterMatches(f, q)),
+            subcategories: cat.subcategories
+                .map((sub) => ({ ...sub, filters: sub.filters.filter((f) => filterMatches(f, q)) }))
+                .filter((sub) => sub.filters.length > 0),
+        }))
+        .filter((cat) => cat.filters.length > 0 || cat.subcategories.length > 0)
 }
 
 export default function OrgOpenCoreDetail({ openCoreId }: Props) {
@@ -312,10 +340,50 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
     // Category action menu
     const [catMenuOpen, setCatMenuOpen] = useState<string | null>(null)
     const [subMenuOpen, setSubMenuOpen] = useState<string | null>(null)
+    const ssCollapseKey = `cf:oc:${openCoreId}:collapsed`
+    const [collapsedCats, setCollapsedCats] = useState<Set<string>>(() => {
+        try {
+            const stored = sessionStorage.getItem(ssCollapseKey)
+            return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>()
+        } catch {
+            return new Set<string>()
+        }
+    })
+
+    function toggleCatCollapsed(id: string) {
+        setCollapsedCats((prev) => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            sessionStorage.setItem(ssCollapseKey, JSON.stringify([...next]))
+            return next
+        })
+    }
+
+    // Search
+    const [rawQuery, setRawQuery] = useState('')
+    const [query, setQuery] = useState('')
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    function handleSearch(val: string) {
+        setRawQuery(val)
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+        debounceRef.current = setTimeout(() => setQuery(val.trim().toLowerCase()), 250)
+    }
+
+    function clearSearch() {
+        setRawQuery('')
+        setQuery('')
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
 
     // Confirm delete
-    const [confirmDeleteCat, setConfirmDeleteCat] = useState<{ id: string; name: string } | null>(null)
-    const [confirmDeleteSub, setConfirmDeleteSub] = useState<{ id: string; name: string } | null>(null)
+    const [confirmDeleteCat, setConfirmDeleteCat] = useState<{ id: string; name: string } | null>(
+        null,
+    )
+    const [confirmDeleteSub, setConfirmDeleteSub] = useState<{ id: string; name: string } | null>(
+        null,
+    )
     const [deletingCat, setDeletingCat] = useState(false)
     const [deletingSub, setDeletingSub] = useState(false)
 
@@ -467,7 +535,10 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                         {canEdit ? (
                             <button
                                 type="button"
-                                onClick={() => { setAddCatName(''); setAddCatOpen(true) }}
+                                onClick={() => {
+                                    setAddCatName('')
+                                    setAddCatOpen(true)
+                                }}
                                 class="rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400"
                             >
                                 + Category
@@ -486,7 +557,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             type="button"
                             onClick={onClone}
                             disabled={busy}
-                            class="rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="rounded bg-amber-500 px-4 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Clone entire Open Core
                         </button>
@@ -498,7 +569,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                 <DeploymentTotals totals={totals} variant="stat" class="mb-6" />
             ) : null}
 
-            <div class="mb-6 inline-flex rounded border border-slate-800 bg-slate-900/40 p-0.5 text-sm">
+            <div class="mb-4 inline-flex rounded border border-slate-800 bg-slate-900/40 p-0.5 text-sm">
                 <button
                     type="button"
                     onClick={() => setView('conveyors')}
@@ -523,141 +594,310 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                 </button>
             </div>
 
+            {/* Search bar */}
+            <div class="relative mb-6">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-500"
+                >
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                    type="text"
+                    placeholder="Search filters or items…"
+                    value={rawQuery}
+                    onInput={(e) => handleSearch((e.target as HTMLInputElement).value)}
+                    class="w-full rounded border border-slate-800 bg-slate-900/40 py-2 pr-9 pl-9 font-mono text-sm text-slate-200 placeholder-slate-600 transition-colors focus:border-amber-500/40 focus:outline-none"
+                />
+                {rawQuery ? (
+                    <button
+                        type="button"
+                        onClick={clearSearch}
+                        class="absolute top-1/2 right-3 -translate-y-1/2 text-slate-500 transition-colors hover:text-slate-300"
+                        aria-label="Clear search"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            class="h-4 w-4"
+                        >
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                ) : null}
+            </div>
+
             {allFilters.length === 0 && !canEdit ? (
                 <p class="text-sm text-slate-500">This Open Core has no filters yet.</p>
             ) : view === 'conveyors' ? (
-                <div class="space-y-8">
-                    {detail.categories.map((cat) => (
-                        <section key={cat.id} class="mb-4">
-                            <div class="mb-3 flex items-center justify-between border-b border-slate-800 pb-3">
-                                <h2
-                                    class="text-lg text-slate-100"
-                                    style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
-                                >
-                                    {cat.name}
-                                </h2>
-                                {canEdit ? (
-                                    <div class="relative">
-                                        <button
-                                            type="button"
-                                            onClick={() => setCatMenuOpen(catMenuOpen === cat.id ? null : cat.id)}
-                                            class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                                            aria-label="Category actions"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
-                                                <circle cx="12" cy="5" r="1.7" />
-                                                <circle cx="12" cy="12" r="1.7" />
-                                                <circle cx="12" cy="19" r="1.7" />
-                                            </svg>
-                                        </button>
-                                        {catMenuOpen === cat.id ? (
-                                            <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-xl">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setCatMenuOpen(null); window.location.href = `/org/opencore/${openCoreId}/filter/new?categoryId=${encodeURIComponent(cat.id)}` }}
-                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
-                                                >
-                                                    New Filter
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setCatMenuOpen(null); setAddSubCatId(cat.id); setAddSubName(''); setAddSubOpen(true) }}
-                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
-                                                >
-                                                    + Subcategory
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setCatMenuOpen(null); setConfirmDeleteCat({ id: cat.id, name: cat.name }) }}
-                                                    class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                ) : null}
-                            </div>
-                            {cat.filters.length === 0 && cat.subcategories.length === 0 ? (
-                                <p class="text-xs text-slate-500">No filters in this category.</p>
+                (() => {
+                    const filteredCats = applySearch(detail.categories, query)
+                    return (
+                        <div class="space-y-8">
+                            {filteredCats.length === 0 && query ? (
+                                <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                                    No filters match your search.
+                                </p>
                             ) : null}
-                            {cat.filters.length > 0 ? (
-                                <ul class="grid gap-3 sm:grid-cols-2">
-                                    {cat.filters.map((f) => (
-                                        <FilterRow
-                                            key={f.id}
-                                            filter={f}
-                                            canEdit={canEdit}
-                                            openCoreId={openCoreId}
-                                            onDeleted={loadDetail}
-                                        />
-                                    ))}
-                                </ul>
-                            ) : null}
-                            {cat.subcategories.map((sub) => (
-                                <div key={sub.id} class="mt-6">
-                                    <div class="mb-2 flex items-center justify-between border-b border-slate-800/70 pb-2">
-                                        <h3 class="font-mono text-[11px] font-bold tracking-widest text-slate-400 uppercase">
-                                            {sub.name}
-                                        </h3>
-                                        {canEdit ? (
-                                            <div class="relative">
+                            {filteredCats.map((cat) => {
+                                const catCollapsed = !query && collapsedCats.has(cat.id)
+                                const catFilterCount =
+                                    cat.filters.length +
+                                    cat.subcategories.reduce((a, s) => a + s.filters.length, 0)
+                                return (
+                                    <section key={cat.id} class="mb-4">
+                                        <div class="mb-3 flex items-center justify-between border-b border-slate-800 pb-3">
+                                            <div class="flex items-center gap-2">
                                                 <button
                                                     type="button"
-                                                    onClick={() => setSubMenuOpen(subMenuOpen === sub.id ? null : sub.id)}
-                                                    class="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                                                    aria-label="Subcategory actions"
+                                                    onClick={() => toggleCatCollapsed(cat.id)}
+                                                    class="rounded p-1 text-slate-500 transition-colors hover:bg-slate-800 hover:text-amber-400"
+                                                    aria-label={
+                                                        catCollapsed
+                                                            ? 'Expand category'
+                                                            : 'Collapse category'
+                                                    }
                                                 >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5">
-                                                        <circle cx="12" cy="5" r="1.7" />
-                                                        <circle cx="12" cy="12" r="1.7" />
-                                                        <circle cx="12" cy="19" r="1.7" />
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="2"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        class={`h-4 w-4 transition-transform ${catCollapsed ? '-rotate-90' : ''}`}
+                                                    >
+                                                        <polyline points="6 9 12 15 18 9" />
                                                     </svg>
                                                 </button>
-                                                {subMenuOpen === sub.id ? (
-                                                    <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-xl">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setSubMenuOpen(null); window.location.href = `/org/opencore/${openCoreId}/filter/new?categoryId=${encodeURIComponent(cat.id)}&subcategoryId=${encodeURIComponent(sub.id)}` }}
-                                                            class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
-                                                        >
-                                                            New Filter
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setSubMenuOpen(null); setConfirmDeleteSub({ id: sub.id, name: sub.name }) }}
-                                                            class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                ) : null}
+                                                <div class="flex items-center gap-2">
+                                                    <h2
+                                                        class="text-lg text-slate-100"
+                                                        style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                                                    >
+                                                        {cat.name}
+                                                    </h2>
+                                                    {catCollapsed && catFilterCount > 0 ? (
+                                                        <span class="font-mono text-[11px] text-slate-600">
+                                                            {catFilterCount} filter
+                                                            {catFilterCount !== 1 ? 's' : ''}
+                                                        </span>
+                                                    ) : null}
+                                                </div>
                                             </div>
+                                            {canEdit ? (
+                                                <div class="relative">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setCatMenuOpen(
+                                                                catMenuOpen === cat.id
+                                                                    ? null
+                                                                    : cat.id,
+                                                            )
+                                                        }
+                                                        class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
+                                                        aria-label="Category actions"
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            viewBox="0 0 24 24"
+                                                            fill="currentColor"
+                                                            class="h-4 w-4"
+                                                        >
+                                                            <circle cx="12" cy="5" r="1.7" />
+                                                            <circle cx="12" cy="12" r="1.7" />
+                                                            <circle cx="12" cy="19" r="1.7" />
+                                                        </svg>
+                                                    </button>
+                                                    {catMenuOpen === cat.id ? (
+                                                        <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-xl">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setCatMenuOpen(null)
+                                                                    window.location.href = `/org/opencore/${openCoreId}/filter/new?categoryId=${encodeURIComponent(cat.id)}`
+                                                                }}
+                                                                class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                            >
+                                                                New Filter
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setCatMenuOpen(null)
+                                                                    setAddSubCatId(cat.id)
+                                                                    setAddSubName('')
+                                                                    setAddSubOpen(true)
+                                                                }}
+                                                                class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                            >
+                                                                + Subcategory
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setCatMenuOpen(null)
+                                                                    setConfirmDeleteCat({
+                                                                        id: cat.id,
+                                                                        name: cat.name,
+                                                                    })
+                                                                }}
+                                                                class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    ) : null}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                        {!catCollapsed ? (
+                                            <>
+                                                {cat.filters.length === 0 &&
+                                                cat.subcategories.length === 0 ? (
+                                                    <p class="text-xs text-slate-500">
+                                                        No filters in this category.
+                                                    </p>
+                                                ) : null}
+                                                {cat.filters.length > 0 ? (
+                                                    <ul class="grid gap-3 sm:grid-cols-3">
+                                                        {cat.filters.map((f) => (
+                                                            <FilterRow
+                                                                key={f.id}
+                                                                filter={f}
+                                                                canEdit={canEdit}
+                                                                openCoreId={openCoreId}
+                                                                onDeleted={loadDetail}
+                                                            />
+                                                        ))}
+                                                    </ul>
+                                                ) : null}
+                                                {cat.subcategories.map((sub) => (
+                                                    <div key={sub.id} class="mt-6">
+                                                        <div class="mb-2 flex items-center justify-between border-b border-slate-800/70 pb-2">
+                                                            <h3 class="font-mono text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                                                                {sub.name}
+                                                            </h3>
+                                                            {canEdit ? (
+                                                                <div class="relative">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            setSubMenuOpen(
+                                                                                subMenuOpen ===
+                                                                                    sub.id
+                                                                                    ? null
+                                                                                    : sub.id,
+                                                                            )
+                                                                        }
+                                                                        class="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
+                                                                        aria-label="Subcategory actions"
+                                                                    >
+                                                                        <svg
+                                                                            xmlns="http://www.w3.org/2000/svg"
+                                                                            viewBox="0 0 24 24"
+                                                                            fill="currentColor"
+                                                                            class="h-3.5 w-3.5"
+                                                                        >
+                                                                            <circle
+                                                                                cx="12"
+                                                                                cy="5"
+                                                                                r="1.7"
+                                                                            />
+                                                                            <circle
+                                                                                cx="12"
+                                                                                cy="12"
+                                                                                r="1.7"
+                                                                            />
+                                                                            <circle
+                                                                                cx="12"
+                                                                                cy="19"
+                                                                                r="1.7"
+                                                                            />
+                                                                        </svg>
+                                                                    </button>
+                                                                    {subMenuOpen === sub.id ? (
+                                                                        <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-xl">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    setSubMenuOpen(
+                                                                                        null,
+                                                                                    )
+                                                                                    window.location.href = `/org/opencore/${openCoreId}/filter/new?categoryId=${encodeURIComponent(cat.id)}&subcategoryId=${encodeURIComponent(sub.id)}`
+                                                                                }}
+                                                                                class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                            >
+                                                                                New Filter
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    setSubMenuOpen(
+                                                                                        null,
+                                                                                    )
+                                                                                    setConfirmDeleteSub(
+                                                                                        {
+                                                                                            id: sub.id,
+                                                                                            name: sub.name,
+                                                                                        },
+                                                                                    )
+                                                                                }}
+                                                                                class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
+                                                                            >
+                                                                                Delete
+                                                                            </button>
+                                                                        </div>
+                                                                    ) : null}
+                                                                </div>
+                                                            ) : null}
+                                                        </div>
+                                                        {sub.filters.length === 0 ? (
+                                                            <p class="text-xs text-slate-500">
+                                                                No filters.
+                                                            </p>
+                                                        ) : (
+                                                            <ul class="grid gap-3 sm:grid-cols-3">
+                                                                {sub.filters.map((f) => (
+                                                                    <FilterRow
+                                                                        key={f.id}
+                                                                        filter={f}
+                                                                        canEdit={canEdit}
+                                                                        openCoreId={openCoreId}
+                                                                        onDeleted={loadDetail}
+                                                                    />
+                                                                ))}
+                                                            </ul>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </>
                                         ) : null}
-                                    </div>
-                                    {sub.filters.length === 0 ? (
-                                        <p class="text-xs text-slate-500">No filters.</p>
-                                    ) : (
-                                        <ul class="grid gap-3 sm:grid-cols-2">
-                                            {sub.filters.map((f) => (
-                                                <FilterRow
-                                                    key={f.id}
-                                                    filter={f}
-                                                    canEdit={canEdit}
-                                                    openCoreId={openCoreId}
-                                                    onDeleted={loadDetail}
-                                                />
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            ))}
-                        </section>
-                    ))}
-                    {canEdit && detail.categories.length === 0 ? (
-                        <p class="text-sm text-slate-500">No categories yet. Add one to get started.</p>
-                    ) : null}
-                </div>
+                                    </section>
+                                )
+                            })}
+                            {canEdit && detail.categories.length === 0 ? (
+                                <p class="text-sm text-slate-500">
+                                    No categories yet. Add one to get started.
+                                </p>
+                            ) : null}
+                        </div>
+                    )
+                })()
             ) : (
                 <OpenCoreBoxesView categories={detail.categories} />
             )}
@@ -680,8 +920,10 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             value={addCatName}
                             onInput={(e) => setAddCatName((e.target as HTMLInputElement).value)}
                             placeholder="Category name"
-                            class="mt-3 w-full rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
-                            onKeyDown={(e) => { if (e.key === 'Enter') void onAddCategory() }}
+                            class="mt-3 w-full rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 transition-colors outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') void onAddCategory()
+                            }}
                             autoFocus
                         />
                         <div class="mt-4 flex justify-end gap-3">
@@ -696,7 +938,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 type="button"
                                 onClick={onAddCategory}
                                 disabled={addCatBusy || !addCatName.trim()}
-                                class="rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:opacity-60"
+                                class="rounded bg-amber-500 px-4 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:opacity-60"
                             >
                                 {addCatBusy ? 'Creating…' : 'Create'}
                             </button>
@@ -723,8 +965,10 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             value={addSubName}
                             onInput={(e) => setAddSubName((e.target as HTMLInputElement).value)}
                             placeholder="Subcategory name"
-                            class="mt-3 w-full rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
-                            onKeyDown={(e) => { if (e.key === 'Enter') void onAddSubcategory() }}
+                            class="mt-3 w-full rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 transition-colors outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') void onAddSubcategory()
+                            }}
                             autoFocus
                         />
                         <div class="mt-4 flex justify-end gap-3">
@@ -739,7 +983,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 type="button"
                                 onClick={onAddSubcategory}
                                 disabled={addSubBusy || !addSubName.trim()}
-                                class="rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:opacity-60"
+                                class="rounded bg-amber-500 px-4 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:opacity-60"
                             >
                                 {addSubBusy ? 'Creating…' : 'Create'}
                             </button>
@@ -762,7 +1006,8 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             Delete category?
                         </h2>
                         <p class="mt-2 text-sm text-slate-400">
-                            "{confirmDeleteCat.name}" and all its filters will be permanently removed.
+                            "{confirmDeleteCat.name}" and all its filters will be permanently
+                            removed.
                         </p>
                         <div class="mt-4 flex justify-end gap-3">
                             <button
@@ -776,7 +1021,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 type="button"
                                 onClick={onDeleteCat}
                                 disabled={deletingCat}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-50 transition-colors hover:bg-rose-500 disabled:opacity-60"
+                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold tracking-wide text-slate-50 uppercase transition-colors hover:bg-rose-500 disabled:opacity-60"
                             >
                                 {deletingCat ? 'Deleting…' : 'Delete'}
                             </button>
@@ -799,7 +1044,8 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             Delete subcategory?
                         </h2>
                         <p class="mt-2 text-sm text-slate-400">
-                            "{confirmDeleteSub.name}" will be removed. Filters in it will be moved up to the parent category.
+                            "{confirmDeleteSub.name}" will be removed. Filters in it will be moved
+                            up to the parent category.
                         </p>
                         <div class="mt-4 flex justify-end gap-3">
                             <button
@@ -813,7 +1059,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 type="button"
                                 onClick={onDeleteSub}
                                 disabled={deletingSub}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-50 transition-colors hover:bg-rose-500 disabled:opacity-60"
+                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold tracking-wide text-slate-50 uppercase transition-colors hover:bg-rose-500 disabled:opacity-60"
                             >
                                 {deletingSub ? 'Deleting…' : 'Delete'}
                             </button>
@@ -836,8 +1082,8 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                             Delete from clan?
                         </h2>
                         <p class="mt-2 text-sm text-slate-400">
-                            "{detail.name}" will be permanently removed from the clan. This does not affect
-                            anyone's personal copies.
+                            "{detail.name}" will be permanently removed from the clan. This does not
+                            affect anyone's personal copies.
                         </p>
                         <div class="mt-4 flex justify-end gap-3">
                             <button
@@ -851,7 +1097,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 type="button"
                                 onClick={onDeleteOc}
                                 disabled={deletingOc}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-50 transition-colors hover:bg-rose-500 disabled:opacity-60"
+                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold tracking-wide text-slate-50 uppercase transition-colors hover:bg-rose-500 disabled:opacity-60"
                             >
                                 {deletingOc ? 'Deleting…' : 'Delete'}
                             </button>

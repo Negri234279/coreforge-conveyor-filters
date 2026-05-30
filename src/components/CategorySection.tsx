@@ -18,6 +18,7 @@ import SubcategoryFormModal from './SubcategoryFormModal'
 
 interface Props {
     category: Category
+    forceExpand?: boolean
 }
 
 function HeaderMenu({
@@ -83,11 +84,22 @@ function HeaderMenu({
     )
 }
 
-export default function CategorySection({ category }: Props) {
+export default function CategorySection({ category, forceExpand = false }: Props) {
     const totalFilters =
         category.filters.length +
         category.subcategories.reduce((acc, s) => acc + s.filters.length, 0)
 
+    const ssKey = `cf:cat:${category.id}:collapsed`
+    const [collapsed, setCollapsed] = useState(() => sessionStorage.getItem(ssKey) === '1')
+
+    function toggleCollapsed() {
+        setCollapsed((v) => {
+            const next = !v
+            if (next) sessionStorage.setItem(ssKey, '1')
+            else sessionStorage.removeItem(ssKey)
+            return next
+        })
+    }
     const [editOpen, setEditOpen] = useState(false)
     const [deleteOpen, setDeleteOpen] = useState(false)
     const [confirmShareOpen, setConfirmShareOpen] = useState(false)
@@ -182,6 +194,25 @@ export default function CategorySection({ category }: Props) {
         <section class="mb-12">
             <header class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => toggleCollapsed()}
+                        class="flex items-center gap-2 rounded p-1 text-slate-500 transition-colors hover:bg-slate-800 hover:text-amber-400"
+                        aria-label={collapsed ? 'Expand category' : 'Collapse category'}
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class={`h-4 w-4 transition-transform ${collapsed ? '-rotate-90' : ''}`}
+                        >
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                    </button>
                     <div>
                         <div class="mb-0.5 font-mono text-[11px] tracking-widest text-amber-500/40 uppercase">
                             Category
@@ -199,6 +230,11 @@ export default function CategorySection({ category }: Props) {
                                     title="Shared with your clan"
                                 >
                                     Shared
+                                </span>
+                            ) : null}
+                            {collapsed && totalFilters > 0 ? (
+                                <span class="font-mono text-[11px] text-slate-600">
+                                    {totalFilters} filter{totalFilters !== 1 ? 's' : ''}
                                 </span>
                             ) : null}
                         </div>
@@ -303,7 +339,7 @@ export default function CategorySection({ category }: Props) {
                 validateName={validateCreateSubcategoryName}
             />
 
-            <div class="mt-4 space-y-8">
+            <div class={`mt-4 space-y-8 ${collapsed && !forceExpand ? 'hidden' : ''}`}>
                 {/* Filters directly in category */}
                 {category.filters.length === 0 && category.subcategories.length === 0 ? (
                     <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
