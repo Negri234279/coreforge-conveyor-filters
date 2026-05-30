@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks'
+import { useRef, useState } from 'preact/hooks'
 import {
     addCategory,
     categoriesForOpenCore,
@@ -13,12 +13,38 @@ import {
 } from '../store/filters'
 import { shareOpenCoreWithClan } from '../store/org'
 import { getCurrentUser } from '../store/auth'
+import { getItem } from '../store/items'
+import type { Category, Filter } from '../types'
 import CategorySection from './CategorySection'
 import DeploymentTotals from './DeploymentTotals'
 import CategoryFormModal from './CategoryFormModal'
 import OpenCoreFormModal from './OpenCoreFormModal'
 import OpenCoreBoxesView from './OpenCoreBoxesView'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
+
+function filterMatches(f: Filter, q: string): boolean {
+    if (f.name.toLowerCase().includes(q)) return true
+    return f.items.some((item) => {
+        if (item.shortname.toLowerCase().includes(q)) return true
+
+        const resolved = getItem(item.shortname)
+        return resolved?.name.toLowerCase().includes(q) ?? false
+    })
+}
+
+function applySearch(cats: Category[], q: string): Category[] {
+    if (!q) return cats
+
+    return cats
+        .map((cat) => ({
+            ...cat,
+            filters: cat.filters.filter((f) => filterMatches(f, q)),
+            subcategories: cat.subcategories
+                .map((sub) => ({ ...sub, filters: sub.filters.filter((f) => filterMatches(f, q)) }))
+                .filter((sub) => sub.filters.length > 0),
+        }))
+        .filter((cat) => cat.filters.length > 0 || cat.subcategories.length > 0)
+}
 
 interface Props {
     openCoreId: string
@@ -37,6 +63,23 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
     const inOrg = !!getCurrentUser()?.orgId
 
     const [view, setView] = useState<View>('conveyors')
+    const [rawQuery, setRawQuery] = useState('')
+    const [query, setQuery] = useState('')
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    function handleSearch(val: string) {
+        setRawQuery(val)
+
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+        debounceRef.current = setTimeout(() => setQuery(val.trim().toLowerCase()), 250)
+    }
+
+    function clearSearch() {
+        setRawQuery('')
+        setQuery('')
+
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
     const [catCreateOpen, setCatCreateOpen] = useState(false)
     const [renameOpen, setRenameOpen] = useState(false)
     const [confirmShareOpen, setConfirmShareOpen] = useState(false)
@@ -151,7 +194,7 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                         <button
                             type="button"
                             onClick={() => setCatCreateOpen(true)}
-                            class="rounded bg-amber-500 px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                            class="rounded bg-amber-500 px-3 py-1.5 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
                         >
                             + Category
                         </button>
@@ -168,7 +211,7 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
             ) : null}
 
             {/* View toggle */}
-            <div class="mb-6 inline-flex rounded border border-slate-800 bg-slate-900/40 p-0.5 text-sm">
+            <div class="mb-4 inline-flex rounded border border-slate-800 bg-slate-900/40 p-0.5 text-sm">
                 <button
                     type="button"
                     onClick={() => setView('conveyors')}
@@ -193,19 +236,75 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                 </button>
             </div>
 
+            {/* Search bar */}
+            <div class="relative mb-6">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-500"
+                >
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                    type="text"
+                    placeholder="Search filters or items…"
+                    value={rawQuery}
+                    onInput={(e) => handleSearch((e.target as HTMLInputElement).value)}
+                    class="w-full rounded border border-slate-800 bg-slate-900/40 py-2 pr-9 pl-9 font-mono text-sm text-slate-200 placeholder-slate-600 transition-colors focus:border-amber-500/40 focus:outline-none"
+                />
+                {rawQuery ? (
+                    <button
+                        type="button"
+                        onClick={clearSearch}
+                        class="absolute top-1/2 right-3 -translate-y-1/2 text-slate-500 transition-colors hover:text-slate-300"
+                        aria-label="Clear search"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            class="h-4 w-4"
+                        >
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                ) : null}
+            </div>
+
             {cats.length === 0 ? (
                 <div class="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center">
                     <p class="text-sm text-slate-400">This Open Core has no categories yet.</p>
                     <button
                         type="button"
                         onClick={() => setCatCreateOpen(true)}
-                        class="mt-4 rounded bg-amber-500 px-3 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                        class="mt-4 rounded bg-amber-500 px-3 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
                     >
                         + Add Category
                     </button>
                 </div>
             ) : view === 'conveyors' ? (
-                cats.map((c) => <CategorySection key={c.id} category={c} />)
+                (() => {
+                    const filteredCats = applySearch(cats, query)
+                    return filteredCats.length > 0 ? (
+                        filteredCats.map((c) => (
+                            <CategorySection key={c.id} category={c} forceExpand={!!query} />
+                        ))
+                    ) : (
+                        <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                            No filters match your search.
+                        </p>
+                    )
+                })()
             ) : (
                 <OpenCoreBoxesView categories={cats} />
             )}

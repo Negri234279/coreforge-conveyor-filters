@@ -18,6 +18,7 @@ import SubcategoryFormModal from './SubcategoryFormModal'
 
 interface Props {
     category: Category
+    forceExpand?: boolean
 }
 
 function HeaderMenu({
@@ -83,7 +84,7 @@ function HeaderMenu({
     )
 }
 
-export default function CategorySection({ category }: Props) {
+export default function CategorySection({ category, forceExpand = false }: Props) {
     const totalFilters =
         category.filters.length +
         category.subcategories.reduce((acc, s) => acc + s.filters.length, 0)
@@ -338,7 +339,7 @@ export default function CategorySection({ category }: Props) {
                 validateName={validateCreateSubcategoryName}
             />
 
-            <div class={`mt-4 space-y-8 ${collapsed ? 'hidden' : ''}`}>
+            <div class={`mt-4 space-y-8 ${collapsed && !forceExpand ? 'hidden' : ''}`}>
                 {/* Filters directly in category */}
                 {category.filters.length === 0 && category.subcategories.length === 0 ? (
                     <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
