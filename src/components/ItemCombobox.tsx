@@ -77,6 +77,7 @@ export default function ItemCombobox({
 }: Props) {
     const [query, setQuery] = useState('')
     const [open, setOpen] = useState(false)
+    const [changing, setChanging] = useState(false)
     const [active, setActive] = useState(0)
     const wrapRef = useRef<HTMLDivElement | null>(null)
     const inputRef = useRef<HTMLInputElement | null>(null)
@@ -94,14 +95,20 @@ export default function ItemCombobox({
     useEffect(() => {
         function onClick(e: MouseEvent) {
             if (!wrapRef.current) return
-            if (!wrapRef.current.contains(e.target as Node)) setOpen(false)
+            if (!wrapRef.current.contains(e.target as Node)) {
+                setOpen(false)
+                setChanging(false)
+            }
         }
+
         document.addEventListener('mousedown', onClick)
         return () => document.removeEventListener('mousedown', onClick)
     }, [])
 
     function pick(entry: ComboboxEntry) {
         onSelect(entry.key)
+        setChanging(false)
+
         if (resetOnSelect) {
             setQuery('')
             inputRef.current?.focus()
@@ -126,12 +133,13 @@ export default function ItemCombobox({
             }
         } else if (e.key === 'Escape') {
             setOpen(false)
+            setChanging(false)
         }
     }
 
     return (
         <div class="relative" ref={wrapRef}>
-            {selected && !resetOnSelect ? (
+            {selected && !resetOnSelect && !changing ? (
                 <div class="flex items-center gap-2 rounded border border-slate-800 bg-slate-900/60 px-2 py-1.5">
                     <div class="h-8 w-8 overflow-hidden rounded bg-slate-800">
                         {selected.imageUrl ? (
@@ -171,6 +179,7 @@ export default function ItemCombobox({
                     <button
                         type="button"
                         onClick={() => {
+                            setChanging(true)
                             setOpen(true)
                             setQuery('')
                             setTimeout(() => inputRef.current?.focus(), 0)
@@ -184,7 +193,7 @@ export default function ItemCombobox({
                 <input
                     ref={inputRef}
                     type="text"
-                    class="w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-colors focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
+                    class="w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 transition-colors outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
                     placeholder={placeholder}
                     value={query}
                     onFocus={() => setOpen(true)}
@@ -197,7 +206,7 @@ export default function ItemCombobox({
                 />
             )}
 
-            {open && (!selected || resetOnSelect) && (
+            {open && (!selected || resetOnSelect || changing) && (
                 <ul class="absolute z-30 mt-1 max-h-72 w-full overflow-auto rounded border border-slate-800 bg-[#0d1117] shadow-xl">
                     {results.length === 0 ? (
                         <li class="px-3 py-2 text-sm text-slate-500">
@@ -208,6 +217,7 @@ export default function ItemCombobox({
                             const isHeader = entry.isHeader === true
                             const grouped = !isHeader && !!entry.group
                             const isActive = i === active
+
                             return (
                                 <li key={entry.key}>
                                     <button
@@ -221,8 +231,10 @@ export default function ItemCombobox({
                                                           ? 'bg-amber-500/10'
                                                           : 'hover:bg-slate-800/60'
                                                   }`
-                                                : `${grouped ? 'pl-6' : 'px-2'} pr-2 py-1.5 ${
-                                                      isActive ? 'bg-amber-500/10' : 'hover:bg-slate-800/60'
+                                                : `${grouped ? 'pl-6' : 'px-2'} py-1.5 pr-2 ${
+                                                      isActive
+                                                          ? 'bg-amber-500/10'
+                                                          : 'hover:bg-slate-800/60'
                                                   }`
                                         }`}
                                     >
@@ -247,11 +259,6 @@ export default function ItemCombobox({
                                                 }`}
                                             >
                                                 {entry.label}
-                                                {entry.badge ? (
-                                                    <span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-semibold tracking-wider text-amber-400 uppercase">
-                                                        {entry.badge}
-                                                    </span>
-                                                ) : null}
                                             </span>
                                             {entry.hint && !hideHint ? (
                                                 <span class="truncate text-xs text-slate-500">
