@@ -36,10 +36,10 @@ function nonNegInt(v: unknown): number {
     return Math.floor(n)
 }
 
-/** Per-filter deployment count: integer, at least 1; defaults to 1. */
+/** Per-filter deployment count: non-negative integer; defaults to 1 when missing/invalid. */
 function countInt(v: unknown): number {
     const n = typeof v === 'number' ? v : Number(v ?? NaN)
-    if (!Number.isFinite(n) || n < 1) return 1
+    if (!Number.isFinite(n) || n < 0) return 1
     return Math.min(Math.floor(n), 10000)
 }
 

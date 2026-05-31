@@ -11,10 +11,10 @@ function toNonNegInt(v: unknown): number {
     return Math.floor(n)
 }
 
-/** Deployment counts are at least 1; missing/garbage values default to 1. */
+/** Deployment counts default to 1 when missing/invalid, but 0 is a valid explicit value. */
 function toCount(v: unknown): number {
     const n = typeof v === 'number' ? v : Number(v ?? NaN)
-    if (!Number.isFinite(n) || n < 1) return 1
+    if (!Number.isFinite(n) || n < 0) return 1
     return Math.floor(n)
 }
 

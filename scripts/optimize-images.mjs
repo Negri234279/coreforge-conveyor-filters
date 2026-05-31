@@ -6,11 +6,11 @@
 // NOTHING is ever deleted — originals in the source dir are left untouched.
 //
 // Usage:
-//   node scripts/optimize-images.mjs <srcDir> [--out=<dir>] [--quality=80] [--dry-run]
+//   node scripts/optimize-images.mjs [srcDir] [--out=<dir>] [--quality=80] [--dry-run]
 //
 // Examples:
-//   npm run optimize:boxes                                  # public/boxes-raw → public/boxes
-//   node scripts/optimize-images.mjs public/boxes-raw --out=public/boxes
+//   node scripts/optimize-images.mjs                                # public/boxes-raw → public/boxes (default)
+//   npm run optimize:boxes                                          # same as above
 //   node scripts/optimize-images.mjs public/items-raw --out=public/items --quality=85
 //   node scripts/optimize-images.mjs public/boxes-raw --dry-run
 
@@ -28,7 +28,13 @@ function defaultOutDir(srcDir) {
 }
 
 function parseArgs(args) {
-    const opts = { srcDir: null, outDir: null, quality: 80, dryRun: false }
+    const opts = {
+        srcDir: null,
+        outDir: null,
+        quality: 80,
+        dryRun: false,
+    }
+
     for (const a of args) {
         if (a.startsWith('--quality=')) {
             opts.quality = Number(a.slice('--quality='.length))
@@ -42,21 +48,26 @@ function parseArgs(args) {
             throw new Error(`Unknown argument: ${a}`)
         }
     }
+
     if (!opts.srcDir) {
-        throw new Error(
-            'Usage: optimize-images.mjs <srcDir> [--out=<dir>] [--quality=N] [--dry-run]',
-        )
+        opts.srcDir = 'public/boxes-raw'
     }
-    if (!opts.outDir) opts.outDir = defaultOutDir(opts.srcDir)
+
+    if (!opts.outDir) {
+        opts.outDir = defaultOutDir(opts.srcDir)
+    }
+
     if (!Number.isFinite(opts.quality) || opts.quality < 1 || opts.quality > 100) {
         throw new Error('--quality must be between 1 and 100')
     }
+
     return opts
 }
 
 function fmt(bytes) {
     if (bytes < 1024) return `${bytes} B`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+
     return `${(bytes / 1024 / 1024).toFixed(2)} MB`
 }
 
@@ -81,7 +92,9 @@ async function main() {
             ` (quality=${opts.quality}${opts.dryRun ? ', dryRun' : ''})\n`,
     )
 
-    if (!opts.dryRun) await mkdir(opts.outDir, { recursive: true })
+    if (!opts.dryRun) {
+        await mkdir(opts.outDir, { recursive: true })
+    }
 
     let totalOld = 0
     let totalNew = 0
@@ -90,6 +103,7 @@ async function main() {
     for (const file of sources) {
         const src = join(opts.srcDir, file)
         const dst = join(opts.outDir, parse(file).name + '.webp')
+
         try {
             const srcStat = await stat(src)
             const buf = await sharp(src).webp({ quality: opts.quality, effort: 6 }).toBuffer()
@@ -99,7 +113,9 @@ async function main() {
             const saved = srcStat.size - buf.length
             const pct = ((saved / srcStat.size) * 100).toFixed(1)
 
-            if (!opts.dryRun) await writeFile(dst, buf)
+            if (!opts.dryRun) {
+                await writeFile(dst, buf)
+            }
 
             console.log(
                 `${opts.dryRun ? '[dry] ' : ''}${file.padEnd(40)} ` +

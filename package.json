@@ -2,7 +2,7 @@
     "name": "coreforge-conveyor-filters",
     "description": "Web app for designing and sharing Rust industrial conveyor filter presets",
     "type": "module",
-    "version": "1.13.0",
+    "version": "1.14.0",
     "engines": {
         "node": ">=22.12.0"
     },
@@ -24,7 +24,8 @@
         "prod:obs:up": "docker compose -f infra/prod/docker-compose.yml --env-file infra/prod/.env up -d",
         "prod:obs:down": "docker compose -f infra/prod/docker-compose.yml down",
         "prod:obs:logs": "docker compose -f infra/prod/docker-compose.yml logs -f",
-        "migrate": "node scripts/run-migration.mjs"
+        "migrate": "node scripts/run-migration.mjs",
+        "optimize-images": "node scripts/optimize-images.mjs"
     },
     "dependencies": {
         "@astrojs/node": "10.1.0",

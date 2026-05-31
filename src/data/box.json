@@ -148,5 +148,25 @@
         "id": 30,
         "name": "Graffiti Metal Storage",
         "imagePath": "graffiti-metal-storage"
+    },
+    {
+        "id": 31,
+        "name": "Neon Full Kit Locker",
+        "imagePath": "neon-storage-full-kit-locker"
+    },
+    {
+        "id": 32,
+        "name": "Neon Roadsign Locker",
+        "imagePath": "neon-storage-roadsign-locker"
+    },
+    {
+        "id": 33,
+        "name": "Neon Hazmat Locker",
+        "imagePath": "neon-storage-hazmat-locker"
+    },
+    {
+        "id": 34,
+        "name": "Lunar Horse Locker",
+        "imagePath": "lunar-horse-locker"
     }
 ]

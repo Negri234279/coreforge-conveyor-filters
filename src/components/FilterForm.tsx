@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useMemo, useState } from 'preact/hooks'
 import {
     categories,
     createFilter,
@@ -10,28 +10,16 @@ import {
 } from '../store/filters'
 import { itemImage } from '../store/items'
 import { getBox, boxImage, searchBoxes } from '../store/boxes'
+import { getRecentBoxes, addRecentBox } from '../lib/recentBoxes'
 import { ALL_GAME_CATEGORIES, itemsInGameCategory } from '../store/gameCategories'
 import { categorySlotShortname, describeSlot } from '../lib/filterSlots'
 import { buildConveyorJson, parseConveyorJson, type ImportResult } from '../lib/conveyor'
 import ItemCombobox, { type ComboboxEntry, type ComboboxSource } from './ItemCombobox'
 
-const BOX_SOURCE: ComboboxSource = {
-    emptyText: 'No boxes match.',
-    search: (q, limit = 30) =>
-        searchBoxes(q, limit).map((b) => ({
-            key: b.imagePath,
-            label: b.name,
-            imageUrl: boxImage(b.imagePath),
-        })),
-    resolve: (key) => {
-        const b = getBox(key)
-        if (!b) return undefined
-        return {
-            key: b.imagePath,
-            label: b.name,
-            imageUrl: boxImage(b.imagePath),
-        }
-    },
+const BOX_RESOLVE = (key: string): ComboboxEntry | undefined => {
+    const b = getBox(key)
+    if (!b) return undefined
+    return { key: b.imagePath, label: b.name, imageUrl: boxImage(b.imagePath) }
 }
 import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
@@ -173,6 +161,43 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
     const [loaded, setLoaded] = useState(false)
     const [submitting, setSubmitting] = useState(false)
 
+    const [recentBoxKeys, setRecentBoxKeys] = useState<string[]>(() => getRecentBoxes())
+
+    const boxSource = useMemo<ComboboxSource>(
+        () => ({
+            emptyText: 'No boxes match.',
+            resolve: BOX_RESOLVE,
+            search: (q: string, limit = 30) => {
+                const all = searchBoxes(q, limit).map((b) => ({
+                    key: b.imagePath,
+                    label: b.name,
+                    imageUrl: boxImage(b.imagePath),
+                }))
+                if (q.length > 0 || recentBoxKeys.length === 0) return all
+
+                const recentEntries = recentBoxKeys
+                    .map((key) => {
+                        const b = getBox(key)
+                        if (!b) return null
+
+                        return {
+                            key: b.imagePath,
+                            label: b.name,
+                            imageUrl: boxImage(b.imagePath),
+                            badge: 'Recent',
+                        }
+                    })
+                    .filter((e): e is NonNullable<typeof e> => e !== null)
+
+                const recentSet = new Set(recentBoxKeys)
+                const rest = all.filter((e) => !recentSet.has(e.key))
+
+                return [...recentEntries, ...rest].slice(0, limit)
+            },
+        }),
+        [recentBoxKeys],
+    )
+
     const [importOpen, setImportOpen] = useState(false)
     const [importText, setImportText] = useState('')
     const [importError, setImportError] = useState<string | null>(null)
@@ -194,6 +219,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
             setLoaded(true)
             return
         }
+
         if (!filterId) {
             if (typeof window !== 'undefined') {
                 const params = new URLSearchParams(window.location.search)
@@ -203,18 +229,22 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                     setSelection(encodeSelection(catId, subId ?? undefined))
                 }
             }
+
             setLoaded(true)
             return
         }
+
         let cancelled = false
         ensureLoaded().then(() => {
             if (cancelled) return
             if (!isHydrated.value) return
+
             const filter = findFilter(filterId!)
             if (!filter) {
                 setLoaded(true)
                 return
             }
+
             setName(filter.name)
             setDescription(filter.description ?? '')
             setCoverItem(filter.coverItemShortname)
@@ -252,9 +282,12 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
             showToast('Nothing to export')
             return
         }
+
         const json = JSON.stringify(buildConveyorJson(items))
         const ok = await copyToClipboard(json)
+
         showToast(ok ? 'Copied · Shift in-game' : 'Copy failed')
+
         if (ok) {
             // Fire-and-forget usage beacon. Failure is non-fatal — server-side
             // logEvent already swallows its own errors.
@@ -286,6 +319,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
             setImportError(err instanceof Error ? err.message : 'Could not parse JSON.')
             return
         }
+
         if (result.items.length === 0) {
             setImportError('No valid items or categories found in JSON.')
             return
@@ -299,6 +333,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
             const additions = result.items.filter((it) => !existing.has(it.shortname))
             next = [...items, ...additions].slice(0, MAX_ITEMS)
         }
+
         setItems(next)
         setImportOpen(false)
 
@@ -306,6 +341,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
         const unknown = result.unknownItems + result.unknownCategories
         if (unknown > 0) parts.push(`${unknown} unknown`)
         if (result.skipped > 0) parts.push(`${result.skipped} skipped`)
+
         showToast(parts.join(' · '))
     }
 
@@ -317,6 +353,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
             setError('Name is required.')
             return
         }
+
         if (!coverItem) {
             setError('Cover image is required.')
             return
@@ -329,6 +366,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
         }
 
         setSubmitting(true)
+
         try {
             if (orgMode && onSave) {
                 await onSave({
@@ -353,6 +391,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                 setSubmitting(false)
                 return
             }
+
             let subName: string | undefined
             if (decoded.subId) {
                 const sub = cat.subcategories.find((s) => s.id === decoded.subId)
@@ -361,6 +400,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                     setSubmitting(false)
                     return
                 }
+
                 subName = sub.name
             }
 
@@ -384,6 +424,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
             } else {
                 await createFilter(draft)
             }
+
             window.location.href = cat.openCoreId
                 ? `/opencore/${encodeURIComponent(cat.openCoreId)}`
                 : '/'
@@ -395,7 +436,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
 
     if (editing && !orgMode && !loaded) {
         return (
-            <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">
+            <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                 Loading filter…
             </p>
         )
@@ -425,7 +466,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
 
             {/* Name */}
             <div>
-                <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                <label class="block font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                     Name <span class="text-rose-400">*</span>
                 </label>
                 <input
@@ -433,21 +474,21 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                     required
                     value={name}
                     onInput={(e) => setName((e.target as HTMLInputElement).value)}
-                    class="mt-1.5 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
+                    class="mt-1.5 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 transition-colors outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
                     placeholder="e.g. HQ, Cloth & Leather, Frags"
                 />
             </div>
 
             {/* Description */}
             <div>
-                <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                <label class="block font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                     Description
                 </label>
                 <input
                     type="text"
                     value={description}
                     onInput={(e) => setDescription((e.target as HTMLInputElement).value)}
-                    class="mt-1.5 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
+                    class="mt-1.5 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 transition-colors outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
                     placeholder="Optional"
                 />
             </div>
@@ -455,7 +496,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
             {/* Cover image + Box picker */}
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                    <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                    <label class="block font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                         Cover Image <span class="text-rose-400">*</span>
                     </label>
                     <div class="mt-1.5">
@@ -470,20 +511,24 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                 </div>
                 <div>
                     <div class="flex flex-wrap items-baseline gap-2">
-                        <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                        <label class="block font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                             Box / Container
                         </label>
-                        <span class="font-mono text-[11px] text-slate-600 normal-case tracking-normal">
+                        <span class="font-mono text-[11px] tracking-normal text-slate-600 normal-case">
                             Select the box this conveyor feeds into
                         </span>
                     </div>
                     <div class="mt-1.5">
                         <ItemCombobox
                             value={boxImagePath || undefined}
-                            onSelect={setBoxImagePath}
+                            onSelect={(key) => {
+                                addRecentBox(key)
+                                setRecentBoxKeys(getRecentBoxes())
+                                setBoxImagePath(key)
+                            }}
                             onClear={() => setBoxImagePath('')}
                             placeholder="Search boxes..."
-                            source={BOX_SOURCE}
+                            source={boxSource}
                         />
                     </div>
                 </div>
@@ -491,7 +536,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
 
             {/* Deployment counts */}
             <div>
-                <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                <label class="block font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                     Deployment
                 </label>
                 <p class="mt-1 font-mono text-[11px] text-slate-600">
@@ -510,7 +555,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                             key={label}
                             class="flex items-stretch overflow-hidden rounded border border-slate-800 bg-slate-900/60 focus-within:border-amber-500/60 focus-within:ring-1 focus-within:ring-amber-500/30"
                         >
-                            <span class="flex flex-1 items-center bg-slate-800/60 px-3 py-2 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                            <span class="flex flex-1 items-center bg-slate-800/60 px-3 py-2 font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                                 {label}
                             </span>
                             <input
@@ -523,7 +568,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                     const n = Math.floor(
                                         Number((e.target as HTMLInputElement).value),
                                     )
-                                    setter(Number.isFinite(n) && n >= 1 ? n : 1)
+                                    setter(Number.isFinite(n) && n >= 0 ? n : 1)
                                 }}
                                 class="w-20 bg-transparent px-2 py-2 text-right text-sm text-slate-100 outline-none"
                             />
@@ -554,7 +599,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
             {/* Category picker */}
             {!orgMode ? (
                 <div>
-                    <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                    <label class="block font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                         Category <span class="text-rose-400">*</span>
                     </label>
                     <p class="mt-1 font-mono text-[11px] text-slate-600">
@@ -565,7 +610,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         value={selection}
                         disabled={noCategories}
                         onChange={(e) => setSelection((e.target as HTMLSelectElement).value)}
-                        class="mt-1.5 w-full appearance-none rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+                        class="mt-1.5 w-full appearance-none rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 transition-colors outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <option value="">— Select a category —</option>
                         {cats.map((cat) => (
@@ -595,7 +640,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
             {/* Filter items */}
             <div>
                 <div class="flex items-center justify-between">
-                    <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                    <label class="block font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                         Conveyor Filter Items
                     </label>
                     <span class="font-mono text-[11px] text-slate-600">
@@ -620,8 +665,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                     <ul class="mt-3 flex flex-wrap gap-3">
                         {items.map((it) => {
                             const meta = describeSlot(it.shortname)
-                            const letter =
-                                meta.label.trim().charAt(0).toUpperCase() || '?'
+                            const letter = meta.label.trim().charAt(0).toUpperCase() || '?'
                             return (
                                 <li
                                     key={it.shortname}
@@ -630,7 +674,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                     <div class="flex items-start gap-3">
                                         <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded bg-slate-800">
                                             {meta.isCategory ? (
-                                                <span class="flex h-full w-full items-center justify-center bg-amber-500/10 text-base font-bold uppercase tracking-wider text-amber-200">
+                                                <span class="flex h-full w-full items-center justify-center bg-amber-500/10 text-base font-bold tracking-wider text-amber-200 uppercase">
                                                     {letter}
                                                 </span>
                                             ) : (
@@ -646,7 +690,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                             <span class="flex items-center gap-1.5 truncate text-sm font-medium text-slate-100">
                                                 {meta.label}
                                                 {meta.isCategory ? (
-                                                    <span class="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-amber-400">
+                                                    <span class="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-amber-400 uppercase">
                                                         Category
                                                     </span>
                                                 ) : null}
@@ -684,7 +728,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                                 key={field}
                                                 class="flex items-stretch overflow-hidden rounded border border-slate-800 bg-slate-900/60 focus-within:border-amber-500/60 focus-within:ring-1 focus-within:ring-amber-500/30"
                                             >
-                                                <span class="flex w-20 flex-shrink-0 items-center justify-center bg-slate-800/60 px-2 py-1.5 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                                                <span class="flex w-20 flex-shrink-0 items-center justify-center bg-slate-800/60 px-2 py-1.5 font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                                                     {field}
                                                 </span>
                                                 <input
@@ -713,7 +757,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         })}
                     </ul>
                 ) : (
-                    <p class="mt-3 font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                    <p class="mt-3 font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                         No items yet. Add up to {MAX_ITEMS} items to this filter.
                     </p>
                 )}
@@ -767,8 +811,12 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         Export
                     </button>
                 </div>
-                <p class="font-mono text-[10px] uppercase tracking-widest text-slate-600">
-                    Hold <kbd class="rounded bg-slate-800 px-1 py-0.5 text-slate-500 not-italic">Shift</kbd> in-game to paste
+                <p class="font-mono text-[10px] tracking-widest text-slate-600 uppercase">
+                    Hold{' '}
+                    <kbd class="rounded bg-slate-800 px-1 py-0.5 text-slate-500 not-italic">
+                        Shift
+                    </kbd>{' '}
+                    in-game to paste
                 </p>
                 <div class="flex items-center gap-3">
                     <a
@@ -780,7 +828,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                     <button
                         type="submit"
                         disabled={submitting || noCategories}
-                        class="rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+                        class="rounded bg-amber-500 px-4 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {submitting ? 'Saving…' : editing ? 'Save Filter' : 'Create Filter'}
                     </button>
@@ -797,10 +845,10 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         if (e.target === e.currentTarget) setImportOpen(false)
                     }}
                 >
-                    <div class="w-full max-w-xl rounded-lg border border-slate-800 border-l-2 border-l-amber-500/30 bg-[#0d1117] p-5 shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_30px_rgba(245,158,11,0.05)]">
+                    <div class="w-full max-w-xl rounded-lg border border-l-2 border-slate-800 border-l-amber-500/30 bg-[#0d1117] p-5 shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_30px_rgba(245,158,11,0.05)]">
                         <div class="flex items-start justify-between gap-4">
                             <div>
-                                <div class="mb-0.5 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                                <div class="mb-0.5 font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                                     Import
                                 </div>
                                 <h3
@@ -831,7 +879,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                             spellcheck={false}
                             rows={10}
                             placeholder='[{"TargetItemName":"metal.fragments","MaxAmountInOutput":0,"BufferAmount":0,"MinAmountInInput":0, ...}]'
-                            class="mt-4 w-full rounded border border-slate-800 bg-slate-950/60 px-3 py-2 font-mono text-xs text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
+                            class="mt-4 w-full rounded border border-slate-800 bg-slate-950/60 px-3 py-2 font-mono text-xs text-slate-100 placeholder-slate-600 transition-colors outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
                         />
 
                         {importError ? (
@@ -864,7 +912,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                     type="button"
                                     onClick={applyImport}
                                     disabled={!importText.trim()}
-                                    class="rounded bg-amber-500 px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                                    class="rounded bg-amber-500 px-3 py-1.5 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Import
                                 </button>
