@@ -568,7 +568,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                                     const n = Math.floor(
                                         Number((e.target as HTMLInputElement).value),
                                     )
-                                    setter(Number.isFinite(n) && n >= 1 ? n : 1)
+                                    setter(Number.isFinite(n) && n >= 0 ? n : 1)
                                 }}
                                 class="w-20 bg-transparent px-2 py-2 text-right text-sm text-slate-100 outline-none"
                             />

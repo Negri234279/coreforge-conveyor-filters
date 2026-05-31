@@ -98,14 +98,14 @@ export const POST: APIRoute = async ({ locals, request }) => {
                 boxImagePath:
                     typeof b.boxImagePath === 'string' && b.boxImagePath ? b.boxImagePath : null,
                 sharedWithOrg: 0,
-                boxCount: typeof b.boxCount === 'number' && b.boxCount >= 1 ? b.boxCount : 1,
+                boxCount: typeof b.boxCount === 'number' && b.boxCount >= 0 ? Math.floor(b.boxCount) : 1,
                 conveyorCount:
-                    typeof b.conveyorCount === 'number' && b.conveyorCount >= 1
-                        ? b.conveyorCount
+                    typeof b.conveyorCount === 'number' && b.conveyorCount >= 0
+                        ? Math.floor(b.conveyorCount)
                         : 1,
                 storageAdaptorCount:
-                    typeof b.storageAdaptorCount === 'number' && b.storageAdaptorCount >= 1
-                        ? b.storageAdaptorCount
+                    typeof b.storageAdaptorCount === 'number' && b.storageAdaptorCount >= 0
+                        ? Math.floor(b.storageAdaptorCount)
                         : 1,
                 position: existingFilters.length,
                 createdAt: now,
