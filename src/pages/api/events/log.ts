@@ -8,10 +8,7 @@ import { logEvent, type EventType } from '../../../lib/events'
 
 export const prerender = false
 
-const CLIENT_ALLOWED: ReadonlySet<EventType> = new Set([
-    'filter_export_json',
-    'filter_view_shared',
-])
+const CLIENT_ALLOWED: ReadonlySet<EventType> = new Set(['filter_export_json', 'filter_view_shared'])
 
 // Events that don't require a logged-in user (landing page beacons).
 const ANON_ALLOWED: ReadonlySet<EventType> = new Set(['landing_google_cta'])
@@ -39,8 +36,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     if (!isAnon && !user) return json({ error: 'Authentication required' }, 401)
     if (!isAnon && !CLIENT_ALLOWED.has(type)) return json({ error: 'Unknown event type' }, 400)
 
-    const targetId =
-        typeof p.targetId === 'string' && p.targetId.length <= 64 ? p.targetId : null
+    const targetId = typeof p.targetId === 'string' && p.targetId.length <= 64 ? p.targetId : null
 
     // Keep metadata small — this is a beacon, not a payload pipe.
     let metadata: unknown = undefined

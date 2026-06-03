@@ -86,9 +86,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
                 userId: user.id,
                 categoryId: b.categoryId as string,
                 subcategoryId:
-                    typeof b.subcategoryId === 'string' && b.subcategoryId
-                        ? b.subcategoryId
-                        : null,
+                    typeof b.subcategoryId === 'string' && b.subcategoryId ? b.subcategoryId : null,
                 name: (b.name as string).trim(),
                 description:
                     typeof b.description === 'string' && b.description.trim()
@@ -98,7 +96,8 @@ export const POST: APIRoute = async ({ locals, request }) => {
                 boxImagePath:
                     typeof b.boxImagePath === 'string' && b.boxImagePath ? b.boxImagePath : null,
                 sharedWithOrg: 0,
-                boxCount: typeof b.boxCount === 'number' && b.boxCount >= 0 ? Math.floor(b.boxCount) : 1,
+                boxCount:
+                    typeof b.boxCount === 'number' && b.boxCount >= 0 ? Math.floor(b.boxCount) : 1,
                 conveyorCount:
                     typeof b.conveyorCount === 'number' && b.conveyorCount >= 0
                         ? Math.floor(b.conveyorCount)

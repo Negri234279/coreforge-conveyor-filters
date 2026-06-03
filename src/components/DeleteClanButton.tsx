@@ -10,7 +10,7 @@ export default function DeleteClanButton({ clanName }: { clanName: string }) {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                class="rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm font-bold uppercase tracking-wide text-rose-300 transition-colors hover:bg-rose-500/20 hover:text-rose-200"
+                class="rounded border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm font-bold tracking-wide text-rose-300 uppercase transition-colors hover:bg-rose-500/20 hover:text-rose-200"
             >
                 Delete clan
             </button>

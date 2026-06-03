@@ -18,7 +18,8 @@ if (!endpoint) {
     process.env.OTEL_SDK_DISABLED = 'true'
 } else {
     const { NodeSDK } = await import('@opentelemetry/sdk-node')
-    const { getNodeAutoInstrumentations } = await import('@opentelemetry/auto-instrumentations-node')
+    const { getNodeAutoInstrumentations } =
+        await import('@opentelemetry/auto-instrumentations-node')
     const { OTLPTraceExporter } = await import('@opentelemetry/exporter-trace-otlp-grpc')
     const { OTLPMetricExporter } = await import('@opentelemetry/exporter-metrics-otlp-grpc')
     const { OTLPLogExporter } = await import('@opentelemetry/exporter-logs-otlp-grpc')
@@ -27,10 +28,8 @@ if (!endpoint) {
     const { logs } = await import('@opentelemetry/api-logs')
     const { trace, SpanStatusCode } = await import('@opentelemetry/api')
     const { resourceFromAttributes } = await import('@opentelemetry/resources')
-    const {
-        ATTR_SERVICE_NAME,
-        ATTR_SERVICE_VERSION,
-    } = await import('@opentelemetry/semantic-conventions')
+    const { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } =
+        await import('@opentelemetry/semantic-conventions')
 
     // Pull the app version out of package.json so SigNoz can split metrics
     // by release. package.json is copied into the runtime image alongside

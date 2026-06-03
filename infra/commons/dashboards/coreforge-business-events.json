@@ -22,10 +22,34 @@
         }
     },
     "layout": [
-        { "i": "panel-events-rate", "x": 0, "y": 0, "w": 8, "h": 6, "moved": false, "static": false },
-        { "i": "panel-events-totals", "x": 8, "y": 0, "w": 4, "h": 6, "moved": false, "static": false },
+        {
+            "i": "panel-events-rate",
+            "x": 0,
+            "y": 0,
+            "w": 8,
+            "h": 6,
+            "moved": false,
+            "static": false
+        },
+        {
+            "i": "panel-events-totals",
+            "x": 8,
+            "y": 0,
+            "w": 4,
+            "h": 6,
+            "moved": false,
+            "static": false
+        },
         { "i": "panel-top-users", "x": 0, "y": 6, "w": 6, "h": 6, "moved": false, "static": false },
-        { "i": "panel-recent-events", "x": 6, "y": 6, "w": 6, "h": 6, "moved": false, "static": false }
+        {
+            "i": "panel-recent-events",
+            "x": 6,
+            "y": 6,
+            "w": 6,
+            "h": 6,
+            "moved": false,
+            "static": false
+        }
     ],
     "widgets": [
         {

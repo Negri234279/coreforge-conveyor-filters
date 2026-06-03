@@ -89,28 +89,17 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
         const { sub: googleId, email, name, picture: avatarUrl } = claims
 
         const now = Date.now()
-        let user = db
-            .select()
-            .from(schema.users)
-            .where(eq(schema.users.googleId, googleId))
-            .get()
+        let user = db.select().from(schema.users).where(eq(schema.users.googleId, googleId)).get()
 
         if (user) {
             // Update avatar if Google changed it
             if (user.avatarUrl !== avatarUrl) {
-                db.update(schema.users)
-                    .set({ avatarUrl })
-                    .where(eq(schema.users.id, user.id))
-                    .run()
+                db.update(schema.users).set({ avatarUrl }).where(eq(schema.users.id, user.id)).run()
             }
         } else {
             // Try to link to an existing account by email
             if (email) {
-                user = db
-                    .select()
-                    .from(schema.users)
-                    .where(eq(schema.users.email, email))
-                    .get()
+                user = db.select().from(schema.users).where(eq(schema.users.email, email)).get()
                 if (user) {
                     db.update(schema.users)
                         .set({ googleId, avatarUrl })

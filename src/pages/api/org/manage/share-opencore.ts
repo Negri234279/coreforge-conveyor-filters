@@ -37,8 +37,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
         .from(schema.openCores)
         .where(eq(schema.openCores.id, b.openCoreId))
         .get()
-    if (!srcOc || srcOc.userId !== user.id)
-        return json({ error: 'Open Core not found' }, 404)
+    if (!srcOc || srcOc.userId !== user.id) return json({ error: 'Open Core not found' }, 404)
 
     // Fetch the full tree
     const srcCats = db

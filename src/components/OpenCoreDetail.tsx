@@ -234,6 +234,12 @@ export default function OpenCoreDetail({ openCoreId }: Props) {
                 >
                     Boxes
                 </button>
+                <a
+                    href={`/opencore/${openCoreId}/viewer`}
+                    class="rounded px-3 py-1.5 font-semibold text-slate-400 transition-colors hover:text-amber-400"
+                >
+                    3D
+                </a>
             </div>
 
             {/* Search bar */}

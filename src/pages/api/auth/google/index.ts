@@ -9,7 +9,11 @@ const SECURE = !import.meta.env.DEV
 export const GET: APIRoute = ({ url, cookies, redirect, locals }) => {
     const state = generateState()
     const codeVerifier = generateCodeVerifier()
-    const authUrl = google.createAuthorizationURL(state, codeVerifier, ['openid', 'profile', 'email'])
+    const authUrl = google.createAuthorizationURL(state, codeVerifier, [
+        'openid',
+        'profile',
+        'email',
+    ])
 
     const opts = {
         httpOnly: true,

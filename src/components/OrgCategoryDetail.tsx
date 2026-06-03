@@ -128,7 +128,7 @@ function FilterRow({ filter }: { filter: Filter }) {
             {itemsModalOpen ? (
                 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4">
                     <div
-                        class="w-full max-h-[90vh] max-w-4xl rounded-lg border border-slate-800 shadow-xl flex flex-col"
+                        class="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-lg border border-slate-800 shadow-xl"
                         style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
                     >
                         <div class="border-b border-slate-800 px-4 py-3 sm:px-6 sm:py-4">
@@ -146,25 +146,25 @@ function FilterRow({ filter }: { filter: Filter }) {
                             {filter.items.length === 0 ? (
                                 <p class="text-sm text-slate-400">No items in this filter.</p>
                             ) : (
-                                <div class="grid grid-cols-3 gap-1.5 sm:gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+                                <div class="grid grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-5 lg:grid-cols-6">
                                     {filter.items.map((item, idx) => {
                                         const itemData = getItem(item.shortname)
                                         const itemName = itemData?.name ?? item.shortname
                                         return (
                                             <div
                                                 key={idx}
-                                                class="flex flex-col items-center gap-1 rounded border border-slate-800/50 bg-slate-800/30 p-1.5 sm:p-2 text-center"
+                                                class="flex flex-col items-center gap-1 rounded border border-slate-800/50 bg-slate-800/30 p-1.5 text-center sm:p-2"
                                             >
                                                 <img
                                                     src={itemImage(item.shortname)}
                                                     alt={itemName}
-                                                    class="h-10 w-10 sm:h-12 sm:w-12 rounded bg-slate-800 object-contain"
+                                                    class="h-10 w-10 rounded bg-slate-800 object-contain sm:h-12 sm:w-12"
                                                     loading="lazy"
                                                 />
-                                                <div class="text-[9px] sm:text-[11px] font-semibold text-slate-200 line-clamp-2">
+                                                <div class="line-clamp-2 text-[9px] font-semibold text-slate-200 sm:text-[11px]">
                                                     {itemName}
                                                 </div>
-                                                <div class="w-full text-[8px] sm:text-[9px] text-slate-400">
+                                                <div class="w-full text-[8px] text-slate-400 sm:text-[9px]">
                                                     <div class="flex justify-between gap-0.5 sm:gap-1">
                                                         <span title="Max">M:{item.max}</span>
                                                         <span title="Buffer">B:{item.buffer}</span>
@@ -181,7 +181,7 @@ function FilterRow({ filter }: { filter: Filter }) {
                             <button
                                 type="button"
                                 onClick={() => setItemsModalOpen(false)}
-                                class="w-full rounded bg-amber-500 px-3 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                                class="w-full rounded bg-amber-500 px-3 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
                             >
                                 Close
                             </button>
@@ -276,7 +276,7 @@ export default function OrgCategoryDetail({ categoryId }: Props) {
                         type="button"
                         onClick={onClone}
                         disabled={busy}
-                        class="rounded bg-amber-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                        class="rounded bg-amber-500 px-4 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         Clone category
                     </button>

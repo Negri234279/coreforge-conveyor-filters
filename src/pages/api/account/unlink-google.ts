@@ -16,10 +16,9 @@ export const POST: APIRoute = async ({ locals }) => {
         .get()
 
     if (!row?.passwordHash) {
-        return new Response(
-            JSON.stringify({ error: 'Set a password before unlinking Google.' }),
-            { status: 400 },
-        )
+        return new Response(JSON.stringify({ error: 'Set a password before unlinking Google.' }), {
+            status: 400,
+        })
     }
 
     db.update(users)

@@ -31,11 +31,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     if (typeof b.filterId !== 'string' || !b.filterId)
         return json({ error: 'Missing filterId' }, 400)
 
-    const filter = db
-        .select()
-        .from(schema.filters)
-        .where(eq(schema.filters.id, b.filterId))
-        .get()
+    const filter = db.select().from(schema.filters).where(eq(schema.filters.id, b.filterId)).get()
     if (!filter) return json({ error: 'Filter not found' }, 404)
 
     const cat = db
@@ -63,7 +59,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
         tx.delete(schema.filterItems)
             .where(eq(schema.filterItems.filterId, b.filterId as string))
             .run()
-        tx.delete(schema.filters).where(eq(schema.filters.id, b.filterId as string)).run()
+        tx.delete(schema.filters)
+            .where(eq(schema.filters.id, b.filterId as string))
+            .run()
     })
 
     return json({ ok: true })

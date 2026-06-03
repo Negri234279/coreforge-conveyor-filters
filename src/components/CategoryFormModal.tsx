@@ -14,11 +14,7 @@ interface Props {
     /** Show the "Share with clan" toggle (caller must be in an org). */
     canShareWithOrg?: boolean
     onCancel: () => void
-    onSubmit: (values: {
-        name: string
-        openCoreId: string | null
-        sharedWithOrg: boolean
-    }) => void
+    onSubmit: (values: { name: string; openCoreId: string | null; sharedWithOrg: boolean }) => void
     validateName?: (name: string) => string | null
 }
 
@@ -80,12 +76,12 @@ export default function CategoryFormModal({
         >
             <form
                 onSubmit={submit}
-                class="w-full max-w-md rounded-lg border border-slate-800 border-l-2 border-l-amber-500/30 bg-[#0d1117] p-5 shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_30px_rgba(245,158,11,0.05)]"
+                class="w-full max-w-md rounded-lg border border-l-2 border-slate-800 border-l-amber-500/30 bg-[#0d1117] p-5 shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_30px_rgba(245,158,11,0.05)]"
             >
                 {/* Header */}
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <div class="mb-0.5 font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                        <div class="mb-0.5 font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                             {mode === 'create' ? 'New' : 'Edit'}
                         </div>
                         <h3
@@ -107,7 +103,7 @@ export default function CategoryFormModal({
 
                 {/* Name */}
                 <div class="mt-5">
-                    <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                    <label class="block font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                         Name <span class="text-rose-400">*</span>
                     </label>
                     <input
@@ -116,7 +112,7 @@ export default function CategoryFormModal({
                         autoFocus
                         value={name}
                         onInput={(e) => setName((e.target as HTMLInputElement).value)}
-                        class="mt-1.5 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
+                        class="mt-1.5 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 transition-colors outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
                         placeholder="e.g. Metal, Components"
                     />
                 </div>
@@ -124,13 +120,13 @@ export default function CategoryFormModal({
                 {/* Open Core picker */}
                 {!locked ? (
                     <div class="mt-4">
-                        <label class="block font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+                        <label class="block font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                             Open Core
                         </label>
                         <select
                             value={openCoreId}
                             onChange={(e) => setOpenCoreId((e.target as HTMLSelectElement).value)}
-                            class="mt-1.5 w-full appearance-none rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
+                            class="mt-1.5 w-full appearance-none rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 transition-colors outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
                         >
                             <option value="">— None (loose category) —</option>
                             {openCores.map((oc) => (
@@ -152,9 +148,7 @@ export default function CategoryFormModal({
                             <input
                                 type="checkbox"
                                 checked={shared}
-                                onChange={(e) =>
-                                    setShared((e.target as HTMLInputElement).checked)
-                                }
+                                onChange={(e) => setShared((e.target as HTMLInputElement).checked)}
                                 class="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 accent-amber-500 focus:ring-1 focus:ring-amber-500/30"
                             />
                             <span>
@@ -185,7 +179,7 @@ export default function CategoryFormModal({
                     </button>
                     <button
                         type="submit"
-                        class="rounded bg-amber-500 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                        class="rounded bg-amber-500 px-4 py-1.5 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
                     >
                         {mode === 'create' ? 'Create' : 'Save'}
                     </button>

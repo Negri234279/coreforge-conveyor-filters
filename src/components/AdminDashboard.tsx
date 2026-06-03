@@ -128,7 +128,7 @@ function dateLabel(dayBucket: number): string {
 function InfoDot({ tip }: { tip: string }) {
     return (
         <span
-            class="relative ml-2 inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-slate-700 text-[9px] font-bold text-slate-500 hover:border-amber-500/50 hover:text-amber-400 transition-colors"
+            class="relative ml-2 inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-slate-700 text-[9px] font-bold text-slate-500 transition-colors hover:border-amber-500/50 hover:text-amber-400"
             tabIndex={0}
             aria-label="What is this?"
         >
@@ -150,8 +150,8 @@ function Card({
     children: preact.ComponentChildren
 }) {
     return (
-        <section class="rounded-lg border border-slate-800 border-l-2 border-l-amber-500/30 bg-slate-900/30 p-4 transition-all duration-[220ms] hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]">
-            <h3 class="group mb-3 flex items-center font-mono text-[11px] uppercase tracking-widest text-amber-500/50">
+        <section class="rounded-lg border border-l-2 border-slate-800 border-l-amber-500/30 bg-slate-900/30 p-4 transition-all duration-[220ms] hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]">
+            <h3 class="group mb-3 flex items-center font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                 <span>{title}</span>
                 {tip ? <InfoDot tip={tip} /> : null}
             </h3>
@@ -172,15 +172,12 @@ function Stat({
     tip?: string
 }) {
     return (
-        <div
-            class="rounded border border-slate-800 bg-slate-900/60 px-3 py-2"
-            title={tip}
-        >
-            <div class="flex items-center font-mono text-[11px] uppercase tracking-widest text-slate-500">
+        <div class="rounded border border-slate-800 bg-slate-900/60 px-3 py-2" title={tip}>
+            <div class="flex items-center font-mono text-[11px] tracking-widest text-slate-500 uppercase">
                 <span>{label}</span>
                 {tip ? (
                     <span
-                        class="ml-1 cursor-help text-slate-600 hover:text-amber-400 transition-colors"
+                        class="ml-1 cursor-help text-slate-600 transition-colors hover:text-amber-400"
                         aria-label={tip}
                     >
                         ⓘ
@@ -234,13 +231,7 @@ function DailyBars({ data, days = 30 }: { data: ByDay[]; days?: number }) {
                 <text x="2" y={H + 14} fill="#475569" font-size="10">
                     {dateLabel(series[0].day)}
                 </text>
-                <text
-                    x={W - 2}
-                    y={H + 14}
-                    fill="#475569"
-                    font-size="10"
-                    text-anchor="end"
-                >
+                <text x={W - 2} y={H + 14} fill="#475569" font-size="10" text-anchor="end">
                     {dateLabel(series[series.length - 1].day)}
                 </text>
             </svg>
@@ -276,7 +267,7 @@ export default function AdminDashboard() {
 
     if (loading && !stats) {
         return (
-            <div class="font-mono text-[11px] uppercase tracking-widest text-slate-500">
+            <div class="font-mono text-[11px] tracking-widest text-slate-500 uppercase">
                 Loading metrics…
             </div>
         )
@@ -294,13 +285,13 @@ export default function AdminDashboard() {
     return (
         <div class="space-y-6">
             <div class="flex items-center justify-between">
-                <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                     Generated {relTime(s.generatedAt)} · last 30 days where shown
                 </p>
                 <button
                     type="button"
                     onClick={() => void load()}
-                    class="rounded border border-slate-700/50 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
+                    class="rounded border border-slate-700/50 px-3 py-1 font-mono text-[11px] tracking-widest text-slate-400 uppercase transition-colors hover:bg-slate-800 hover:text-amber-400"
                 >
                     Refresh
                 </button>
@@ -339,7 +330,7 @@ export default function AdminDashboard() {
                     />
                 </div>
                 <div class="mt-4">
-                    <div class="mb-1 font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                    <div class="mb-1 font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                         Registrations · last 30 days
                     </div>
                     <DailyBars data={s.users.registrationsByDay} />
@@ -375,7 +366,7 @@ export default function AdminDashboard() {
                     />
                 </div>
                 <div class="mt-4">
-                    <div class="mb-1 font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                    <div class="mb-1 font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                         Filters created · last 30 days
                     </div>
                     <DailyBars data={s.content.filtersByDay} />
@@ -391,10 +382,7 @@ export default function AdminDashboard() {
                     <div class="grid grid-cols-3 gap-2">
                         <Stat label="Boxes" value={s.content.deployment.boxes} />
                         <Stat label="Conveyors" value={s.content.deployment.conveyors} />
-                        <Stat
-                            label="Storage adaptors"
-                            value={s.content.deployment.storage}
-                        />
+                        <Stat label="Storage adaptors" value={s.content.deployment.storage} />
                     </div>
                 </Card>
                 <Card
@@ -418,25 +406,24 @@ export default function AdminDashboard() {
                     <Stat label="Total clans" value={s.orgs.total} />
                     <Stat
                         label="Avg members"
-                        value={
-                            s.orgs.total
-                                ? (s.users.withOrg / s.orgs.total).toFixed(1)
-                                : '0'
-                        }
+                        value={s.orgs.total ? (s.users.withOrg / s.orgs.total).toFixed(1) : '0'}
                         tip="Average members per clan (only counts users with an org_id)."
                     />
                 </div>
                 {s.orgs.top.length ? (
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="text-left font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                            <tr class="text-left font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                                 <th class="py-1">Clan</th>
                                 <th class="py-1 text-right">Members</th>
                             </tr>
                         </thead>
                         <tbody>
                             {s.orgs.top.map((o) => (
-                                <tr key={o.id} class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30">
+                                <tr
+                                    key={o.id}
+                                    class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30"
+                                >
                                     <td class="py-1 text-slate-200">{o.name}</td>
                                     <td class="py-1 text-right text-slate-400">{fmt(o.members)}</td>
                                 </tr>
@@ -444,7 +431,9 @@ export default function AdminDashboard() {
                         </tbody>
                     </table>
                 ) : (
-                    <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">No clans yet.</p>
+                    <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                        No clans yet.
+                    </p>
                 )}
             </Card>
 
@@ -459,7 +448,7 @@ export default function AdminDashboard() {
                             {s.content.topItems.map((it, i) => (
                                 <li
                                     key={it.shortname}
-                                    class="flex items-center gap-2 border-b border-slate-800/40 py-1 last:border-0 transition-colors hover:bg-slate-800/30"
+                                    class="flex items-center gap-2 border-b border-slate-800/40 py-1 transition-colors last:border-0 hover:bg-slate-800/30"
                                 >
                                     <span class="w-5 text-right font-mono text-[11px] text-slate-600">
                                         {i + 1}.
@@ -470,8 +459,9 @@ export default function AdminDashboard() {
                                         loading="lazy"
                                         class="h-6 w-6 rounded bg-slate-800/40"
                                         onError={(e) => {
-                                            ;(e.currentTarget as HTMLImageElement).style.visibility =
-                                                'hidden'
+                                            ;(
+                                                e.currentTarget as HTMLImageElement
+                                            ).style.visibility = 'hidden'
                                         }}
                                     />
                                     <span class="flex-1 truncate text-slate-200">
@@ -484,7 +474,9 @@ export default function AdminDashboard() {
                             ))}
                         </ol>
                     ) : (
-                        <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">No items yet.</p>
+                        <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                            No items yet.
+                        </p>
                     )}
                 </Card>
                 <Card
@@ -496,7 +488,7 @@ export default function AdminDashboard() {
                             {s.content.topBoxes.map((b, i) => (
                                 <li
                                     key={b.boxImagePath}
-                                    class="flex items-center gap-2 border-b border-slate-800/40 py-1 last:border-0 transition-colors hover:bg-slate-800/30"
+                                    class="flex items-center gap-2 border-b border-slate-800/40 py-1 transition-colors last:border-0 hover:bg-slate-800/30"
                                 >
                                     <span class="w-5 text-right font-mono text-[11px] text-slate-600">
                                         {i + 1}.
@@ -507,19 +499,24 @@ export default function AdminDashboard() {
                                         loading="lazy"
                                         class="h-6 w-6 rounded bg-slate-800/40 object-contain"
                                         onError={(e) => {
-                                            ;(e.currentTarget as HTMLImageElement).style.visibility =
-                                                'hidden'
+                                            ;(
+                                                e.currentTarget as HTMLImageElement
+                                            ).style.visibility = 'hidden'
                                         }}
                                     />
                                     <span class="flex-1 truncate text-slate-200">
                                         {b.boxImagePath}
                                     </span>
-                                    <span class="font-mono text-xs text-amber-400/70">{fmt(b.n)}</span>
+                                    <span class="font-mono text-xs text-amber-400/70">
+                                        {fmt(b.n)}
+                                    </span>
                                 </li>
                             ))}
                         </ol>
                     ) : (
-                        <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">No boxes yet.</p>
+                        <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                            No boxes yet.
+                        </p>
                     )}
                 </Card>
             </div>
@@ -534,7 +531,10 @@ export default function AdminDashboard() {
                         <table class="w-full text-sm">
                             <tbody>
                                 {s.users.topByFilters.map((u) => (
-                                    <tr key={u.id} class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30">
+                                    <tr
+                                        key={u.id}
+                                        class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30"
+                                    >
                                         <td class="py-1 text-slate-200">{u.username}</td>
                                         <td class="py-1 text-right font-mono text-xs text-amber-400/70">
                                             {fmt(u.filters)}
@@ -544,7 +544,9 @@ export default function AdminDashboard() {
                             </tbody>
                         </table>
                     ) : (
-                        <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">—</p>
+                        <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                            —
+                        </p>
                     )}
                 </Card>
                 <Card
@@ -555,7 +557,10 @@ export default function AdminDashboard() {
                         <table class="w-full text-sm">
                             <tbody>
                                 {s.users.topByCategories.map((u) => (
-                                    <tr key={u.id} class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30">
+                                    <tr
+                                        key={u.id}
+                                        class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30"
+                                    >
                                         <td class="py-1 text-slate-200">{u.username}</td>
                                         <td class="py-1 text-right font-mono text-xs text-amber-400/70">
                                             {fmt(u.categories)}
@@ -565,7 +570,9 @@ export default function AdminDashboard() {
                             </tbody>
                         </table>
                     ) : (
-                        <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">—</p>
+                        <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                            —
+                        </p>
                     )}
                 </Card>
             </div>
@@ -577,7 +584,7 @@ export default function AdminDashboard() {
             >
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="text-left font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                        <tr class="text-left font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                             <th class="py-1">User</th>
                             <th class="py-1">Email</th>
                             <th class="py-1">Clan role</th>
@@ -587,12 +594,19 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                         {s.users.recent.map((u) => (
-                            <tr key={u.id} class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30">
+                            <tr
+                                key={u.id}
+                                class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30"
+                            >
                                 <td class="py-1 text-slate-200">{u.username}</td>
                                 <td class="py-1 text-slate-500">{u.email ?? '—'}</td>
                                 <td class="py-1 text-slate-500">{u.orgRole ?? '—'}</td>
-                                <td class="py-1 font-mono text-xs text-slate-500">{relTime(u.createdAt)}</td>
-                                <td class="py-1 font-mono text-xs text-slate-500">{relTime(u.lastSeenAt)}</td>
+                                <td class="py-1 font-mono text-xs text-slate-500">
+                                    {relTime(u.createdAt)}
+                                </td>
+                                <td class="py-1 font-mono text-xs text-slate-500">
+                                    {relTime(u.lastSeenAt)}
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -609,15 +623,19 @@ export default function AdminDashboard() {
                         {s.users.recentlyActive.map((u) => (
                             <li
                                 key={u.id}
-                                class="flex items-center justify-between border-b border-slate-800/40 py-1 last:border-0 transition-colors hover:bg-slate-800/30"
+                                class="flex items-center justify-between border-b border-slate-800/40 py-1 transition-colors last:border-0 hover:bg-slate-800/30"
                             >
                                 <span class="text-slate-200">{u.username}</span>
-                                <span class="font-mono text-xs text-slate-500">{relTime(u.lastSeenAt)}</span>
+                                <span class="font-mono text-xs text-slate-500">
+                                    {relTime(u.lastSeenAt)}
+                                </span>
                             </li>
                         ))}
                     </ol>
                 ) : (
-                    <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">No activity yet.</p>
+                    <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                        No activity yet.
+                    </p>
                 )}
             </Card>
 
@@ -628,7 +646,9 @@ export default function AdminDashboard() {
             >
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                        <div class="mb-1 font-mono text-[11px] uppercase tracking-widest text-slate-600">Last 7 days</div>
+                        <div class="mb-1 font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                            Last 7 days
+                        </div>
                         {s.events.countsWeek.length ? (
                             <table class="w-full text-sm">
                                 <tbody>
@@ -648,11 +668,15 @@ export default function AdminDashboard() {
                                 </tbody>
                             </table>
                         ) : (
-                            <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">No events.</p>
+                            <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                                No events.
+                            </p>
                         )}
                     </div>
                     <div>
-                        <div class="mb-1 font-mono text-[11px] uppercase tracking-widest text-slate-600">Last 30 days</div>
+                        <div class="mb-1 font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                            Last 30 days
+                        </div>
                         {s.events.countsMonth.length ? (
                             <table class="w-full text-sm">
                                 <tbody>
@@ -672,7 +696,9 @@ export default function AdminDashboard() {
                                 </tbody>
                             </table>
                         ) : (
-                            <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">No events.</p>
+                            <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                                No events.
+                            </p>
                         )}
                     </div>
                 </div>
@@ -686,7 +712,7 @@ export default function AdminDashboard() {
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="text-left font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                                <tr class="text-left font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                                     <th class="py-1">When</th>
                                     <th class="py-1">Type</th>
                                     <th class="py-1">User</th>
@@ -696,16 +722,17 @@ export default function AdminDashboard() {
                             </thead>
                             <tbody>
                                 {s.events.recent.map((e) => (
-                                    <tr key={e.id} class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30">
-                                        <td class="py-1 whitespace-nowrap font-mono text-xs text-slate-500">
+                                    <tr
+                                        key={e.id}
+                                        class="border-t border-slate-800/60 transition-colors hover:bg-slate-800/30"
+                                    >
+                                        <td class="py-1 font-mono text-xs whitespace-nowrap text-slate-500">
                                             {relTime(e.createdAt)}
                                         </td>
                                         <td class="py-1 font-mono text-xs text-amber-400/70">
                                             {e.type}
                                         </td>
-                                        <td class="py-1 text-slate-300">
-                                            {e.username ?? '—'}
-                                        </td>
+                                        <td class="py-1 text-slate-300">{e.username ?? '—'}</td>
                                         <td class="py-1 font-mono text-xs text-slate-600">
                                             {e.targetId ?? '—'}
                                         </td>
@@ -718,7 +745,9 @@ export default function AdminDashboard() {
                         </table>
                     </div>
                 ) : (
-                    <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">No events yet.</p>
+                    <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                        No events yet.
+                    </p>
                 )}
             </Card>
 
@@ -731,7 +760,7 @@ export default function AdminDashboard() {
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="text-left font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                                <tr class="text-left font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                                     <th class="py-1">Migration</th>
                                     <th class="py-1">Applied</th>
                                     <th class="py-1">App version</th>
@@ -746,7 +775,7 @@ export default function AdminDashboard() {
                                         <td class="py-1 font-mono text-xs text-amber-400/70">
                                             {m.name}
                                         </td>
-                                        <td class="py-1 whitespace-nowrap font-mono text-xs text-slate-500">
+                                        <td class="py-1 font-mono text-xs whitespace-nowrap text-slate-500">
                                             {m.appliedAt > 0 ? relTime(m.appliedAt) : 'historic'}
                                         </td>
                                         <td class="py-1 font-mono text-xs text-slate-600">
@@ -758,7 +787,9 @@ export default function AdminDashboard() {
                         </table>
                     </div>
                 ) : (
-                    <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">No migrations recorded.</p>
+                    <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
+                        No migrations recorded.
+                    </p>
                 )}
             </Card>
         </div>

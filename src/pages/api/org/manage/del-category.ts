@@ -62,13 +62,17 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     db.transaction((tx) => {
         if (filterIds.length) {
-            tx.delete(schema.filterItems).where(inArray(schema.filterItems.filterId, filterIds)).run()
+            tx.delete(schema.filterItems)
+                .where(inArray(schema.filterItems.filterId, filterIds))
+                .run()
             tx.delete(schema.filters).where(inArray(schema.filters.id, filterIds)).run()
         }
         tx.delete(schema.subcategories)
             .where(eq(schema.subcategories.categoryId, b.categoryId as string))
             .run()
-        tx.delete(schema.categories).where(eq(schema.categories.id, b.categoryId as string)).run()
+        tx.delete(schema.categories)
+            .where(eq(schema.categories.id, b.categoryId as string))
+            .run()
     })
 
     return json({ ok: true })
