@@ -15,14 +15,14 @@ function def(
 }
 
 export const PREFAB_REGISTRY: Record<string, PrefabDef> = {
-    foundation: def('foundation', 'Foundation', 'foundation', 'box', 3, 1, 3, 'center', false),
+    foundation: def('foundation', 'Foundation', 'foundation', 'box', 3, 0.2, 3, 'center', false),
     'foundation.triangle': def(
         'foundation.triangle',
         'Triangle Foundation',
         'foundation-triangle',
         'triangle-prism',
         3,
-        1,
+        0.2,
         3,
         'center',
         false,
