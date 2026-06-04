@@ -19,9 +19,10 @@ import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
 import OpenCoreBoxesView from './OpenCoreBoxesView'
 import DeploymentTotals from './DeploymentTotals'
+import OpenCoreViewer from './openCore3D/OpenCoreViewer'
 import type { Category, Filter, OrgOpenCoreDetail as Detail } from '../types'
 
-type View = 'conveyors' | 'boxes'
+type View = 'conveyors' | 'boxes' | '3d'
 
 interface Props {
     openCoreId: string
@@ -592,9 +593,21 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                 >
                     Boxes
                 </button>
+                <button
+                    type="button"
+                    onClick={() => setView('3d')}
+                    class={`rounded px-3 py-1.5 font-semibold transition-colors ${
+                        view === '3d'
+                            ? 'bg-amber-500/10 text-amber-400'
+                            : 'text-slate-400 hover:text-amber-400'
+                    }`}
+                >
+                    3D
+                </button>
             </div>
 
             {/* Search bar */}
+            {view !== '3d' && (
             <div class="relative mb-6">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -638,8 +651,16 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                     </button>
                 ) : null}
             </div>
+            )}
 
-            {allFilters.length === 0 && !canEdit ? (
+            {view === '3d' ? (
+                <OpenCoreViewer
+                    openCoreId={openCoreId}
+                    initialFilters={allFilters}
+                    canCreate={canEdit}
+                    sharedWithOrg={true}
+                />
+            ) : allFilters.length === 0 && !canEdit ? (
                 <p class="text-sm text-slate-500">This Open Core has no filters yet.</p>
             ) : view === 'conveyors' ? (
                 (() => {

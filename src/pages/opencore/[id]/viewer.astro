@@ -1,0 +1,11 @@
+---
+import Layout from '../../../layouts/Layout.astro'
+import OpenCoreViewer from '../../../components/openCore3D/OpenCoreViewer'
+
+const { id } = Astro.params
+if (!id) return Astro.redirect('/')
+---
+
+<Layout title="Open Core 3D – CoreForge" activeNav="home">
+    <OpenCoreViewer client:only="preact" openCoreId={id} />
+</Layout>

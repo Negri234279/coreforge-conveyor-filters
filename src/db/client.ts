@@ -208,9 +208,9 @@ const MIGRATIONS: Migration[] = [
  *  to crash on boot than to silently leave the DB half-migrated. */
 function migrate(sqlite: Database.Database): void {
     // The applied-set is loaded once; the table itself is created by schema.sql.
-    const appliedRows = sqlite
-        .prepare(`SELECT name FROM schema_migrations`)
-        .all() as { name: string }[]
+    const appliedRows = sqlite.prepare(`SELECT name FROM schema_migrations`).all() as {
+        name: string
+    }[]
     const applied = new Set(appliedRows.map((r) => r.name))
 
     const insertApplied = sqlite.prepare(
@@ -224,8 +224,8 @@ function migrate(sqlite: Database.Database): void {
     // we don't claim they were applied "just now". Heuristic: schema_migrations
     // is empty AND the DB has at least one user row (i.e. not a fresh install).
     if (applied.size === 0) {
-        const userCount =
-            (sqlite.prepare(`SELECT COUNT(*) AS n FROM users`).get() as { n: number }).n
+        const userCount = (sqlite.prepare(`SELECT COUNT(*) AS n FROM users`).get() as { n: number })
+            .n
         if (userCount > 0) {
             for (const m of MIGRATIONS) {
                 insertApplied.run(m.name, 0, null)

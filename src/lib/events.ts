@@ -42,6 +42,10 @@ export type EventType =
     | 'org_leave'
     | 'org_delete'
     | 'landing_google_cta'
+    | 'opencore_layout_create'
+    | 'opencore_layout_update'
+    | 'opencore_layout_delete'
+    | 'opencore_layout_view_shared'
 
 export function logEvent(
     type: EventType,
