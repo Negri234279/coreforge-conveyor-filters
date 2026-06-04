@@ -127,6 +127,21 @@ export const events = sqliteTable('events', {
     createdAt: integer('created_at').notNull(),
 })
 
+export const openCoreLayouts = sqliteTable('open_core_layouts', {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    openCoreId: text('open_core_id'),
+    name: text('name').notNull(),
+    sourceJson: text('source_json').notNull(),
+    assignmentsJson: text('assignments_json').notNull().default('[]'),
+    sharedWithOrg: integer('shared_with_org').notNull().default(0),
+    position: integer('position').notNull().default(0),
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull().default(0),
+})
+
+export type DbOpenCoreLayout = typeof openCoreLayouts.$inferSelect
+
 export const schemaMigrations = sqliteTable('schema_migrations', {
     name: text('name').primaryKey(),
     appliedAt: integer('applied_at').notNull(),

@@ -86,7 +86,7 @@ export default function OpenCoreFormModal({
                         autoFocus
                         value={name}
                         onInput={(e) => setName((e.target as HTMLInputElement).value)}
-                        class="mt-1 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-colors focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
+                        class="mt-1 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 transition-colors outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
                         placeholder="e.g. Main Base, Outpost Farm"
                     />
                 </div>
@@ -107,7 +107,7 @@ export default function OpenCoreFormModal({
                     </button>
                     <button
                         type="submit"
-                        class="rounded bg-amber-500 px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                        class="rounded bg-amber-500 px-3 py-1.5 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
                     >
                         {mode === 'create' ? 'Create' : 'Save'}
                     </button>

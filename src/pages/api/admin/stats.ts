@@ -40,8 +40,7 @@ export const GET: APIRoute = ({ locals }) => {
     const monthAgo = now - 30 * DAY_MS
 
     // ----- Users ---------------------------------------------------------
-    const totalUsers =
-        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM users`)?.n ?? 0
+    const totalUsers = row<{ n: number }>(sql`SELECT COUNT(*) as n FROM users`)?.n ?? 0
     const newToday =
         row<{ n: number }>(sql`SELECT COUNT(*) as n FROM users WHERE created_at >= ${dayAgo}`)?.n ??
         0
@@ -53,17 +52,14 @@ export const GET: APIRoute = ({ locals }) => {
             ?.n ?? 0
 
     const dau =
-        row<{ n: number }>(
-            sql`SELECT COUNT(*) as n FROM users WHERE last_seen_at >= ${dayAgo}`,
-        )?.n ?? 0
+        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM users WHERE last_seen_at >= ${dayAgo}`)
+            ?.n ?? 0
     const wau =
-        row<{ n: number }>(
-            sql`SELECT COUNT(*) as n FROM users WHERE last_seen_at >= ${weekAgo}`,
-        )?.n ?? 0
+        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM users WHERE last_seen_at >= ${weekAgo}`)
+            ?.n ?? 0
     const mau =
-        row<{ n: number }>(
-            sql`SELECT COUNT(*) as n FROM users WHERE last_seen_at >= ${monthAgo}`,
-        )?.n ?? 0
+        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM users WHERE last_seen_at >= ${monthAgo}`)
+            ?.n ?? 0
 
     const withOrg =
         row<{ n: number }>(sql`SELECT COUNT(*) as n FROM users WHERE org_id IS NOT NULL`)?.n ?? 0
@@ -80,8 +76,7 @@ export const GET: APIRoute = ({ locals }) => {
     )
 
     // ----- Organisations -------------------------------------------------
-    const totalOrgs =
-        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM organizations`)?.n ?? 0
+    const totalOrgs = row<{ n: number }>(sql`SELECT COUNT(*) as n FROM organizations`)?.n ?? 0
     const topOrgsByMembers = rows<{ id: string; name: string; members: number }>(
         sql`SELECT o.id, o.name, COUNT(u.id) as members
             FROM organizations o
@@ -90,21 +85,16 @@ export const GET: APIRoute = ({ locals }) => {
     )
 
     // ----- Content -------------------------------------------------------
-    const totalCategories =
-        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM categories`)?.n ?? 0
+    const totalCategories = row<{ n: number }>(sql`SELECT COUNT(*) as n FROM categories`)?.n ?? 0
     const totalSubcategories =
         row<{ n: number }>(sql`SELECT COUNT(*) as n FROM subcategories`)?.n ?? 0
-    const totalFilters =
-        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM filters`)?.n ?? 0
-    const totalOpenCores =
-        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM open_cores`)?.n ?? 0
-    const totalFilterItems =
-        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM filter_items`)?.n ?? 0
+    const totalFilters = row<{ n: number }>(sql`SELECT COUNT(*) as n FROM filters`)?.n ?? 0
+    const totalOpenCores = row<{ n: number }>(sql`SELECT COUNT(*) as n FROM open_cores`)?.n ?? 0
+    const totalFilterItems = row<{ n: number }>(sql`SELECT COUNT(*) as n FROM filter_items`)?.n ?? 0
 
     const filtersNewWeek =
-        row<{ n: number }>(
-            sql`SELECT COUNT(*) as n FROM filters WHERE created_at >= ${weekAgo}`,
-        )?.n ?? 0
+        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM filters WHERE created_at >= ${weekAgo}`)
+            ?.n ?? 0
     const filtersEditedWeek =
         row<{ n: number }>(
             sql`SELECT COUNT(*) as n FROM filters WHERE updated_at >= ${weekAgo} AND updated_at > created_at`,
@@ -116,12 +106,11 @@ export const GET: APIRoute = ({ locals }) => {
             GROUP BY day ORDER BY day ASC`,
     )
 
-    const avgItems =
-        row<{ avg: number | null; max: number | null }>(
-            sql`SELECT AVG(c) as avg, MAX(c) as max FROM (
+    const avgItems = row<{ avg: number | null; max: number | null }>(
+        sql`SELECT AVG(c) as avg, MAX(c) as max FROM (
                 SELECT filter_id, COUNT(*) as c FROM filter_items GROUP BY filter_id
             )`,
-        ) ?? { avg: 0, max: 0 }
+    ) ?? { avg: 0, max: 0 }
     const filtersAtCap =
         row<{ n: number }>(
             sql`SELECT COUNT(*) as n FROM (
@@ -129,22 +118,20 @@ export const GET: APIRoute = ({ locals }) => {
             )`,
         )?.n ?? 0
 
-    const deploymentTotals =
-        row<{ boxes: number; conveyors: number; storage: number }>(
-            sql`SELECT
+    const deploymentTotals = row<{ boxes: number; conveyors: number; storage: number }>(
+        sql`SELECT
                 COALESCE(SUM(box_count), 0) as boxes,
                 COALESCE(SUM(conveyor_count), 0) as conveyors,
                 COALESCE(SUM(storage_adaptor_count), 0) as storage
                 FROM filters`,
-        ) ?? { boxes: 0, conveyors: 0, storage: 0 }
+    ) ?? { boxes: 0, conveyors: 0, storage: 0 }
 
-    const sharedCounts =
-        row<{ filters: number; categories: number; openCores: number }>(
-            sql`SELECT
+    const sharedCounts = row<{ filters: number; categories: number; openCores: number }>(
+        sql`SELECT
                 (SELECT COUNT(*) FROM filters WHERE shared_with_org = 1) as filters,
                 (SELECT COUNT(*) FROM categories WHERE shared_with_org = 1) as categories,
                 (SELECT COUNT(*) FROM open_cores WHERE shared_with_org = 1) as openCores`,
-        ) ?? { filters: 0, categories: 0, openCores: 0 }
+    ) ?? { filters: 0, categories: 0, openCores: 0 }
 
     const topItems = rows<{ shortname: string; filters: number }>(
         sql`SELECT shortname, COUNT(DISTINCT filter_id) as filters
@@ -227,8 +214,7 @@ export const GET: APIRoute = ({ locals }) => {
             FROM events e LEFT JOIN users u ON u.id = e.user_id
             ORDER BY e.created_at DESC LIMIT 50`,
     )
-    const totalEvents =
-        row<{ n: number }>(sql`SELECT COUNT(*) as n FROM events`)?.n ?? 0
+    const totalEvents = row<{ n: number }>(sql`SELECT COUNT(*) as n FROM events`)?.n ?? 0
 
     // ----- Schema migrations --------------------------------------------
     // Pre-tracking rows are backfilled with applied_at = 0; surface them as

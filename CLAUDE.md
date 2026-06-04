@@ -42,43 +42,48 @@ Astro 6 with `output: 'server'` + `@astrojs/node` standalone adapter · Preact 1
 
 ### Colour palette
 
-| Token | Value | Usage |
-|---|---|---|
-| Background | `#0d1117` (Layout) / `#0a0e14` (landing) | Page background |
-| **Amber — primary accent** | `#f59e0b` (`amber-500`) | Buttons, active nav, stat numbers, glow effects |
-| Amber dim | `rgba(245,158,11,0.05–0.15)` | Hover backgrounds, badge fills |
-| Slate surface | `bg-slate-900/30–40` | Cards, inputs |
-| Slate border | `border-slate-800` | Default border |
-| Slate muted | `text-slate-400–600` | Secondary text, inactive nav |
+| Token                      | Value                                    | Usage                                           |
+| -------------------------- | ---------------------------------------- | ----------------------------------------------- |
+| Background                 | `#0d1117` (Layout) / `#0a0e14` (landing) | Page background                                 |
+| **Amber — primary accent** | `#f59e0b` (`amber-500`)                  | Buttons, active nav, stat numbers, glow effects |
+| Amber dim                  | `rgba(245,158,11,0.05–0.15)`             | Hover backgrounds, badge fills                  |
+| Slate surface              | `bg-slate-900/30–40`                     | Cards, inputs                                   |
+| Slate border               | `border-slate-800`                       | Default border                                  |
+| Slate muted                | `text-slate-400–600`                     | Secondary text, inactive nav                    |
 
 **Never use teal/green as a primary accent.** Teal is retired; amber is the single accent colour across all interactive states.
 
 ### Interactive states
 
 **Nav links** (in `Layout.astro`):
+
 ```
 inactive : text-slate-400 hover:bg-slate-800/60 hover:text-amber-400
 active   : bg-amber-500/10 text-amber-400
 ```
 
 **Cards** (filter cards, stat tiles, feature cards):
+
 ```
 default : border-slate-800 bg-slate-900/30
 hover   : hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]
 ```
 
 **Buttons — primary** (CTA, new filter):
+
 ```
 bg-amber-500 text-slate-950 font-bold uppercase tracking-wide
 hover:bg-amber-400
 ```
 
 **Buttons — icon/ghost** (copy, menu actions):
+
 ```
 text-slate-400–600  hover:bg-slate-800  hover:text-amber-400
 ```
 
 **Badges** (e.g. "Shared"):
+
 ```
 bg-amber-500/15 text-amber-400
 ```
@@ -86,6 +91,7 @@ bg-amber-500/15 text-amber-400
 ### Typography
 
 Fonts loaded from Bunny Fonts in `Layout.astro` (and inline in the landing `<head>`):
+
 - **Bebas Neue** — display/headings (`font-family: 'Bebas Neue', sans-serif`). Use for page titles, section headers, large stat numbers, and the COREFORGE wordmark.
 - **JetBrains Mono** — mono accents (`font-family: 'JetBrains Mono', monospace`). Use for labels, tags, status pills, tickers, and `text-[11px] uppercase tracking-widest` eyebrow text.
 - **Inter / system-ui** — body text. Already set on `<body>` via Layout.
@@ -93,13 +99,17 @@ Fonts loaded from Bunny Fonts in `Layout.astro` (and inline in the landing `<hea
 ### Logo dot
 
 The `CoreForge` wordmark uses an amber pulsing dot:
+
 ```html
-<span class="inline-block h-2 w-2 shrink-0 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.7)]" />
+<span
+    class="inline-block h-2 w-2 shrink-0 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.7)]"
+/>
 ```
 
 ### Landing page (unauthenticated `/`)
 
 The landing page renders a fully custom `<html>` structure (no Layout) with:
+
 - Dot-grid hero background: `radial-gradient(rgba(245,158,11,0.055) 1px, transparent 1px) / 24px 24px`
 - Radial amber/orange glow blobs (absolute, `pointer-events: none`)
 - `CORE` in `#f1f5f9`, `FORGE` in `#f59e0b` with `text-shadow: 0 0 80px rgba(245,158,11,0.45)`
@@ -109,29 +119,34 @@ The landing page renders a fully custom `<html>` structure (no Layout) with:
 ### Authenticated home (`/` when logged in)
 
 Uses `Layout.astro` + two islands:
+
 1. `HomeDashboard` (`client:only="preact"`) — stat tiles (Filters / Categories / Clan) + recent-6 filter grid + ASCII empty state
 2. `MyConveyors` (`client:only="preact"`) — full arsenal management, below an "ARSENAL" divider
 
 ## Code style
 
 **Control flow**
+
 - Prefer an anonymous object map over `switch` whenever the branches map a key to a value/handler. Fall back to `switch` only when cases need fall-through or complex guards.
 - Use `try / catch` with `async / await`. Don't chain `.then().catch()`; don't pass a `.catch(handler)` callback as the error path.
 - Early-return on guard conditions; avoid `else` after `return`.
 - No nested ternaries — extract to a variable or an object map.
 
 **Async**
+
 - Top-level async work must be inside `try / catch`; never let a promise reject silently.
 - Run independent awaits in parallel with `Promise.all` — never sequential `await`s when there's no data dependency.
 - No `async` functions without an `await` inside.
 
 **Errors & logging**
+
 - Throw real `Error` instances (or a subclass), never strings or plain objects.
 - Catch at the boundary that can actually handle it (API route, signal commit, event handler). Don't `try / catch` just to re-throw.
 - In `catch`, type the error as `unknown` and narrow before use.
 - `console.error` only at the outermost boundary; lower layers throw.
 
 **Usage events (`logEvent`)**
+
 - Any business-meaningful action (user/auth lifecycle, create/update/delete of filters/categories/subcategories/orgs, clones, shared views, exports, landing CTAs) MUST be recorded via `logEvent` from `src/lib/events.ts`. Never `db.insert(schema.events)` directly and never emit a parallel `log.info` for the same business action — `logEvent` already writes the row, annotates the active OTel span, and emits the structured log line.
 - Call it from the server-side boundary that actually performed the action (API route handler, server endpoint, auth flow), after the work has succeeded — not from Preact islands and not before the mutation commits.
 - Pick the `EventType` from the union in `src/lib/events.ts`. If a new action needs tracking, extend that union first; don't pass an ad-hoc string.
@@ -139,6 +154,7 @@ Uses `Layout.astro` + two islands:
 - `logEvent` is fire-and-forget and swallows its own errors; do not wrap the call in `try / catch` and do not `await` it.
 
 **Types (TypeScript)**
+
 - `type` for unions, primitives, and function shapes; `interface` only when declaration merging is needed (rare here).
 - Never `any`. Use `unknown` + narrowing, or a precise type.
 - No non-null `!` assertions — narrow with a guard or early return.
@@ -146,18 +162,21 @@ Uses `Layout.astro` + two islands:
 - Shared domain types live in `src/types/index.ts` — don't redeclare them in components.
 
 **Naming**
+
 - `camelCase` for variables, functions, signals. `PascalCase` for components, types, and classes. `SCREAMING_SNAKE_CASE` for true constants (e.g. `MAX_ITEMS_PER_FILTER`).
 - Files: `PascalCase.tsx` for Preact components, `kebab-case.ts` for everything else, `.astro` pages mirror the route.
 - Boolean names start with `is` / `has` / `can` / `should`.
 - Event handlers: `onX` for props, `handleX` for the local function.
 
 **File / import structure**
+
 - Import order: node builtins → external packages → `src/...` absolute → relative `./` / `../`. Blank line between groups.
 - Use the configured aliases over deep `../../../` chains.
 - One default export per file at most; prefer named exports for everything else.
 - Co-locate component-private helpers in the same file; promote to `src/lib/` only when reused.
 
 **Preact / Astro / signals**
+
 - Astro pages stay thin shells — all interactivity in Preact islands mounted with `client:only="preact"`.
 - Read signals with `.value` inside components; never destructure a signal.
 - Mutations to the filters tree go through `src/store/filters.ts` (clone → mutate → commit). Never mutate `categories.value` in place from a component.

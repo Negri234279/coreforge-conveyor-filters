@@ -91,7 +91,7 @@ export default function MyConveyors() {
                     <button
                         type="button"
                         onClick={() => setOcCreateOpen(true)}
-                        class="inline-flex items-center gap-1 rounded-md bg-amber-500 px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                        class="inline-flex items-center gap-1 rounded-md bg-amber-500 px-3 py-1.5 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
                     >
                         <span aria-hidden="true">+</span> Open Core
                     </button>
@@ -152,7 +152,7 @@ export default function MyConveyors() {
                                 <button
                                     type="button"
                                     onClick={() => setOcCreateOpen(true)}
-                                    class="mt-4 rounded-md bg-amber-500 px-3 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                                    class="mt-4 rounded-md bg-amber-500 px-3 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
                                 >
                                     + Create Open Core
                                 </button>
@@ -188,7 +188,7 @@ export default function MyConveyors() {
                                     </button>
                                     <a
                                         href="/filters/new"
-                                        class="rounded-md bg-amber-500 px-3 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                                        class="rounded-md bg-amber-500 px-3 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
                                     >
                                         + New Filter
                                     </a>

@@ -138,7 +138,7 @@ try {
         'exception.message': err?.message ?? String(err),
         'exception.stacktrace': err?.stack,
     })
-    
+
     if (sqlite.open) sqlite.close()
     process.exit(1)
 }

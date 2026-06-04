@@ -24,8 +24,24 @@
     "layout": [
         { "i": "panel-req-rate", "x": 0, "y": 0, "w": 6, "h": 6, "moved": false, "static": false },
         { "i": "panel-p95", "x": 6, "y": 0, "w": 6, "h": 6, "moved": false, "static": false },
-        { "i": "panel-errors-by-type", "x": 0, "y": 6, "w": 6, "h": 6, "moved": false, "static": false },
-        { "i": "panel-recent-errors", "x": 6, "y": 6, "w": 6, "h": 6, "moved": false, "static": false }
+        {
+            "i": "panel-errors-by-type",
+            "x": 0,
+            "y": 6,
+            "w": 6,
+            "h": 6,
+            "moved": false,
+            "static": false
+        },
+        {
+            "i": "panel-recent-errors",
+            "x": 6,
+            "y": 6,
+            "w": 6,
+            "h": 6,
+            "moved": false,
+            "static": false
+        }
     ],
     "widgets": [
         {

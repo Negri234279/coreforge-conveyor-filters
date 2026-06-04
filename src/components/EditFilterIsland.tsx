@@ -21,7 +21,10 @@ export default function EditFilterIsland() {
         return (
             <p class="text-sm text-rose-300">
                 No filter id provided.{' '}
-                <a href="/" class="text-amber-400 underline decoration-amber-400/40 transition-colors hover:text-amber-300 hover:decoration-amber-400">
+                <a
+                    href="/"
+                    class="text-amber-400 underline decoration-amber-400/40 transition-colors hover:text-amber-300 hover:decoration-amber-400"
+                >
                     Go home
                 </a>
                 .

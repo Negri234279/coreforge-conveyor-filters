@@ -6,7 +6,8 @@ const user = Astro.locals.user!
 const { id } = Astro.params
 if (!id) return Astro.redirect('/org/filters')
 if (!user.orgId) return Astro.redirect('/org')
-if (user.orgRole !== 'owner' && user.orgRole !== 'admin') return Astro.redirect(`/org/opencore/${id}`)
+if (user.orgRole !== 'owner' && user.orgRole !== 'admin')
+    return Astro.redirect(`/org/opencore/${id}`)
 
 const url = new URL(Astro.request.url)
 const filterId = url.searchParams.get('filterId') ?? undefined
@@ -30,10 +31,6 @@ if (!filterId) return Astro.redirect(`/org/opencore/${id}`)
     </div>
 
     <div class="rounded-lg border border-slate-800 bg-slate-900/30 p-6 shadow-inner">
-        <OrgFilterIsland
-            client:only="preact"
-            openCoreId={id}
-            filterId={filterId}
-        />
+        <OrgFilterIsland client:only="preact" openCoreId={id} filterId={filterId} />
     </div>
 </Layout>

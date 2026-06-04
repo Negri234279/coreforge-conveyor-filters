@@ -111,14 +111,18 @@ export default function DeploymentTotals({ totals, variant = 'chip', class: cls 
                             {it.path}
                         </svg>
                         <span class="text-sm font-semibold text-amber-400">{totals[it.key]}</span>
-                        <span class="font-mono text-[11px] uppercase tracking-widest text-slate-500">{it.label}</span>
+                        <span class="font-mono text-[11px] tracking-widest text-slate-500 uppercase">
+                            {it.label}
+                        </span>
                     </div>
                 ))}
             </div>
         )
     }
     return (
-        <div class={`flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-slate-500 ${cls}`}>
+        <div
+            class={`flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-slate-500 ${cls}`}
+        >
             {ITEMS.map((it) => (
                 <span key={it.key} class="inline-flex items-center gap-1" title={it.label}>
                     <svg

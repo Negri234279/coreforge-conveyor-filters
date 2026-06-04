@@ -54,7 +54,11 @@ export const GET: APIRoute = ({ locals }) => {
 
     const categoryIds = Array.from(new Set(filterRows.map((f) => f.categoryId)))
     const catRows = db
-        .select({ id: schema.categories.id, name: schema.categories.name, openCoreId: schema.categories.openCoreId })
+        .select({
+            id: schema.categories.id,
+            name: schema.categories.name,
+            openCoreId: schema.categories.openCoreId,
+        })
         .from(schema.categories)
         .where(inArray(schema.categories.id, categoryIds))
         .all()

@@ -126,6 +126,24 @@ CREATE INDEX IF NOT EXISTS events_user_id_idx ON events(user_id);
 CREATE INDEX IF NOT EXISTS events_created_at_idx ON events(created_at);
 CREATE INDEX IF NOT EXISTS events_type_created_at_idx ON events(type, created_at);
 
+-- One saved 3D layout = one uploaded base export + its box→filter assignments.
+-- Lives alongside the per-user filter tree. shared_with_org lets clan members
+-- view; only the owner and clan owner/admins may edit (enforced in the route).
+CREATE TABLE IF NOT EXISTS open_core_layouts (
+    id                TEXT PRIMARY KEY,
+    user_id           TEXT NOT NULL,
+    open_core_id      TEXT,                       -- nullable FK-ish to open_cores.id
+    name              TEXT NOT NULL,
+    source_json       TEXT NOT NULL,              -- raw CopyPaste JSON (verbatim)
+    assignments_json  TEXT NOT NULL DEFAULT '[]', -- JSON BoxAssignment[]
+    shared_with_org   INTEGER NOT NULL DEFAULT 0,
+    position          INTEGER NOT NULL DEFAULT 0,
+    created_at        INTEGER NOT NULL,
+    updated_at        INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS open_core_layouts_user_idx ON open_core_layouts(user_id);
+CREATE INDEX IF NOT EXISTS open_core_layouts_open_core_idx ON open_core_layouts(open_core_id);
+
 -- Tracks which named forward-migrations from src/db/client.ts::migrate() have
 -- already been applied to this DB. One INSERT OR IGNORE per step on boot, so
 -- existing prod DBs backfill their history the first time after this lands.

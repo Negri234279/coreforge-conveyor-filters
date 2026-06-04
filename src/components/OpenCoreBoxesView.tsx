@@ -35,9 +35,7 @@ function FilterTile({ filter }: { filter: Filter }) {
 
 function Row({ label, indent, filters }: { label: string; indent?: boolean; filters: Filter[] }) {
     return (
-        <div
-            class={`flex items-start gap-4 border-b border-slate-800 p-3 ${indent ? 'pl-4' : ''}`}
-        >
+        <div class={`flex items-start gap-4 border-b border-slate-800 p-3 ${indent ? 'pl-4' : ''}`}>
             <div class="w-36 flex-shrink-0 pl-1 text-left">
                 <span
                     class={`block truncate font-mono text-[11px] font-bold tracking-widest uppercase ${

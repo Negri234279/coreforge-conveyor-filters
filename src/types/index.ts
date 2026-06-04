@@ -117,6 +117,159 @@ export interface MeState {
     source?: string
 }
 
+// ─── Open Core 3D Viewer ────────────────────────────────────────────────────
+
+export interface RawVec3 {
+    x: string
+    y: string
+    z: string
+}
+
+export interface RawEntity {
+    grade: number
+    pos: RawVec3
+    prefabname: string
+    rot: RawVec3 // Euler radians, Unity/left-handed, each component in [0, 2π]
+    skinid: number // Steam workshop skin id; 0 = default skin
+}
+
+export interface RawOpenCoreFile {
+    default?: {
+        position?: RawVec3
+        rotationdiff?: number
+        rotationy?: number
+    }
+    entities: RawEntity[]
+}
+
+export interface Vec3 {
+    x: number
+    y: number
+    z: number
+}
+
+export type PrefabKind =
+    | 'foundation'
+    | 'foundation-triangle'
+    | 'floor'
+    | 'floor-triangle'
+    | 'wall'
+    | 'wall-half'
+    | 'wall-window'
+    | 'wall-frame'
+    | 'ramp'
+    | 'box-large'
+    | 'box-small'
+    | 'fridge'
+    | 'shelf'
+    | 'unknown'
+
+export type GeometryShape = 'box' | 'triangle-prism' | 'wedge'
+
+/** Where the Rust entity `pos.y` sits relative to the mesh's vertical extent. */
+export type Anchor = 'center' | 'bottom' | 'top'
+
+export interface PrefabDef {
+    /** Short prefab name = basename of prefabname without the ".prefab" suffix. */
+    prefabName: string
+    displayName: string
+    kind: PrefabKind
+    shape: GeometryShape
+    /** Mesh size in metres: x = width, y = height, z = depth. */
+    size: Vec3
+    anchor: Anchor
+    /** True = a storage container the user can click & assign a filter to. */
+    interactive: boolean
+}
+
+export interface SceneEntity {
+    /** Index into the parsed entity list — stable id for the whole entity set. */
+    index: number
+    /** Stable assignment key (interactive boxes only; '' for context geometry). */
+    boxKey: string
+    prefab: PrefabDef
+    /** Position in Three.js space (Z already negated, anchor applied → mesh CENTER). */
+    position: Vec3
+    /** Euler radians in Three.js space, applied with rotation order 'YXZ'. */
+    rotation: Vec3
+    skinId: number
+    grade: number
+    interactive: boolean
+}
+
+export interface SceneBounds {
+    min: Vec3
+    max: Vec3
+    center: Vec3
+    size: Vec3
+}
+
+export interface OpenCoreLayoutModel {
+    entities: SceneEntity[]
+    /** Subset of `entities` where interactive === true. */
+    interactiveBoxes: SceneEntity[]
+    bounds: SceneBounds
+    counts: {
+        total: number
+        structures: number
+        boxes: number
+        unknown: number
+    }
+}
+
+/** One box → one filter. boxKey matches SceneEntity.boxKey. */
+export interface BoxAssignment {
+    boxKey: string
+    filterId: string
+}
+
+/** Layout as returned by the API (client-facing). */
+export interface OpenCoreLayout {
+    id: string
+    /** The Open Core this layout belongs to (null = standalone). */
+    openCoreId: string | null
+    name: string
+    sharedWithOrg: boolean
+    /** The raw uploaded CopyPaste JSON, verbatim. Parsed client-side at render. */
+    sourceJson: string
+    assignments: BoxAssignment[]
+    owner: { id: string; username: string }
+    /** Computed server-side for the requesting user (owner || clan owner/admin). */
+    canEdit: boolean
+    createdAt: string
+    updatedAt: string
+}
+
+/** POST body to create a layout from an upload. */
+export interface CreateLayoutBody {
+    openCoreId: string | null
+    name: string
+    sourceJson: string
+    sharedWithOrg?: boolean
+}
+
+/** PUT body to save edits. sourceJson set = owner "replace base file" in place. */
+export interface UpdateLayoutBody {
+    name?: string
+    sharedWithOrg?: boolean
+    assignments?: BoxAssignment[]
+    sourceJson?: string
+}
+
+export type ViewerMode = 'view' | 'edit'
+
+export interface ViewerUiState {
+    mode: ViewerMode
+    selectedBoxKey: string | null
+    hoveredBoxKey: string | null
+    panelOpen: boolean // mirrors selectedBoxKey !== null
+    dirty: boolean // assignments changed since last successful save
+    saving: boolean // a PUT is in flight
+    lastError: string | null
+}
+
+// ─── /Open Core 3D Viewer ───────────────────────────────────────────────────
+
 /** A clan member's shared Open Core, as listed on the Clan page. */
 export interface OrgOpenCoreView {
     id: string

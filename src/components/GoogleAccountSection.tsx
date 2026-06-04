@@ -60,7 +60,7 @@ export default function GoogleAccountSection({ isLinked: initialLinked }: Props)
 
     return (
         <section class="rounded-lg border border-slate-800 bg-slate-900/30 p-5 transition-all hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]">
-            <h2 class="font-mono text-[11px] uppercase tracking-widest text-slate-400">
+            <h2 class="font-mono text-[11px] tracking-widest text-slate-400 uppercase">
                 Linked Accounts
             </h2>
             <div class="mt-3 flex items-center justify-between gap-4">
@@ -91,7 +91,7 @@ export default function GoogleAccountSection({ isLinked: initialLinked }: Props)
                 ) : (
                     <a
                         href="/api/auth/google?mode=link"
-                        class="rounded-md bg-amber-500 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                        class="rounded-md bg-amber-500 px-3 py-1.5 text-xs font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
                     >
                         Link Google
                     </a>

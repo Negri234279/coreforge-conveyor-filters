@@ -15,11 +15,18 @@ interface Props {
     filterId?: string
 }
 
-export default function OrgFilterIsland({ openCoreId, categoryId, subcategoryId, filterId }: Props) {
+export default function OrgFilterIsland({
+    openCoreId,
+    categoryId,
+    subcategoryId,
+    filterId,
+}: Props) {
     const editing = !!filterId
     const cancelHref = `/org/opencore/${openCoreId}`
 
-    const [initialData, setInitialData] = useState<OrgFilterDraft & { items: FilterItem[] } | null>(null)
+    const [initialData, setInitialData] = useState<
+        (OrgFilterDraft & { items: FilterItem[] }) | null
+    >(null)
     const [loadError, setLoadError] = useState<string | null>(null)
     const [loading, setLoading] = useState(editing)
 
@@ -87,7 +94,7 @@ export default function OrgFilterIsland({ openCoreId, categoryId, subcategoryId,
     }
 
     const resolvedInitialData = editing
-        ? initialData ?? undefined
+        ? (initialData ?? undefined)
         : categoryId
           ? {
                 categoryId,

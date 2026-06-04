@@ -178,7 +178,7 @@ export default function FilterCard({ filter }: Props) {
 
             {itemsModalOpen ? (
                 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
-                    <div class="w-full max-h-[90vh] max-w-4xl rounded-lg border border-slate-700 bg-slate-900 shadow-xl flex flex-col">
+                    <div class="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
                         <div class="border-b border-slate-800 px-4 py-3 sm:px-6 sm:py-4">
                             <h2 class="text-lg font-semibold text-slate-100">{filter.name}</h2>
                             <p class="mt-1 text-xs text-slate-400">
@@ -189,25 +189,25 @@ export default function FilterCard({ filter }: Props) {
                             {filter.items.length === 0 ? (
                                 <p class="text-sm text-slate-400">No items in this filter.</p>
                             ) : (
-                                <div class="grid grid-cols-3 gap-1.5 sm:gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+                                <div class="grid grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-5 lg:grid-cols-6">
                                     {filter.items.map((item, idx) => {
                                         const itemData = getItem(item.shortname)
                                         const itemName = itemData?.name ?? item.shortname
                                         return (
                                             <div
                                                 key={idx}
-                                                class="flex flex-col items-center gap-1 rounded border border-slate-700/50 bg-slate-800/40 p-1.5 sm:p-2 text-center"
+                                                class="flex flex-col items-center gap-1 rounded border border-slate-700/50 bg-slate-800/40 p-1.5 text-center sm:p-2"
                                             >
                                                 <img
                                                     src={itemImage(item.shortname)}
                                                     alt={itemName}
-                                                    class="h-10 w-10 sm:h-12 sm:w-12 rounded bg-slate-800 object-contain"
+                                                    class="h-10 w-10 rounded bg-slate-800 object-contain sm:h-12 sm:w-12"
                                                     loading="lazy"
                                                 />
-                                                <div class="text-[9px] sm:text-[11px] font-semibold text-slate-200 line-clamp-2">
+                                                <div class="line-clamp-2 text-[9px] font-semibold text-slate-200 sm:text-[11px]">
                                                     {itemName}
                                                 </div>
-                                                <div class="w-full text-[8px] sm:text-[9px] text-slate-400">
+                                                <div class="w-full text-[8px] text-slate-400 sm:text-[9px]">
                                                     <div class="flex justify-between gap-0.5 sm:gap-1">
                                                         <span title="Max">M:{item.max}</span>
                                                         <span title="Buffer">B:{item.buffer}</span>

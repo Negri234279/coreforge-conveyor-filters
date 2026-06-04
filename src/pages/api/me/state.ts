@@ -408,11 +408,7 @@ export const PUT: APIRoute = async ({ locals, request }) => {
             hashItems(items),
         ].join('|')
     }
-    function nextFilterHash(
-        f: InFilter,
-        categoryId: string,
-        subcategoryId: string | null,
-    ): string {
+    function nextFilterHash(f: InFilter, categoryId: string, subcategoryId: string | null): string {
         return [
             categoryId,
             subcategoryId ?? '',

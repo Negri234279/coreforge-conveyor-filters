@@ -6,7 +6,8 @@ const user = Astro.locals.user!
 const { id } = Astro.params
 if (!id) return Astro.redirect('/org/filters')
 if (!user.orgId) return Astro.redirect('/org')
-if (user.orgRole !== 'owner' && user.orgRole !== 'admin') return Astro.redirect(`/org/opencore/${id}`)
+if (user.orgRole !== 'owner' && user.orgRole !== 'admin')
+    return Astro.redirect(`/org/opencore/${id}`)
 
 const url = new URL(Astro.request.url)
 const categoryId = url.searchParams.get('categoryId') ?? undefined

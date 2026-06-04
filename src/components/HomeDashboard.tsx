@@ -47,7 +47,7 @@ function FilterMiniCard({ filter }: { filter: Filter }) {
                 />
             </div>
             <div class="min-w-0 flex-1">
-                <div class="truncate text-xs font-bold uppercase tracking-wider text-slate-100">
+                <div class="truncate text-xs font-bold tracking-wider text-slate-100 uppercase">
                     {filter.name}
                 </div>
                 <div class="text-[11px] text-slate-500">
@@ -66,15 +66,7 @@ function FilterMiniCard({ filter }: { filter: Filter }) {
     )
 }
 
-function StatTile({
-    label,
-    value,
-    dim = false,
-}: {
-    label: string
-    value: string
-    dim?: boolean
-}) {
+function StatTile({ label, value, dim = false }: { label: string; value: string; dim?: boolean }) {
     return (
         <div class="rounded-lg border border-slate-800 bg-slate-900/30 p-3 sm:p-4">
             <div
@@ -85,7 +77,7 @@ function StatTile({
             >
                 {value}
             </div>
-            <div class="mt-0.5 text-[11px] uppercase tracking-widest text-slate-500">{label}</div>
+            <div class="mt-0.5 text-[11px] tracking-widest text-slate-500 uppercase">{label}</div>
         </div>
     )
 }
@@ -110,7 +102,7 @@ function Skeleton() {
 function EmptyState() {
     return (
         <div class="rounded-lg border border-dashed border-slate-800 bg-slate-900/20 px-6 py-12 text-center">
-            <pre class="mx-auto mb-5 select-none font-mono text-[11px] leading-relaxed text-slate-700">{`┌────────────────────────┐
+            <pre class="mx-auto mb-5 font-mono text-[11px] leading-relaxed text-slate-700 select-none">{`┌────────────────────────┐
 │   CONVEYOR  OFFLINE    │
 │                        │
 │   [ ] no presets       │
@@ -119,10 +111,12 @@ function EmptyState() {
 │                        │
 │   STATUS: STANDBY      │
 └────────────────────────┘`}</pre>
-            <p class="mb-4 text-sm text-slate-500">Your arsenal is empty. Build your first preset.</p>
+            <p class="mb-4 text-sm text-slate-500">
+                Your arsenal is empty. Build your first preset.
+            </p>
             <a
                 href="/filters/new"
-                class="inline-block rounded bg-amber-500 px-5 py-2 text-sm font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400"
+                class="inline-block rounded bg-amber-500 px-5 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
             >
                 Build First Filter
             </a>
@@ -145,10 +139,7 @@ export default function HomeDashboard({ orgId }: Props) {
     const totalCategories = cats.length
 
     const recentFilters = [...allFilters]
-        .sort(
-            (a, b) =>
-                new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
-        )
+        .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
         .slice(0, 6)
 
     return (
@@ -164,7 +155,7 @@ export default function HomeDashboard({ orgId }: Props) {
                         <div class="text-sm font-bold text-amber-400 transition-colors group-hover:text-amber-300">
                             CLAN
                         </div>
-                        <div class="mt-0.5 text-[11px] uppercase tracking-widest text-slate-500">
+                        <div class="mt-0.5 text-[11px] tracking-widest text-slate-500 uppercase">
                             Member →
                         </div>
                     </a>
@@ -176,7 +167,7 @@ export default function HomeDashboard({ orgId }: Props) {
             {totalFilters > 0 ? (
                 <div>
                     <div class="mb-3">
-                        <span class="font-mono text-[11px] uppercase tracking-widest text-slate-600">
+                        <span class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                             Recent
                         </span>
                     </div>

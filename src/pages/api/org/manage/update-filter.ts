@@ -46,11 +46,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     if (typeof b.coverItemShortname !== 'string' || !b.coverItemShortname)
         return json({ error: 'Missing coverItemShortname' }, 400)
 
-    const filter = db
-        .select()
-        .from(schema.filters)
-        .where(eq(schema.filters.id, b.filterId))
-        .get()
+    const filter = db.select().from(schema.filters).where(eq(schema.filters.id, b.filterId)).get()
     if (!filter) return json({ error: 'Filter not found' }, 404)
 
     const cat = db
@@ -87,7 +83,8 @@ export const POST: APIRoute = async ({ locals, request }) => {
                 coverItemShortname: b.coverItemShortname as string,
                 boxImagePath:
                     typeof b.boxImagePath === 'string' && b.boxImagePath ? b.boxImagePath : null,
-                boxCount: typeof b.boxCount === 'number' && b.boxCount >= 0 ? Math.floor(b.boxCount) : 1,
+                boxCount:
+                    typeof b.boxCount === 'number' && b.boxCount >= 0 ? Math.floor(b.boxCount) : 1,
                 conveyorCount:
                     typeof b.conveyorCount === 'number' && b.conveyorCount >= 0
                         ? Math.floor(b.conveyorCount)

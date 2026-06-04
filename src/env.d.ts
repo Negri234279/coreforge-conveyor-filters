@@ -2,7 +2,10 @@
 
 import type { DbUser } from './db/schema'
 
-export type SafeUser = Pick<DbUser, 'id' | 'username' | 'email' | 'orgId' | 'orgRole' | 'avatarUrl'> & {
+export type SafeUser = Pick<
+    DbUser,
+    'id' | 'username' | 'email' | 'orgId' | 'orgRole' | 'avatarUrl'
+> & {
     isAdmin: boolean
 }
 

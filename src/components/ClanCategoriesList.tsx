@@ -35,14 +35,14 @@ export default function ClanCategoriesList() {
     }
     if (!hydrated) {
         return (
-            <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">
+            <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                 Loading clan categories…
             </p>
         )
     }
     if (cats.length === 0) {
         return (
-            <p class="font-mono text-[11px] uppercase tracking-widest text-slate-600">
+            <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
                 No shared categories yet. A member can share one from its section on My Conveyors.
             </p>
         )
@@ -53,7 +53,7 @@ export default function ClanCategoriesList() {
             {cats.map((c) => (
                 <div
                     key={c.id}
-                    class="flex flex-col rounded-lg border border-slate-800 border-l-2 border-l-amber-500/30 bg-slate-900/30 p-4 transition-all duration-[220ms] hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]"
+                    class="flex flex-col rounded-lg border border-l-2 border-slate-800 border-l-amber-500/30 bg-slate-900/30 p-4 transition-all duration-[220ms] hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]"
                 >
                     <h3
                         class="truncate text-xl text-slate-100"
@@ -98,7 +98,7 @@ export default function ClanCategoriesList() {
                             type="button"
                             onClick={() => onClone(c)}
                             disabled={busy}
-                            class="rounded bg-amber-500 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="rounded bg-amber-500 px-3 py-1.5 text-xs font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Clone category
                         </button>
