@@ -6430,5 +6430,85 @@
         "name": "Wood Armor Gloves",
         "category": "Attire",
         "image_path": "woodarmor.gloves"
+    },
+    {
+        "id": 806,
+        "itemid": 1127732084,
+        "shortname": "ballistic.helmet",
+        "name": "Ballistic Helmet",
+        "category": "Attire",
+        "image_path": "ballistic.helmet"
+    },
+    {
+        "id": 807,
+        "itemid": -1780402255,
+        "shortname": "ballistic.vest",
+        "name": "Ballistic vest",
+        "category": "Attire",
+        "image_path": "ballistic.vest"
+    },
+    {
+        "id": 808,
+        "itemid": 1983541158,
+        "shortname": "ballistic.legarmor",
+        "name": "Ballistic leg armour",
+        "category": "Attire",
+        "image_path": "ballistic.legarmor"
+    },
+    {
+        "id": 809,
+        "itemid": -2127311451,
+        "shortname": "bdu.shirt",
+        "name": "BDU shirt",
+        "Category": "Attire",
+        "image_path": "bdu.shirt"
+    },
+    {
+        "id": 810,
+        "itemid": 1468749025,
+        "shortname": "bdu.pants",
+        "name": "BDU pants",
+        "category": "Attire",
+        "image_path": "bdu.pants"
+    },
+    {
+        "id": 811,
+        "itemid": -1800102806,
+        "shortname": "discord.plushie",
+        "name": "Wumpus Plush",
+        "category": "Items",
+        "image_path": "discord.plushie"
+    },
+    {
+        "id": 812,
+        "itemid": -1019111952,
+        "shortname": "industrial.storage.horizontal",
+        "name": "Industrial Storage Horizontal Barrel",
+        "category": "Items",
+        "image_path": "industrial.storage.horizontal"
+    },
+    {
+        "id": 813,
+        "itemid": -883975138,
+        "shortname": "industrial.storage.vertical",
+        "name": "Industrial Storage Vertical Barrel",
+        "category": "Items",
+        "image_path": "industrial.storage.vertical"
+    },
+    {
+        "id": 814,
+        "itemid": 599591861,
+        "shortname": "m16a2",
+        "name": "M16A2",
+        "category": "Weapon",
+        "image_path": "m16a2"
+    },
+    {
+        "id": 815,
+        "itemid": -265202949,
+        "shortname": "wall.shallow.industrial.shelves",
+        "name": "Industrial Wall Shelves",
+        "category": "Items",
+        "image_path": "wall.shallow.industrial.shelves"
     }
 ]
