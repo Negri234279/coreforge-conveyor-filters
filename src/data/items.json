@@ -6460,7 +6460,7 @@
         "itemid": -2127311451,
         "shortname": "bdu.shirt",
         "name": "BDU shirt",
-        "Category": "Attire",
+        "category": "Attire",
         "image_path": "bdu.shirt"
     },
     {
