@@ -7,8 +7,8 @@
         "node": ">=22.12.0"
     },
     "scripts": {
-        "dev": "astro dev --host 127.0.0.1 --port 3000 --open",
-        "dev:otel": "node --env-file=.env --import ./otel/instrumentation.mjs ./node_modules/astro/bin/astro.mjs dev --host 127.0.0.1 --port 3000 --open",
+        "dev": "astro dev --host 127.0.0.1 --port 4300 --open",
+        "dev:otel": "node --env-file=.env --import ./otel/instrumentation.mjs ./node_modules/astro/bin/astro.mjs dev --host 127.0.0.1 --port 4300 --open",
         "build": "astro build",
         "preview": "astro preview",
         "astro": "astro",
