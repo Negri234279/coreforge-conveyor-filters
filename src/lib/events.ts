@@ -40,6 +40,7 @@ export type EventType =
     | 'org_create'
     | 'org_join'
     | 'org_leave'
+    | 'org_kick'
     | 'org_delete'
     | 'landing_google_cta'
     | 'opencore_layout_create'
