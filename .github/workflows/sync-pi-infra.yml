@@ -58,7 +58,7 @@ jobs:
                       **Source:** `${{ github.repository }}@${{ github.sha }}`
 
                       Mirrors (per the sync contract):
-                      - `infra/prod/` → `apps/coreforge/prod/`
+                      - `infra/prod/` → `apps/coreforge/`
                       - `infra/observability/` (minus grafana) → `apps/coreforge/observability/`
                       - app dashboards → `core/grafana/dashboards/coreforge/`
                       - datasources → `core/grafana/provisioning/datasources/coreforge.yml`
