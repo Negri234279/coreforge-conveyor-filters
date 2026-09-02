@@ -6464,6 +6464,7 @@
         "image_path": "wall.shallow.industrial.shelves"
     },
     {
+        "id": 816,
         "itemid": -418359052,
         "shortname": "hat.horsemask",
         "name": "Horse Mask",
@@ -6471,6 +6472,7 @@
         "image_path": "hat.horsemask"
     },
     {
+        "id": 817,
         "itemid": 1849409072,
         "shortname": "silly.horse.mask",
         "name": "Silly Horse Mask",
@@ -6478,10 +6480,19 @@
         "image_path": "silly.horse.mask"
     },
     {
+        "id": 818,
         "itemid": -945548410,
         "shortname": "fuse.highgrade",
         "name": "Heavy Fuse",
         "category": "Component",
         "image_path": "fuse.highgrade"
+    },
+    {
+        "id": 819,
+        "itemid": -75264812,
+        "shortname": "medical.honey.bandage",
+        "name": "Medical Honey Bandage",
+        "category": "Medical",
+        "image_path": "medical.honey.bandage"
     }
 ]
