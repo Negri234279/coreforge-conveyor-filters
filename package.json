@@ -28,7 +28,8 @@
         "prod:down": "docker compose -f infra/prod/docker-compose.yml down",
         "prod:logs": "docker compose -f infra/prod/docker-compose.yml logs -f",
         "migrate": "node scripts/run-migration.mjs",
-        "optimize-images": "node scripts/optimize-images.mjs"
+        "optimize-images": "node scripts/optimize-images.mjs",
+        "optimize:items": "node scripts/optimize-items.mjs"
     },
     "dependencies": {
         "@astrojs/node": "10.1.0",
