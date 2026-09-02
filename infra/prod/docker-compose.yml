@@ -112,6 +112,14 @@ services:
         # monitoring: reachable by nginx-proxy-manager (core).
         networks: [coreforge-net, monitoring]
         restart: unless-stopped
+        labels:
+            - homepage.group=Apps
+            - homepage.name=CoreForge
+            - homepage.icon=mdi-anvil
+            - homepage.href=https://coreforge-conveyor-filters.negri.es/
+            - homepage.docker.container=coreforge-app
+            - homepage.widget.type=customapi
+            - homepage.widget.url=http://coreforge-app:4321/api/healthz
 
     # ── Observability (metrics / logs / traces) ──────────────────
     coreforge-prometheus:
