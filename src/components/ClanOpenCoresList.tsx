@@ -8,6 +8,7 @@ import {
 } from '../store/org'
 import { showToast } from './CopyToast'
 import DeploymentTotals from './DeploymentTotals'
+import TrackedButton from './TrackedButton'
 import type { OrgOpenCoreView } from '../types'
 
 export default function ClanOpenCoresList() {
@@ -87,14 +88,16 @@ export default function ClanOpenCoresList() {
                         >
                             View
                         </a>
-                        <button
+                        <TrackedButton
                             type="button"
+                            track="opencore_clone"
+                            trackAttrs={{ openCoreId: oc.id }}
                             onClick={() => onClone(oc)}
                             disabled={busy}
                             class="rounded bg-amber-500 px-3 py-1.5 text-xs font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Clone entire
-                        </button>
+                        </TrackedButton>
                     </div>
                 </div>
             ))}

@@ -4912,14 +4912,6 @@
         "imagePath": "gunrack_wide.horizontal"
     },
     {
-        "id": 615,
-        "itemId": 1315082560,
-        "shortname": "hat.oxmask",
-        "name": "Ox Mask",
-        "category": "Attire",
-        "imagePath": "hat.oxmask"
-    },
-    {
         "id": 616,
         "itemId": 1132603396,
         "shortname": "gunrack_stand",
@@ -4982,22 +4974,6 @@
         "name": "Hobo Barrel",
         "category": "Items",
         "imagePath": "hobobarrel"
-    },
-    {
-        "id": 624,
-        "itemId": -986782031,
-        "shortname": "hat.rabbitmask",
-        "name": "Rabbit Mask",
-        "category": "Attire",
-        "imagePath": "hat.rabbitmask"
-    },
-    {
-        "id": 625,
-        "itemId": 709206314,
-        "shortname": "hat.tigermask",
-        "name": "Tiger Mask",
-        "category": "Attire",
-        "imagePath": "hat.tigermask"
     },
     {
         "id": 626,
@@ -5344,14 +5320,6 @@
         "imagePath": "hat.boonie"
     },
     {
-        "id": 669,
-        "itemId": 271048478,
-        "shortname": "hat.ratmask",
-        "name": "Rat Mask",
-        "category": "Attire",
-        "imagePath": "hat.ratmask"
-    },
-    {
         "id": 670,
         "itemId": 479292118,
         "shortname": "halloween.lootbag.large",
@@ -5366,14 +5334,6 @@
         "name": "Horizontal Weapon Rack",
         "category": "Items",
         "imagePath": "gunrack.horizontal"
-    },
-    {
-        "id": 672,
-        "itemId": -22883916,
-        "shortname": "hat.dragonmask",
-        "name": "Dragon Mask",
-        "category": "Attire",
-        "imagePath": "hat.dragonmask"
     },
     {
         "id": 673,
@@ -5830,14 +5790,6 @@
         "name": "Lunar Wall Frame Inlay",
         "category": "Construction",
         "imagePath": "wall.frame.lunar2025_a"
-    },
-    {
-        "id": 731,
-        "itemId": -1314079879,
-        "shortname": "hat.snakemask",
-        "name": "Snake mask",
-        "category": "Attire",
-        "imagePath": "hat.snakemask"
     },
     {
         "id": 732,
@@ -6510,5 +6462,26 @@
         "name": "Industrial Wall Shelves",
         "category": "Items",
         "image_path": "wall.shallow.industrial.shelves"
+    },
+    {
+        "itemid": -418359052,
+        "shortname": "hat.horsemask",
+        "name": "Horse Mask",
+        "category": "Attire",
+        "image_path": "hat.horsemask"
+    },
+    {
+        "itemid": 1849409072,
+        "shortname": "silly.horse.mask",
+        "name": "Silly Horse Mask",
+        "category": "Attire",
+        "image_path": "silly.horse.mask"
+    },
+    {
+        "itemid": -945548410,
+        "shortname": "fuse.highgrade",
+        "name": "Heavy Fuse",
+        "category": "Component",
+        "image_path": "fuse.highgrade"
     }
 ]

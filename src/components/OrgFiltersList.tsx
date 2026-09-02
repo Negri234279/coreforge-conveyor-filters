@@ -11,6 +11,7 @@ import { boxImage } from '../store/boxes'
 import { buildConveyorJson } from '../lib/conveyor'
 import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
+import TrackedButton from './TrackedButton'
 import type { OrgFilterView } from '../types'
 
 export default function OrgFiltersList() {
@@ -101,8 +102,10 @@ export default function OrgFiltersList() {
                                         <span class="text-slate-400">{f.owner.username}</span>
                                     </span>
                                 </div>
-                                <button
+                                <TrackedButton
                                     type="button"
+                                    track="filter_export_json"
+                                    trackAttrs={{ source: 'clan', filterId: f.id }}
                                     onClick={() => onCopy(f)}
                                     class="rounded p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
                                     aria-label="Copy conveyor JSON"
@@ -121,16 +124,18 @@ export default function OrgFiltersList() {
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                                     </svg>
-                                </button>
-                                <button
+                                </TrackedButton>
+                                <TrackedButton
                                     type="button"
+                                    track="filter_clone"
+                                    trackAttrs={{ filterId: f.id }}
                                     onClick={() => onClone(f)}
                                     disabled={busy}
                                     class="rounded border border-slate-800 bg-slate-900/60 px-2 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                                     title="Clone to your filters"
                                 >
                                     Clone
-                                </button>
+                                </TrackedButton>
                             </li>
                         ))}
                     </ul>

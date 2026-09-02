@@ -7,6 +7,7 @@ import { buildConveyorJson } from '../lib/conveyor'
 import { copyToClipboard } from '../lib/clipboard'
 import { showToast } from './CopyToast'
 import DeploymentTotals from './DeploymentTotals'
+import TrackedButton from './TrackedButton'
 import type { Filter, OrgCategoryDetail as Detail } from '../types'
 
 interface Props {
@@ -272,14 +273,16 @@ export default function OrgCategoryDetail({ categoryId }: Props) {
                             · read-only
                         </p>
                     </div>
-                    <button
+                    <TrackedButton
                         type="button"
+                        track="category_clone"
+                        trackAttrs={{ categoryId }}
                         onClick={onClone}
                         disabled={busy}
                         class="rounded bg-amber-500 px-4 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         Clone category
-                    </button>
+                    </TrackedButton>
                 </div>
             </div>
 

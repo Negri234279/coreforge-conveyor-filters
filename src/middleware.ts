@@ -10,7 +10,19 @@ import { trace } from '@opentelemetry/api'
 import { checkOrigin, expectedHost, isSafeMethod } from './lib/auth/origin'
 import { clearSessionCookie, getSessionToken, setSessionCookie } from './lib/auth/cookie'
 import { loadSession, touchLastSeen } from './lib/auth/session'
+import { observeHttpRequest } from './lib/metrics'
 import type { SafeUser } from './env'
+
+// Hostnames a Prometheus scrape legitimately arrives on: in-network container
+// DNS (staging/prod) and localhost / the docker host gateway (dev). Public
+// traffic always comes through the reverse proxy with the real domain in Host,
+// so /metrics stays invisible from outside.
+const METRICS_ALLOWED_HOSTNAMES = new Set([
+    'coreforge-app',
+    'localhost',
+    '127.0.0.1',
+    'host.docker.internal',
+])
 
 const PUBLIC_PAGES = new Set(['/', '/login', '/register', '/legal'])
 const PUBLIC_API_PREFIXES = [
@@ -77,6 +89,17 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
     const { request, url, cookies, locals, redirect } = ctx
     const isApi = url.pathname.startsWith('/api/')
 
+    // --- 0. Prometheus scrape endpoint -------------------------------------
+    // Internal-only and sessionless: answer direct in-network requests, 404
+    // (not 403) anything that arrives via the public proxy so the route's
+    // existence stays implicit.
+    if (url.pathname === '/metrics') {
+        if (!METRICS_ALLOWED_HOSTNAMES.has(url.hostname)) {
+            return applySecurityHeaders(new Response(null, { status: 404 }))
+        }
+        return next()
+    }
+
     // --- 1. CSRF (Origin) check for mutating requests --------------------
     if (!isSafeMethod(request.method)) {
         const ok = checkOrigin(request, expectedHost(request))
@@ -101,7 +124,7 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
         : null
     locals.user = user
 
-    // Stamp the active HTTP span with who this request belongs to. SigNoz can
+    // Stamp the active HTTP span with who this request belongs to. Grafana can
     // then filter/group traces by enduser.id, splice org-scoped requests, or
     // build admin-vs-user breakdowns without any extra instrumentation in the
     // route handlers. No-op when the OTel SDK isn't running.
@@ -150,6 +173,15 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
         return redirect('/')
     }
 
+    // --- 4. Handle + measure ------------------------------------------------
+    // Label by the matched route pattern (bounded cardinality: '/filters/[id]',
+    // not '/filters/abc123'). The healthcheck is excluded so a 30s probe
+    // doesn't skew request rate and latency percentiles.
+    const start = performance.now()
     const res = await next()
+    if (url.pathname !== '/api/healthz') {
+        const route = ctx.routePattern || 'unmatched'
+        observeHttpRequest(request.method, route, res.status, (performance.now() - start) / 1000)
+    }
     return applySecurityHeaders(res)
 })

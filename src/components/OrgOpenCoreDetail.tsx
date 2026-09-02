@@ -20,6 +20,7 @@ import { showToast } from './CopyToast'
 import OpenCoreBoxesView from './OpenCoreBoxesView'
 import DeploymentTotals from './DeploymentTotals'
 import OpenCoreViewer from './openCore3D/OpenCoreViewer'
+import TrackedButton from './TrackedButton'
 import type { Category, Filter, OrgOpenCoreDetail as Detail } from '../types'
 
 type View = 'conveyors' | 'boxes' | '3d'
@@ -554,14 +555,16 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 Delete from clan
                             </button>
                         ) : null}
-                        <button
+                        <TrackedButton
                             type="button"
+                            track="opencore_clone"
+                            trackAttrs={{ openCoreId }}
                             onClick={onClone}
                             disabled={busy}
                             class="rounded bg-amber-500 px-4 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Clone entire Open Core
-                        </button>
+                        </TrackedButton>
                     </div>
                 </div>
             </div>
@@ -608,49 +611,49 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
 
             {/* Search bar */}
             {view !== '3d' && (
-            <div class="relative mb-6">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-500"
-                >
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input
-                    type="text"
-                    placeholder="Search filters or items…"
-                    value={rawQuery}
-                    onInput={(e) => handleSearch((e.target as HTMLInputElement).value)}
-                    class="w-full rounded border border-slate-800 bg-slate-900/40 py-2 pr-9 pl-9 font-mono text-sm text-slate-200 placeholder-slate-600 transition-colors focus:border-amber-500/40 focus:outline-none"
-                />
-                {rawQuery ? (
-                    <button
-                        type="button"
-                        onClick={clearSearch}
-                        class="absolute top-1/2 right-3 -translate-y-1/2 text-slate-500 transition-colors hover:text-slate-300"
-                        aria-label="Clear search"
+                <div class="relative mb-6">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-500"
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            class="h-4 w-4"
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder="Search filters or items…"
+                        value={rawQuery}
+                        onInput={(e) => handleSearch((e.target as HTMLInputElement).value)}
+                        class="w-full rounded border border-slate-800 bg-slate-900/40 py-2 pr-9 pl-9 font-mono text-sm text-slate-200 placeholder-slate-600 transition-colors focus:border-amber-500/40 focus:outline-none"
+                    />
+                    {rawQuery ? (
+                        <button
+                            type="button"
+                            onClick={clearSearch}
+                            class="absolute top-1/2 right-3 -translate-y-1/2 text-slate-500 transition-colors hover:text-slate-300"
+                            aria-label="Clear search"
                         >
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-                ) : null}
-            </div>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                class="h-4 w-4"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    ) : null}
+                </div>
             )}
 
             {view === '3d' ? (

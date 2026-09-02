@@ -1,116 +1,66 @@
-// Browser RUM bootstrap. Mounted from Layout.astro as a `<script>` block so
-// Vite bundles it into a client-side chunk. The collector endpoint is passed
-// at render time via `window.__cf_otel` (runtime-configurable through the
-// PUBLIC_OTEL_RUM_ENDPOINT env var on the server container).
+// Browser RUM bootstrap — Grafana Faro. Mounted as a `<script>` block from
+// Layout.astro and the unauthenticated landing (index.astro) so Vite bundles
+// it into a client-side chunk. Config is passed at render time via
+// `window.__cf_faro` (built server-side by src/lib/faro-config.ts from the
+// FARO_COLLECTOR_URL / FARO_APP_NAME env vars) and points at Alloy's
+// CORS-gated faro.receiver, which fans out logs/events/measurements → Loki
+// and traces → Tempo.
 //
-// Sends traces + logs to <endpoint>/v1/traces and <endpoint>/v1/logs over
-// OTLP/HTTP+JSON. No metrics from the browser — the metrics SDK is heavier
-// and SigNoz already gets RED metrics from the backend's HTTP spans.
+// What Faro collects out of the box: Web Vitals (LCP/CLS/INP/FCP/TTFB),
+// unhandled errors + rejections, console warnings/errors, session tracking,
+// page views, and — via the tracing instrumentation — fetch/XHR spans with
+// W3C traceparent propagation to our own backend, so browser traces join the
+// server traces in Tempo. Custom business events go through
+// src/otel-web/track.ts (islands) or window.__cfTrack (inline scripts).
 
-import { WebTracerProvider } from '@opentelemetry/sdk-trace-web'
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base'
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
-import { ZoneContextManager } from '@opentelemetry/context-zone'
-import { resourceFromAttributes } from '@opentelemetry/resources'
-import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions'
-import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web'
-import { registerInstrumentations } from '@opentelemetry/instrumentation'
-import { LoggerProvider, BatchLogRecordProcessor } from '@opentelemetry/sdk-logs'
-import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http'
-import { logs } from '@opentelemetry/api-logs'
+import { getWebInstrumentations, initializeFaro, faro } from '@grafana/faro-web-sdk'
+import { TracingInstrumentation } from '@grafana/faro-web-tracing'
 
 declare global {
     interface Window {
-        __cf_otel?: { endpoint: string; serviceName: string; serviceVersion?: string }
+        __cf_faro?: { url: string; appName: string; appVersion?: string; environment?: string }
+        __cf_user?: {
+            id: string
+            username: string
+            orgId: string | null
+            orgRole: string | null
+        } | null
+        __cfTrack?: (name: string, attributes?: Record<string, string>) => void
     }
 }
 
-const cfg = window.__cf_otel
-if (cfg && cfg.endpoint) {
-    const resource = resourceFromAttributes({
-        [ATTR_SERVICE_NAME]: cfg.serviceName,
-        ...(cfg.serviceVersion ? { [ATTR_SERVICE_VERSION]: cfg.serviceVersion } : {}),
-        'browser.user_agent': navigator.userAgent,
-    })
+const cfg = window.__cf_faro
+if (cfg && cfg.url) {
+    const user = window.__cf_user
 
-    // ----- Traces --------------------------------------------------------
-    const traceProvider = new WebTracerProvider({
-        resource,
-        spanProcessors: [
-            new BatchSpanProcessor(new OTLPTraceExporter({ url: `${cfg.endpoint}/v1/traces` })),
-        ],
-    })
-    // ZoneContextManager keeps the active span across async boundaries
-    // (Preact effects, fetch handlers, event listeners).
-    traceProvider.register({ contextManager: new ZoneContextManager() })
-
-    registerInstrumentations({
+    initializeFaro({
+        url: cfg.url,
+        app: {
+            name: cfg.appName,
+            version: cfg.appVersion,
+            environment: cfg.environment,
+        },
+        ...(user ? { user: { id: user.id, username: user.username } } : {}),
         instrumentations: [
-            getWebAutoInstrumentations({
-                '@opentelemetry/instrumentation-document-load': {},
-                '@opentelemetry/instrumentation-fetch': {
+            ...getWebInstrumentations(),
+            new TracingInstrumentation({
+                instrumentationOptions: {
                     // Only propagate trace headers to our own backend; otherwise
                     // every CDN/3rd-party CORS request gets W3C trace headers
                     // and may reject the preflight.
                     propagateTraceHeaderCorsUrls: [/^https:\/\/[^/]*\.negri\.es\//],
-                    clearTimingResources: true,
-                },
-                '@opentelemetry/instrumentation-xml-http-request': {
-                    propagateTraceHeaderCorsUrls: [/^https:\/\/[^/]*\.negri\.es\//],
-                },
-                '@opentelemetry/instrumentation-user-interaction': {
-                    eventNames: ['click', 'submit'],
                 },
             }),
         ],
     })
 
-    // ----- Logs (window.onerror + unhandledrejection) --------------------
-    const loggerProvider = new LoggerProvider({
-        resource,
-        processors: [
-            new BatchLogRecordProcessor(new OTLPLogExporter({ url: `${cfg.endpoint}/v1/logs` })),
-        ],
-    })
-    logs.setGlobalLoggerProvider(loggerProvider)
-    const logger = logs.getLogger('coreforge.browser', cfg.serviceVersion ?? '0.0.0')
-
-    window.addEventListener('error', (ev) => {
-        const err = ev.error
-        logger.emit({
-            severityNumber: 17,
-            severityText: 'ERROR',
-            body: err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(ev.message),
-            attributes: {
-                'browser.error.source': ev.filename ?? '',
-                'browser.error.lineno': ev.lineno ?? 0,
-                'browser.error.colno': ev.colno ?? 0,
-                'browser.url': location.href,
-            },
-        })
-    })
-    window.addEventListener('unhandledrejection', (ev) => {
-        const reason = ev.reason
-        logger.emit({
-            severityNumber: 17,
-            severityText: 'ERROR',
-            body:
-                reason instanceof Error
-                    ? `${reason.message}\n${reason.stack ?? ''}`
-                    : typeof reason === 'string'
-                      ? reason
-                      : JSON.stringify(reason),
-            attributes: {
-                'exception.kind': 'unhandledrejection',
-                'browser.url': location.href,
-            },
-        })
-    })
-
-    // Flush on page hide — sendBeacon is the only reliable transport here,
-    // but the OTLP HTTP exporter already falls back to it on `pagehide`.
-    addEventListener('pagehide', () => {
-        traceProvider.forceFlush().catch(() => {})
-        loggerProvider.forceFlush().catch(() => {})
-    })
+    // Hook for inline (non-module) scripts like the landing CTA tracker,
+    // which can't import from the bundle.
+    window.__cfTrack = (name, attributes) => {
+        try {
+            faro.api?.pushEvent(name, attributes)
+        } catch {
+            // RUM must never break the page.
+        }
+    }
 }

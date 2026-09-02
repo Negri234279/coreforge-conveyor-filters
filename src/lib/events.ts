@@ -4,9 +4,9 @@
 // and grows linearly with usage.
 //
 // In addition to the DB write, every logged event is mirrored to the active
-// trace as a span event. That makes it trivial in SigNoz to follow a single
-// request across HTTP span -> SQL span -> "filter_create" event -> response,
-// or to filter traces by `app.event.type`.
+// trace as a span event and counted in Prometheus. That makes it trivial in
+// Grafana to follow a single request across HTTP span -> SQL span ->
+// "filter_create" event -> response, or to chart event rates by type.
 //
 // Catch-all error swallow: instrumentation must never break a user-facing
 // request. If the DB write fails we emit a structured ERROR log (which also
@@ -15,6 +15,7 @@
 import { trace } from '@opentelemetry/api'
 import { db, schema } from '../db/client'
 import { log } from './logger'
+import { countEvent, countEventPersistFailure } from './metrics'
 
 export type EventType =
     | 'user_register'
@@ -61,6 +62,10 @@ export function logEvent(
     const userName = opts.userName ?? null
     const targetId = opts.targetId ?? null
 
+    // Prometheus counter first — the event happened regardless of whether the
+    // DB write below succeeds. Feeds coreforge_events_total{type}.
+    countEvent(type)
+
     // Annotate the active server span so traces carry the business event
     // alongside the auto-instrumented HTTP/SQL spans. Cheap and unconditional.
     const span = trace.getActiveSpan()
@@ -85,17 +90,18 @@ export function logEvent(
             })
             .run()
 
-        // Also surface the event as a structured log line so SigNoz's Logs
-        // view doubles as a business-event feed (filterable by app.event.type
-        // / enduser.username). The span event above is what you want when
-        // tracing a single request; this log is what you want when sweeping
-        // by user or time range.
+        // Also surface the event as a structured log line so Loki doubles as
+        // a business-event feed (filterable by app.event.type /
+        // enduser.username via `| json`). The span event above is what you
+        // want when tracing a single request; this log is what you want when
+        // sweeping by user or time range.
         // Scannable single-line body: "<event> target=<id> by <user>". The
-        // structured attrs duplicate the same data so SigNoz can still
+        // structured attrs duplicate the same data so Loki can still
         // filter/group on each field individually.
         const parts: string[] = [type]
         if (targetId) parts.push(`target=${targetId}`)
         if (userName) parts.push(`by ${userName}`)
+
         log.info({
             message: parts.join(' '),
             attrs: {
@@ -106,6 +112,8 @@ export function logEvent(
             },
         })
     } catch (err) {
+        countEventPersistFailure()
+        
         log.error({
             message: 'events: failed to persist usage event',
             attrs: {

@@ -1,40 +1,41 @@
-# DEVELOPMENT SigNoz self-hosted observability stack.
+# DEVELOPMENT observability stack — Grafana · Prometheus · Alloy · Tempo ·
+# Loki · Alertmanager. The Astro dev server usually runs on the HOST
+# (`npm run dev:otel`, http://localhost:4300) pushing OTLP to Alloy while
+# Prometheus scrapes host.docker.internal:4300/metrics (see ./scrape.d/).
+# Alternatively, the `app` compose profile runs that same dev server (HMR
+# included) inside docker — see the coreforge-app service below. Either way
+# it's one app on port 4300: stop the host dev server before `dev:docker:up`.
 #
 # Sibling stacks per environment:
-#   infra/staging/  (merged app + obs, LAN-exposed for NPM on RPi)
-#   infra/prod/     (obs stack only — prod app lives at the repo root)
-# Each env has its own ClickHouse + Zookeeper + UI + collector so telemetry
-# never mixes across environments. Shared XML/YAML lives in infra/commons/.
-#
-# This stack supports `npm run dev` running OUTSIDE docker on the host
-# (Astro dev server on http://localhost:3000 — port 4321 is reserved by
-# Windows on this machine, see CLAUDE.md). All ports are loopback-only
-# so the dev collector never accidentally accepts traffic from the LAN.
+#   infra/staging/  (app + obs + Grafana, LAN-exposed for NPM on the RPi)
+#   infra/prod/     (app + obs, no Grafana — the central pi-infra Grafana owns it)
+# Service/container names are unified to `coreforge-*` so every config in
+# ../observability is byte-identical across envs (edit dashboards/alerts once).
+# Consequence: dev and staging CANNOT run at the same time on this machine —
+# the fixed container names collide. Stop one before starting the other.
 #
 # Bring-up:
-#   npm run dev:obs:up
-# (equivalent to: docker compose -f infra/dev/docker-compose.yml \
-#                   --env-file infra/dev/.env up -d  — .env is optional)
-# No external network needed; this compose owns its `observability-dev`
-# bridge internally.
-#
-# UI:                http://127.0.0.1:3301
-# OTLP gRPC (host):  127.0.0.1:4317   (for the Node SDK in `npm run dev`)
-# OTLP HTTP (host):  127.0.0.1:4318   (for browser RUM on localhost:3000)
-#
-# CORS for browser RUM is restricted to http://localhost:3000 +
-# http://127.0.0.1:3000 in ./otel-collector-config.yaml — do not relax it.
-#
-# Resource notes: ~2 GB RAM at idle. If your dev box is tight, stop this
-# stack before running staging (another ~2 GB on its own backend).
-#
+#   npm run dev:obs:up          # obs only — app runs on the host
+#   npm run dev:docker:up       # obs + Astro dev server in docker (profile: app)
 # Teardown:
-#   npm run dev:obs:down                              # preserves data
-#   docker compose -f infra/dev/docker-compose.yml down -v   # wipes data
+#   npm run dev:obs:down / dev:docker:down                     # preserves data
+#   docker compose -f infra/dev/docker-compose.yml down -v     # wipes data
+#
+# UIs (loopback-only — never LAN-exposed):
+#   Grafana     http://127.0.0.1:13000   (anonymous admin, dev only)
+#   Prometheus  http://127.0.0.1:19090   (9090 is taken by prometheus-infra here)
+#   Alloy       http://127.0.0.1:12345
+#   OTLP        127.0.0.1:4318 (http) / 127.0.0.1:4317 (grpc) — Alloy receives
+#               both the host app's traces and browser RUM, and forwards to
+#               Tempo/Loki. Tempo/Loki/Alertmanager have no host ports.
+#
+# Grafana/Loki/Tempo host ports are remapped into the 13xxx range because
+# 3000–3200 is WinNAT-reserved on Windows 11. Container ports are unchanged,
+# so inter-service config (datasources, Alloy push, OTLP) is identical.
 
 x-common: &common
     networks:
-        - observability-dev
+        - coreforge-dev-net
     restart: unless-stopped
     logging:
         driver: json-file
@@ -42,188 +43,236 @@ x-common: &common
             max-size: '20m'
             max-file: '3'
 
-x-clickhouse-defaults: &clickhouse-defaults
-    <<: *common
-    image: clickhouse/clickhouse-server:25.5.6
-    tty: true
-    depends_on:
-        init-clickhouse:
-            condition: service_completed_successfully
-        zookeeper-1:
-            condition: service_healthy
-    healthcheck:
-        test: ['CMD', 'wget', '--spider', '-q', '0.0.0.0:8123/ping']
-        interval: 30s
-        timeout: 5s
-        retries: 3
-    ulimits:
-        nproc: 65535
-        nofile:
-            soft: 262144
-            hard: 262144
-    environment:
-        - CLICKHOUSE_SKIP_USER_SETUP=1
-
-x-zookeeper-defaults: &zookeeper-defaults
-    <<: *common
-    image: signoz/zookeeper:3.7.1
-    user: root
-    healthcheck:
-        test:
-            - CMD-SHELL
-            - curl -s -m 2 http://localhost:8080/commands/ruok | grep error | grep null
-        interval: 30s
-        timeout: 5s
-        retries: 3
-
-x-db-depend: &db-depend
-    <<: *common
-    depends_on:
-        clickhouse:
-            condition: service_healthy
-
 services:
-    init-clickhouse:
+    # ── App (optional — compose profile `app`) ────────────────────────────
+    # The Astro DEV server (HMR) inside docker, as an alternative to running
+    # it on the host. `npm run dev:docker:up` / `npm run dev:docker:down`.
+    # The repo is bind-mounted, but node_modules lives in a named volume so
+    # the Linux container never sees the host's Windows-native binaries
+    # (better-sqlite3 / argon2 / sharp): the first start pays an `npm install`
+    # into that volume; later starts reuse it.
+    coreforge-app:
         <<: *common
-        image: clickhouse/clickhouse-server:25.5.6
-        container_name: signoz-init-clickhouse-dev
+        profiles:
+            - app
+        image: node:24-slim
+        container_name: coreforge-app
+        working_dir: /app
+        init: true
         command:
-            - bash
+            - sh
             - -c
-            - |
-                version="v0.0.1"
-                node_os=$$(uname -s | tr '[:upper:]' '[:lower:]')
-                node_arch=$$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
-                echo "Fetching histogram-binary for $${node_os}/$${node_arch}"
-                cd /tmp
-                wget -O histogram-quantile.tar.gz "https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2F$${version}/histogram-quantile_$${node_os}_$${node_arch}.tar.gz"
-                tar -xvzf histogram-quantile.tar.gz
-                mv histogram-quantile /var/lib/clickhouse/user_scripts/histogramQuantile
-        restart: on-failure
-        volumes:
-            - ../commons/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
-
-    zookeeper-1:
-        <<: *zookeeper-defaults
-        container_name: signoz-zookeeper-1-dev
-        volumes:
-            - zookeeper-1:/bitnami/zookeeper
+            - 'npm install --no-audit --no-fund && exec node --import ./otel/instrumentation.mjs ./node_modules/astro/bin/astro.mjs dev --host 0.0.0.0 --port 4300'
         environment:
-            - ZOO_SERVER_ID=1
-            - ALLOW_ANONYMOUS_LOGIN=yes
-            - ZOO_AUTOPURGE_INTERVAL=1
-            - ZOO_ENABLE_PROMETHEUS_METRICS=yes
-            - ZOO_PROMETHEUS_METRICS_PORT_NUMBER=9141
+            # /data is bind-mounted from the repo's src/data (see volumes), so
+            # the container works on the SAME dev DB as host-run `npm run dev`.
+            # Single writer either way — the shared port 4300 already prevents
+            # running both at once. WAL over the bind mount is verified to work
+            # on Docker Desktop's current file sharing.
+            DATA_DIR: /data
+            # File events don't cross the Windows bind mount; astro.config.mjs
+            # switches Vite's watcher to polling when this is set, so HMR works.
+            CHOKIDAR_USEPOLLING: 'true'
+            ASTRO_TELEMETRY_DISABLED: '1'
 
-    clickhouse:
-        <<: *clickhouse-defaults
-        container_name: signoz-clickhouse-dev
+            # Server traces → Alloy, same fan-out as the host dev server —
+            # just via container DNS instead of 127.0.0.1:4318.
+            OTEL_EXPORTER_OTLP_ENDPOINT: http://coreforge-alloy:4318
+            OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+            # sdk-node defaults these to "otlp" when unset — metrics are
+            # scraped from /metrics and logs go stdout → Alloy, so push off.
+            OTEL_METRICS_EXPORTER: none
+            OTEL_LOGS_EXPORTER: none
+            OTEL_SERVICE_NAME: coreforge-dev
+            OTEL_RESOURCE_ATTRIBUTES: 'service.namespace=coreforge,deployment.environment=dev'
+            OTEL_LOG_LEVEL: error
+
+            # Browser RUM (Grafana Faro) runs in the HOST browser → Alloy's
+            # host-published faro.receiver (CORS already covers 127.0.0.1:4300).
+            FARO_COLLECTOR_URL: http://127.0.0.1:12347/collect
+            FARO_APP_NAME: coreforge-web-dev
+        # Same optional secrets the host `npm run dev:otel` reads via
+        # --env-file=.env. Explicit `environment:` above wins on conflicts,
+        # so a localhost OTLP endpoint in .env can't leak into the container.
+        env_file:
+            - path: ../../.env
+              required: false
         volumes:
-            - ../commons/clickhouse/config.xml:/etc/clickhouse-server/config.xml
-            - ../commons/clickhouse/users.xml:/etc/clickhouse-server/users.xml
-            - ../commons/clickhouse/custom-function.xml:/etc/clickhouse-server/custom-function.xml
-            - ../commons/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
-            - ../commons/clickhouse/cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
-            - clickhouse:/var/lib/clickhouse/
-
-    signoz-telemetrystore-migrator:
-        <<: *db-depend
-        image: signoz/signoz-otel-collector:${OTELCOL_TAG:-v0.144.4}
-        container_name: signoz-telemetrystore-migrator-dev
-        environment:
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
-            - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
-        entrypoint:
-            - /bin/sh
-        command:
-            - -c
-            - |
-                /signoz-otel-collector migrate bootstrap &&
-                /signoz-otel-collector migrate sync up &&
-                /signoz-otel-collector migrate async up
-        restart: on-failure
-
-    signoz:
-        <<: *db-depend
-        image: signoz/signoz:${SIGNOZ_TAG:-v0.122.0}
-        container_name: signoz-dev
-        # Loopback-only — dev UI is local-only. Override with SIGNOZ_UI_BIND
-        # in .env if you proxy a signoz-dev.<domain> through NPM.
-        ports:
-            - '${SIGNOZ_UI_BIND:-127.0.0.1}:3301:8080'
-        volumes:
-            - signoz-sqlite:/var/lib/signoz/
-        environment:
-            - SIGNOZ_ALERTMANAGER_PROVIDER=signoz
-            - SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN=tcp://clickhouse:9000
-            - SIGNOZ_SQLSTORE_SQLITE_PATH=/var/lib/signoz/signoz.db
-            # Hard-coded fallback because this stack is local-only. Override
-            # via .env if you care; never reuse this in prod.
-            - SIGNOZ_TOKENIZER_JWT_SECRET=${SIGNOZ_TOKENIZER_JWT_SECRET:-local-only-not-a-secret-change-me}
-        healthcheck:
-            test: ['CMD', 'wget', '--spider', '-q', 'localhost:8080/api/v1/health']
-            interval: 30s
-            timeout: 5s
-            retries: 3
-        networks:
-            observability-dev:
-                # OpAMP manager-config hard-codes ws://signoz:4320/v1/opamp.
-                # Container is signoz-dev, alias keeps the lookup working.
-                aliases:
-                    - signoz
-
-    otel-collector:
-        <<: *db-depend
-        image: signoz/signoz-otel-collector:${OTELCOL_TAG:-v0.144.4}
-        container_name: signoz-otel-collector-dev
+            - ../..:/app
+            - app-node-modules:/app/node_modules
+            # Dev DB data (coreforge.dev.db + seed JSONs) shared with the host
+            # checkout — no copy step: container and host edit the same files.
+            - ../../src/data:/data
         depends_on:
-            clickhouse:
-                condition: service_healthy
-            signoz-telemetrystore-migrator:
-                condition: service_completed_successfully
-        entrypoint:
-            - /bin/sh
-        command:
-            - -c
-            - |
-                /signoz-otel-collector migrate sync check &&
-                /signoz-otel-collector --config=/etc/otel-collector-config.yaml --manager-config=/etc/manager-config.yaml --copy-path=/var/tmp/collector-config.yaml
-        volumes:
-            - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
-            - ../commons/signoz/otel-collector-opamp-config.yaml:/etc/manager-config.yaml
-        environment:
-            - OTEL_RESOURCE_ATTRIBUTES=host.name=signoz-host-dev,os.type=linux,deployment.environment=development
-            - LOW_CARDINAL_EXCEPTION_GROUPING=false
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
-            - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+            - coreforge-alloy
         ports:
-            # Loopback only — `npm run dev` runs on the same host, so the
-            # dev collector must not accept traffic from the LAN.
+            # Loopback-only, same port as host dev — the RUM CORS allowlist and
+            # the Prometheus host.docker.internal:4300 scrape work unchanged.
+            - '127.0.0.1:4300:4300'
+
+    coreforge-prometheus:
+        <<: *common
+        image: prom/prometheus:v3.5.0
+        container_name: coreforge-prometheus
+        command:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--storage.tsdb.path=/prometheus'
+            - '--storage.tsdb.retention.time=15d'
+            - '--web.enable-lifecycle'
+            # Tempo's metrics_generator remote-writes span-metrics + service graph here.
+            - '--web.enable-remote-write-receiver'
+            # Store trace exemplars so latency panels can link to traces.
+            - '--enable-feature=exemplar-storage'
+        volumes:
+            - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+            - ../observability/prometheus/rules:/etc/prometheus/rules:ro
+            - ./scrape.d:/etc/prometheus/scrape.d:ro
+            - prometheus-data:/prometheus
+        # The dev app runs on the host — make host.docker.internal resolvable
+        # even on engines where it isn't injected by default.
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        ports:
+            # 19090 because the local pi-infra core (prometheus-infra) owns 9090.
+            # OBS_BIND_HOST (infra/dev/.env) widens the bind so dockerized MCP
+            # clients can reach it via the host's LAN IP; default stays loopback.
+            - '${OBS_BIND_HOST:-127.0.0.1}:19090:9090'
+
+    coreforge-loki:
+        <<: *common
+        image: grafana/loki:3.5.0
+        container_name: coreforge-loki
+        command: ['-config.file=/etc/loki/loki-config.yaml']
+        volumes:
+            - ../observability/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+            - loki-data:/loki
+        ports:
+            - '127.0.0.1:13100:3100'
+
+    coreforge-tempo:
+        <<: *common
+        image: grafana/tempo:2.8.1
+        container_name: coreforge-tempo
+        command: ['-config.file=/etc/tempo/tempo.yaml']
+        volumes:
+            - ../observability/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+            - tempo-data:/var/tempo
+        ports:
+            - '127.0.0.1:13200:3200'
+
+    coreforge-alloy:
+        <<: *common
+        image: grafana/alloy:v1.9.2
+        container_name: coreforge-alloy
+        command:
+            - run
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --storage.path=/var/lib/alloy/data
+            - /etc/alloy/config.alloy
+        volumes:
+            - ../observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - alloy-data:/var/lib/alloy/data
+        depends_on:
+            - coreforge-loki
+            - coreforge-tempo
+        ports:
+            - '127.0.0.1:12345:12345'
+            # OTLP in — the host-run dev app AND browser RUM on localhost:4300.
             - '127.0.0.1:4317:4317'
             - '127.0.0.1:4318:4318'
+            # Faro RUM collector (browser → /collect).
+            - '127.0.0.1:12347:12347'
+
+    # Liveness probes (blackbox). Probes the obs stack readiness + the app's
+    # /api/healthz. The app usually runs on the HOST (:4300), so this container
+    # needs host.docker.internal resolvable to probe it (same as prometheus).
+    coreforge-blackbox:
+        <<: *common
+        image: prom/blackbox-exporter:v0.27.0
+        container_name: coreforge-blackbox
+        command: ['--config.file=/etc/blackbox/blackbox.yml']
+        volumes:
+            - ../observability/blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        ports:
+            - '127.0.0.1:19115:9115'
+
+    # Alertmanager for parity with staging/prod (same shared config). In dev the
+    # Discord webhook is optional — alerts are still visible in Prometheus/Grafana.
+    coreforge-alertmanager-init:
+        image: busybox:1.37
+        container_name: coreforge-alertmanager-init
+        command:
+            - sh
+            - -c
+            - 'printf "%s" "$$COREFORGE_DISCORD_WEBHOOK_URL" > /secrets/discord_webhook_url && echo ok'
+        environment:
+            COREFORGE_DISCORD_WEBHOOK_URL: ${COREFORGE_DISCORD_WEBHOOK_URL:-}
+        volumes:
+            - alertmanager-secrets:/secrets
         networks:
-            observability-dev:
-                # The shared SigNoz image hard-codes `signoz-otel-collector`
-                # in internal telemetry and manager-config. Alias keeps the
-                # backward-compatible name resolvable inside the network.
-                aliases:
-                    - signoz-otel-collector
+            - coreforge-dev-net
+        restart: 'no'
+
+    coreforge-alertmanager:
+        <<: *common
+        image: prom/alertmanager:v0.28.1
+        container_name: coreforge-alertmanager
+        command:
+            - '--config.file=/etc/alertmanager/alertmanager.yml'
+            - '--storage.path=/alertmanager'
+        volumes:
+            - ../observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+            - alertmanager-secrets:/etc/alertmanager/secrets:ro
+            - alertmanager-data:/alertmanager
+        depends_on:
+            coreforge-alertmanager-init:
+                condition: service_completed_successfully
+
+    coreforge-grafana:
+        <<: *common
+        image: grafana/grafana:12.1.0
+        container_name: coreforge-grafana
+        environment:
+            GF_AUTH_ANONYMOUS_ENABLED: 'true'
+            GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+            GF_AUTH_DISABLE_LOGIN_FORM: 'true'
+            GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+        volumes:
+            - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+            - ../observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+            - grafana-data:/var/lib/grafana
+        ports:
+            # See OBS_BIND_HOST note on coreforge-prometheus.
+            - '${OBS_BIND_HOST:-127.0.0.1}:13000:3000'
+        depends_on:
+            - coreforge-prometheus
+            - coreforge-loki
+            - coreforge-tempo
 
 networks:
     # Internal-only bridge; this compose creates and owns it. No external
-    # dependency, no overlap with prod/staging.
-    observability-dev:
-        name: observability-dev
+    # dependency, no overlap with staging/prod.
+    coreforge-dev-net:
+        name: coreforge-dev-net
         driver: bridge
 
 volumes:
-    clickhouse:
-        name: signoz-clickhouse-dev
-    signoz-sqlite:
-        name: signoz-sqlite-dev
-    zookeeper-1:
-        name: signoz-zookeeper-1-dev
+    app-node-modules:
+        name: coreforge-app-node-modules-dev
+    prometheus-data:
+        name: coreforge-prometheus-dev
+    loki-data:
+        name: coreforge-loki-dev
+    tempo-data:
+        name: coreforge-tempo-dev
+    alloy-data:
+        name: coreforge-alloy-dev
+    alertmanager-data:
+        name: coreforge-alertmanager-dev
+    alertmanager-secrets:
+        name: coreforge-alertmanager-secrets-dev
+    grafana-data:
+        name: coreforge-grafana-dev
