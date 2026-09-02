@@ -25,7 +25,7 @@ const DB_PATH = resolve(DATA_DIR, DB_FILE)
  *  LEGACY — do NOT add new steps here. New schema changes go in a versioned
  *  script under `src/db/migrations/migration-X.Y.Z.mjs` run via `npm run
  *  migrate`, which writes to the same `schema_migrations` ledger and emits
- *  structured logs to stdout (and from there to SigNoz). The entries below
+ *  structured logs to stdout (and from there to Loki). The entries below
  *  predate that flow and are kept so existing prod DBs keep booting cleanly. */
 interface Migration {
     name: string
@@ -203,7 +203,7 @@ const MIGRATIONS: Migration[] = [
 ]
 
 /** Walk MIGRATIONS in order. Each step runs only if its name is not yet present
- *  in schema_migrations; applied steps are logged to SigNoz (and recorded in
+ *  in schema_migrations; applied steps are logged to Loki (and recorded in
  *  the DB for the admin panel). Failure of one step aborts the rest — better
  *  to crash on boot than to silently leave the DB half-migrated. */
 function migrate(sqlite: Database.Database): void {

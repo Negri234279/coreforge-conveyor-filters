@@ -1,232 +1,60 @@
-# PRODUCTION stack: CoreForge app + SigNoz self-hosted observability.
+# ─────────────────────────────────────────────────────────────
+# CoreForge — full PROD stack for the shared Raspberry Pi (pi-infra).
 #
-# Sibling stacks per environment:
-#   infra/dev/      (loopback-only, for `npm run dev` on host)
-#   infra/staging/  (merged app + obs, LAN-exposed for NPM on RPi)
-# Each env has its own ClickHouse + Zookeeper + UI + collector so telemetry
-# never mixes. Shared XML/YAML lives in infra/commons/.
+# Self-contained: app + its OWN observability (prometheus / loki / tempo /
+# alloy) + its OWN alerting (alertmanager → coreforge's Discord, independent
+# from the core channel).
 #
-# Bring-up (first time):
-#   docker network create --driver bridge observability
-#   cd infra/prod && docker compose --env-file .env up -d
+# Every service is prefixed `coreforge-` and joins the external `monitoring`
+# network so the CENTRAL Grafana (pi-infra core) can query this stack's
+# Prometheus / Loki / Tempo / Alertmanager as the `*-coreforge` datasources.
+# No Grafana here — the core owns it. No host ports — everything is reached by
+# DNS on `monitoring`; the app and Alloy's RUM endpoint are exposed through
+# nginx-proxy-manager (core):
+#   coreforge-conveyor-filters.negri.es       → http://coreforge-app:4321
+#   otlp.coreforge-conveyor-filters.negri.es  → http://coreforge-alloy:4318
+#     └ custom location /collect              → http://coreforge-alloy:12347 (Faro RUM)
 #
-# App UI:      host:8085 (point NPM at coreforge-conveyor-filters.negri.es -> http://<host>:8085)
-# SigNoz UI:   host:3301 (point NPM at signoz.coreforge-conveyor-filters.negri.es -> http://<host>:3301)
-# OTLP HTTP:   host:4318 (point NPM at otlp.coreforge-conveyor-filters.negri.es -> http://<host>:4318)
-# OTLP gRPC:   NOT exposed on the host; only reachable inside the `observability`
-#              docker network. The app uses signoz-otel-collector:4317 directly.
-#
-# Resource notes: ClickHouse + Zookeeper + SigNoz needs ~2 GB RAM at idle. The
-# memory limits below are a starting point; raise them if you ingest from many
-# apps or keep long retention.
+# This folder is the source of truth in the coreforge repo (infra/prod/) and is
+# synced into pi-infra/apps/coreforge/prod/ by the sync-pi-infra action.
+# Secrets live in coreforge.env on the Pi only (gitignored; see
+# coreforge.env.example).
+# ─────────────────────────────────────────────────────────────
+name: coreforge
 
-x-common: &common
-    networks:
-        - observability
+x-obs-common: &obs-common
+    networks: [coreforge-net, monitoring]
     restart: unless-stopped
     logging:
         driver: json-file
-        options:
-            max-size: '50m'
-            max-file: '3'
-
-x-clickhouse-defaults: &clickhouse-defaults
-    <<: *common
-    image: clickhouse/clickhouse-server:25.5.6
-    tty: true
-    labels:
-        signoz.io/scrape: 'true'
-        signoz.io/port: '9363'
-        signoz.io/path: '/metrics'
-    depends_on:
-        init-clickhouse:
-            condition: service_completed_successfully
-        zookeeper-1:
-            condition: service_healthy
-    healthcheck:
-        test: ['CMD', 'wget', '--spider', '-q', '0.0.0.0:8123/ping']
-        interval: 30s
-        timeout: 5s
-        retries: 3
-    ulimits:
-        nproc: 65535
-        nofile:
-            soft: 262144
-            hard: 262144
-    environment:
-        - CLICKHOUSE_SKIP_USER_SETUP=1
-
-x-zookeeper-defaults: &zookeeper-defaults
-    <<: *common
-    image: signoz/zookeeper:3.7.1
-    user: root
-    labels:
-        signoz.io/scrape: 'true'
-        signoz.io/port: '9141'
-        signoz.io/path: '/metrics'
-    healthcheck:
-        test:
-            - CMD-SHELL
-            - curl -s -m 2 http://localhost:8080/commands/ruok | grep error | grep null
-        interval: 30s
-        timeout: 5s
-        retries: 3
-
-x-db-depend: &db-depend
-    <<: *common
-    depends_on:
-        clickhouse:
-            condition: service_healthy
+        options: { max-size: '10m', max-file: '3' }
 
 services:
-    # Fetches the histogramQuantile user-defined function binary into the
-    # ClickHouse user_scripts dir before clickhouse-server starts. Runs once.
-    init-clickhouse:
-        <<: *common
-        image: clickhouse/clickhouse-server:25.5.6
-        container_name: signoz-init-clickhouse
-        command:
-            - bash
-            - -c
-            - |
-                version="v0.0.1"
-                node_os=$$(uname -s | tr '[:upper:]' '[:lower:]')
-                node_arch=$$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
-                echo "Fetching histogram-binary for $${node_os}/$${node_arch}"
-                cd /tmp
-                wget -O histogram-quantile.tar.gz "https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2F$${version}/histogram-quantile_$${node_os}_$${node_arch}.tar.gz"
-                tar -xvzf histogram-quantile.tar.gz
-                mv histogram-quantile /var/lib/clickhouse/user_scripts/histogramQuantile
-        restart: on-failure
-        volumes:
-            - ../commons/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
-
-    zookeeper-1:
-        <<: *zookeeper-defaults
-        container_name: signoz-zookeeper-1
-        volumes:
-            - zookeeper-1:/bitnami/zookeeper
-        environment:
-            - ZOO_SERVER_ID=1
-            - ALLOW_ANONYMOUS_LOGIN=yes
-            - ZOO_AUTOPURGE_INTERVAL=1
-            - ZOO_ENABLE_PROMETHEUS_METRICS=yes
-            - ZOO_PROMETHEUS_METRICS_PORT_NUMBER=9141
-
-    clickhouse:
-        <<: *clickhouse-defaults
-        container_name: signoz-clickhouse
-        volumes:
-            - ../commons/clickhouse/config.xml:/etc/clickhouse-server/config.xml
-            - ../commons/clickhouse/users.xml:/etc/clickhouse-server/users.xml
-            - ../commons/clickhouse/custom-function.xml:/etc/clickhouse-server/custom-function.xml
-            - ../commons/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
-            - ../commons/clickhouse/cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
-            - clickhouse:/var/lib/clickhouse/
-
-    # Runs schema migrations against ClickHouse and exits. The main collector
-    # depends on this completing so the storage tables exist before ingest.
-    signoz-telemetrystore-migrator:
-        <<: *db-depend
-        image: signoz/signoz-otel-collector:${OTELCOL_TAG:-v0.144.4}
-        container_name: signoz-telemetrystore-migrator
-        environment:
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
-            - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
-        entrypoint:
-            - /bin/sh
-        command:
-            - -c
-            - |
-                /signoz-otel-collector migrate bootstrap &&
-                /signoz-otel-collector migrate sync up &&
-                /signoz-otel-collector migrate async up
-        restart: on-failure
-
-    signoz:
-        <<: *db-depend
-        image: signoz/signoz:${SIGNOZ_TAG:-v0.122.0}
-        container_name: signoz
-        # 3301 is the published host port; SigNoz listens on 8080 inside the
-        # container. Point Nginx Proxy Manager at http://<host-ip>:3301 (or
-        # join NPM to this network and use http://signoz:8080 directly).
-        ports:
-            - '${SIGNOZ_UI_BIND:-0.0.0.0}:3301:8080'
-        volumes:
-            - signoz-sqlite:/var/lib/signoz/
-        environment:
-            - SIGNOZ_ALERTMANAGER_PROVIDER=signoz
-            - SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN=tcp://clickhouse:9000
-            - SIGNOZ_SQLSTORE_SQLITE_PATH=/var/lib/signoz/signoz.db
-            - SIGNOZ_TOKENIZER_JWT_SECRET=${SIGNOZ_TOKENIZER_JWT_SECRET:?SIGNOZ_TOKENIZER_JWT_SECRET must be set in .env}
-        healthcheck:
-            test: ['CMD', 'wget', '--spider', '-q', 'localhost:8080/api/v1/health']
-            interval: 30s
-            timeout: 5s
-            retries: 3
-
-    otel-collector:
-        <<: *db-depend
-        image: signoz/signoz-otel-collector:${OTELCOL_TAG:-v0.144.4}
-        container_name: signoz-otel-collector
-        depends_on:
-            clickhouse:
-                condition: service_healthy
-            signoz-telemetrystore-migrator:
-                condition: service_completed_successfully
-        entrypoint:
-            - /bin/sh
-        command:
-            - -c
-            - |
-                /signoz-otel-collector migrate sync check &&
-                /signoz-otel-collector --config=/etc/otel-collector-config.yaml --manager-config=/etc/manager-config.yaml --copy-path=/var/tmp/collector-config.yaml
-        volumes:
-            - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
-            - ../commons/signoz/otel-collector-opamp-config.yaml:/etc/manager-config.yaml
-        environment:
-            - OTEL_RESOURCE_ATTRIBUTES=host.name=signoz-host,os.type=linux
-            - LOW_CARDINAL_EXCEPTION_GROUPING=false
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
-            - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
-            - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
-        ports:
-            # gRPC is only reachable inside the `observability` network — apps
-            # on the same host use signoz-otel-collector:4317 directly.
-            # HTTP is exposed because browser RUM has to POST from outside
-            # docker; restrict via NPM + the CORS allowlist in the config.
-            - '${OTLP_HTTP_BIND:-0.0.0.0}:4318:4318'
-
-    # CoreForge app. Pulled from Docker Hub (built by .github/workflows/
-    # docker-publish.yml on version bumps). Joins the `observability` network
-    # so the OTel SDK can resolve `signoz-otel-collector:4317` directly.
-    app:
+    # ── App ──────────────────────────────────────────────────────
+    # Pulled from Docker Hub (built by .github/workflows/docker-publish.yml on
+    # version bumps).
+    coreforge-app:
         image: negrii/coreforge-conveyor-filters:latest
         container_name: coreforge-app
-        restart: unless-stopped
-        networks:
-            - observability
-        # Host port 8085 -> the app's 4321, so it coexists with a proxy that
-        # owns 80/443 (8080 is taken by another service on this host). If the
-        # proxy runs on this same host, prefer loopback:
-        #   - '127.0.0.1:8085:4321'
-        ports:
-            - '8085:4321'
+        pull_policy: always
+        env_file:
+            - path: ./coreforge.env
+              required: false
         environment:
             NODE_ENV: production
             HOST: 0.0.0.0
             PORT: '4321'
             DATA_DIR: /data
 
-            # --- OpenTelemetry → SigNoz ----------------------------------
-            # gRPC over the internal hostname is the fastest path and never
-            # leaves the host. If SigNoz moves to another host, point this at
-            # the public OTLP endpoint (https://otlp.<app>.<domain>).
-            OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4317
-            OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+            # --- OpenTelemetry → Tempo (traces only) ----------------------
+            # Logs go to stdout as JSON (Alloy tails the container → Loki) and
+            # metrics are scraped from /metrics by this stack's Prometheus.
+            OTEL_EXPORTER_OTLP_ENDPOINT: http://coreforge-tempo:4318
+            OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+            # sdk-node defaults these to "otlp" when unset, which would push
+            # metrics/logs at Tempo and 404 — this stack is traces-only OTLP.
+            OTEL_METRICS_EXPORTER: none
+            OTEL_LOGS_EXPORTER: none
             OTEL_SERVICE_NAME: coreforge
             OTEL_RESOURCE_ATTRIBUTES: 'service.namespace=coreforge,deployment.environment=production'
             OTEL_LOG_LEVEL: error
@@ -234,22 +62,18 @@ services:
             # Trace sampling: keep 10% of browser-initiated traces.
             # `parentbased_traceidratio` respects upstream sampling decisions,
             # so a trace sampled by the browser SDK is fully recorded on the
-            # backend too — no orphan spans. Errors are NOT exempted (the SDK
-            # doesn't support tail-based out of the box); if missed errors
-            # become a problem, raise the ratio or move sampling to the
-            # collector.
+            # backend too — no orphan spans.
             OTEL_TRACES_SAMPLER: parentbased_traceidratio
             OTEL_TRACES_SAMPLER_ARG: '0.1'
 
-            # Browser RUM endpoint. The frontend SDK POSTs OTLP/HTTP to
-            # <url>/v1/traces and /v1/logs. Must terminate TLS — point NPM at
-            # the collector's host:4318. Unset to disable RUM.
-            OTEL_RUM_EXPORTER_URL: https://otlp.coreforge-conveyor-filters.negri.es
-            OTEL_RUM_SERVICE_NAME: coreforge-web
+            # Browser RUM — Grafana Faro (Alloy's CORS-gated faro.receiver via
+            # NPM: custom location /collect → coreforge-alloy:12347 over the
+            # `monitoring` network). Unset to disable RUM.
+            FARO_COLLECTOR_URL: https://otlp.coreforge-conveyor-filters.negri.es/collect
+            FARO_APP_NAME: coreforge-web
 
-            # Admin shortcut: render a "SigNoz" button on /admin that opens
-            # the observability UI in a new tab. Unset to hide the button.
-            SIGNOZ_URL: https://signoz.coreforge-conveyor-filters.negri.es
+            # GRAFANA_URL (admin shortcut button on /admin) and the rest of the
+            # app secrets come from coreforge.env via env_file above.
 
         volumes:
             - coreforge-data:/data
@@ -262,8 +86,6 @@ services:
         cap_drop:
             - ALL
         # Root FS is immutable; the only persistent writable path is /data.
-        # tmpfs covers ephemeral scratch: /tmp and Astro's session cache dir
-        # (only touched if a request uses Astro.session, but harmless empty).
         read_only: true
         tmpfs:
             - /tmp:size=64m
@@ -280,33 +102,172 @@ services:
             start_period: 20s
             retries: 3
 
+        deploy:
+            resources:
+                limits: { cpus: '1.0', memory: 512m }
         logging:
             driver: json-file
-            options:
-                max-size: '10m'
-                max-file: '3'
+            options: { max-size: '10m', max-file: '3' }
+        # coreforge-net: scraped by prometheus + pushes OTLP to tempo.
+        # monitoring: reachable by nginx-proxy-manager (core).
+        networks: [coreforge-net, monitoring]
+        restart: unless-stopped
+        labels:
+            - homepage.group=Apps
+            - homepage.name=CoreForge
+            - homepage.icon=mdi-anvil
+            - homepage.href=https://coreforge-conveyor-filters.negri.es/
+            - homepage.docker.container=coreforge-app
+            - homepage.widget.type=customapi
+            - homepage.widget.url=http://coreforge-app:4321/api/healthz
 
-networks:
-    observability:
-        name: observability
-        external: true
+    # ── Observability (metrics / logs / traces) ──────────────────
+    coreforge-prometheus:
+        <<: *obs-common
+        image: prom/prometheus:v3.5.0
+        container_name: coreforge-prometheus
+        command:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--storage.tsdb.path=/prometheus'
+            - '--storage.tsdb.retention.time=15d'
+            - '--storage.tsdb.retention.size=1GB'
+            - '--web.enable-lifecycle'
+            # Tempo's metrics_generator remote-writes span-metrics + service graph here.
+            - '--web.enable-remote-write-receiver'
+            # Store trace exemplars so latency panels can link to traces.
+            - '--enable-feature=exemplar-storage'
+        volumes:
+            # Shared single-source obs configs (../observability) + per-env scrape.d.
+            - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+            - ../observability/prometheus/rules:/etc/prometheus/rules:ro
+            - ./scrape.d:/etc/prometheus/scrape.d:ro
+            - prometheus-data:/prometheus
+        deploy:
+            resources:
+                limits: { cpus: '0.5', memory: 512m }
+
+    coreforge-loki:
+        <<: *obs-common
+        image: grafana/loki:3.5.0
+        container_name: coreforge-loki
+        command: ['-config.file=/etc/loki/loki-config.yaml']
+        volumes:
+            - ../observability/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+            - loki-data:/loki
+        deploy:
+            resources:
+                limits: { cpus: '0.5', memory: 384m }
+
+    coreforge-tempo:
+        <<: *obs-common
+        image: grafana/tempo:2.8.1
+        container_name: coreforge-tempo
+        command: ['-config.file=/etc/tempo/tempo.yaml']
+        volumes:
+            - ../observability/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+            - tempo-data:/var/tempo
+        deploy:
+            resources:
+                limits: { cpus: '0.5', memory: 384m }
+
+    coreforge-alloy:
+        <<: *obs-common
+        image: grafana/alloy:v1.9.2
+        container_name: coreforge-alloy
+        command:
+            - run
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --storage.path=/var/lib/alloy/data
+            - /etc/alloy/config.alloy
+        volumes:
+            - ../observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - alloy-data:/var/lib/alloy/data
+        depends_on:
+            - coreforge-loki
+            - coreforge-tempo
+        deploy:
+            resources:
+                limits: { cpus: '0.25', memory: 128m }
+
+    # ── Liveness probes (blackbox) ───────────────────────────────
+    # Prometheus drives this exporter to probe HTTP endpoints and records
+    # probe_success / probe_duration_seconds. Targets are defined in
+    # prometheus.yml (obs readiness) + scrape.d/ (the app's /api/healthz).
+    coreforge-blackbox:
+        <<: *obs-common
+        image: prom/blackbox-exporter:v0.27.0
+        container_name: coreforge-blackbox
+        command: ['--config.file=/etc/blackbox/blackbox.yml']
+        volumes:
+            - ../observability/blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+        deploy:
+            resources:
+                limits: { cpus: '0.1', memory: 64m }
+
+    # ── Alerting (independent from core; own Discord channel) ─────
+    # Writes COREFORGE_DISCORD_WEBHOOK_URL (from coreforge.env) into a secret
+    # file so Alertmanager reads it via webhook_url_file — the secret stays out
+    # of git.
+    coreforge-alertmanager-init:
+        image: busybox:1.37
+        container_name: coreforge-alertmanager-init
+        env_file:
+            - path: ./coreforge.env
+              required: false
+        command:
+            - sh
+            - -c
+            - 'printf "%s" "$$COREFORGE_DISCORD_WEBHOOK_URL" > /secrets/discord_webhook_url && echo "wrote coreforge discord webhook secret"'
+        volumes:
+            - alertmanager-secrets:/secrets
+        networks: [coreforge-net]
+        restart: 'no'
+
+    coreforge-alertmanager:
+        <<: *obs-common
+        image: prom/alertmanager:v0.28.1
+        container_name: coreforge-alertmanager
+        command:
+            - '--config.file=/etc/alertmanager/alertmanager.yml'
+            - '--storage.path=/alertmanager'
+        volumes:
+            - ../observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+            - alertmanager-secrets:/etc/alertmanager/secrets:ro
+            - alertmanager-data:/alertmanager
+        depends_on:
+            coreforge-alertmanager-init:
+                condition: service_completed_successfully
+        deploy:
+            resources:
+                limits: { cpus: '0.25', memory: 128m }
 
 volumes:
-    clickhouse:
-        name: signoz-clickhouse
-    signoz-sqlite:
-        name: signoz-sqlite
-    zookeeper-1:
-        name: signoz-zookeeper-1
-    # Adopts the volume that the OLD root-level compose created. Compose
-    # auto-prefixes volumes with the project name (= the directory the
-    # compose file lives in). On the prod host that directory is
-    # `coreforge-conveyor-filters/`, so the real volume is
-    # `coreforge-conveyor-filters_coreforge-data`. `external: true` says
-    # "don't create — use the one that's already there", the safe way to
-    # take over a pre-existing volume without touching the data.
-    # Verify with `docker volume ls | grep coreforge` and update `name:`
-    # here if the actual name differs.
+    # Adopts the pre-existing data volume (SQLite DB + WAL). `external: true`
+    # says "don't create — use the one that's already there". On a FRESH host,
+    # create it first:  docker volume create coreforge-conveyor-filters_coreforge-data
+    # then copy coreforge.prod.db into it before first start.
     coreforge-data:
         name: coreforge-conveyor-filters_coreforge-data
         external: true
+    prometheus-data:
+        name: coreforge-prometheus-data
+    loki-data:
+        name: coreforge-loki-data
+    tempo-data:
+        name: coreforge-tempo-data
+    alloy-data:
+        name: coreforge-alloy-data
+    alertmanager-data:
+        name: coreforge-alertmanager-data
+    alertmanager-secrets:
+        name: coreforge-alertmanager-secrets
+
+networks:
+    # Private: app ↔ its own observability + alerting.
+    coreforge-net:
+        name: coreforge-net
+    # Shared, created once by pi-infra's scripts/create-network.sh — joined, not created.
+    monitoring:
+        external: true
+        name: monitoring

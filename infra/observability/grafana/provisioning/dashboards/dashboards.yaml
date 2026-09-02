@@ -1,0 +1,15 @@
+# Loads every dashboard JSON mounted at /var/lib/grafana/dashboards (dev and
+# staging Grafana). In prod the central pi-infra Grafana provisions the same
+# JSONs from core/grafana/dashboards/coreforge/ (copied by sync-pi-infra).
+apiVersion: 1
+
+providers:
+    - name: coreforge
+      folder: coreforge
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 30
+      allowUiUpdates: true
+      options:
+          path: /var/lib/grafana/dashboards
+          foldersFromFilesStructure: false

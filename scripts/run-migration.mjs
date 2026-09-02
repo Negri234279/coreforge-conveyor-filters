@@ -14,7 +14,7 @@ const DB_PATH = resolve(DATA_DIR, DB_FILE)
 // Structured JSON-on-stdout logger. The Astro runtime's OTel SDK is not loaded
 // in this CLI context, so we can't go through src/lib/logger.ts. Instead we
 // emit one JSON line per event — Docker captures stdout, and any log shipper
-// (Promtail / OTel collector) indexes the attrs as columns in SigNoz.
+// (Alloy → Loki) indexes the attrs as queryable fields.
 function emit(severity, message, attrs = {}) {
     const line = JSON.stringify({
         severity,

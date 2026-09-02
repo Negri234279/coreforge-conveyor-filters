@@ -8,11 +8,10 @@ if (!user.isAdmin) {
     return new Response(null, { status: 404 })
 }
 
-// Optional deep-link to the SigNoz observability UI. Empty/unset = no button,
-// so dev environments without SigNoz running stay clean. SigNoz has its own
-// auth — clicking the link goes through SigNoz's /login if you don't have a
-// session there yet.
-const signozUrl = process.env.SIGNOZ_URL?.trim() || null
+// Optional deep-link to the Grafana observability UI (the central pi-infra
+// Grafana in prod, the local one in dev/staging). Empty/unset = no button, so
+// environments without the stack running stay clean. Grafana has its own auth.
+const grafanaUrl = process.env.GRAFANA_URL?.trim() || null
 ---
 
 <Layout title="Admin – CoreForge" noindex activeNav="admin">
@@ -31,13 +30,13 @@ const signozUrl = process.env.SIGNOZ_URL?.trim() || null
                 <p class="mt-2 text-sm text-slate-400">App-wide metrics. Visible only to you.</p>
             </div>
             {
-                signozUrl && (
+                grafanaUrl && (
                     <a
-                        href={signozUrl}
+                        href={grafanaUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         class="inline-flex items-center gap-2 rounded border border-slate-700 bg-slate-800/60 px-3 py-1.5 text-sm text-slate-200 transition-all hover:border-amber-500/40 hover:bg-slate-800 hover:text-amber-400"
-                        title="Open SigNoz observability UI in a new tab"
+                        title="Open Grafana observability UI in a new tab"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -53,7 +52,7 @@ const signozUrl = process.env.SIGNOZ_URL?.trim() || null
                                 d="M3 12h3l3-8 4 16 3-8h5"
                             />
                         </svg>
-                        <span>SigNoz</span>
+                        <span>Grafana</span>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             class="h-3 w-3 opacity-60"

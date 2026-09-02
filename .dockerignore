@@ -17,6 +17,12 @@ npm-debug.log*
 .env
 .env.*
 
+# Raw image sources — inputs to `npm run optimize:{boxes,images}` only. The
+# build serves the optimized WebP under public/{boxes,items}; Astro would copy
+# these verbatim into dist/client and ship them, so keep them out of the image.
+public/boxes-raw
+public/items-raw
+
 # Local dev data (kept out of image; runtime uses the DATA_DIR volume)
 src/data/filters.dev.json
 src/data/filters.prod.json

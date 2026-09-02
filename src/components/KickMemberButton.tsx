@@ -28,6 +28,8 @@ export default function KickMemberButton({ userId, memberName }: Props) {
                 title="Remove member"
                 message={`Remove ${memberName} from the clan? They'll keep their filters as personal.`}
                 confirmLabel="Remove"
+                track="org_kick"
+                trackAttrs={{ member: userId }}
                 onCancel={() => setOpen(false)}
                 onConfirm={() => {
                     setOpen(false)

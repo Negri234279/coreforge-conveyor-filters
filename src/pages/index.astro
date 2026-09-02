@@ -3,9 +3,13 @@ import Layout from '../layouts/Layout.astro'
 import HomeDashboard from '../components/HomeDashboard'
 import MyConveyors from '../components/MyConveyors'
 import { version as APP_VERSION } from '../../package.json'
+import { faroClientConfig } from '../lib/faro-config'
 import '../styles/global.css'
 
 const user = Astro.locals.user
+// The landing renders its own <html> (no Layout), so it must mount RUM itself
+// — web vitals matter most on the first page a visitor sees.
+const faroRum = faroClientConfig()
 
 const TICKER =
     'AK-47 · Thompson · Semi-Auto Rifle · Metal Ore · Sulfur · HQM · C4 · Rocket · Explosive 5.56 · Metal Frags · Stone · Wood · Cloth · Low Grade Fuel · F1 Grenade · Satchel Charge · Medical Syringe · Custom SMG · Python · Revolver · Pump Shotgun · Bone Knife · Pickaxe · Hatchet · Silencer · Scope · Beancan · Auto Turret · Flame Turret · Tarp · Rope · Gear · '
@@ -107,6 +111,12 @@ const TICKER =
                         .cf-hide-sm { display: none !important; }
                     }
                 `}</style>
+                <script is:inline define:vars={{ faroRum }}>
+                    if (faroRum) window.__cf_faro = faroRum
+                </script>
+                <script>
+                    import '../otel-web/init'
+                </script>
             </head>
             <body
                 style="min-height: 100%; background-color: #0a0e14; color: #e2e8f0; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale"
@@ -463,6 +473,7 @@ const TICKER =
                     document.querySelectorAll('a[data-cta]').forEach(function(el) {
                         el.addEventListener('click', function() {
                             var cta = el.getAttribute('data-cta')
+                            if (window.__cfTrack) window.__cfTrack('landing_google_cta', { cta: cta })
                             fetch('/api/events/log', {
                                 method: 'POST',
                                 headers: { 'content-type': 'application/json' },

@@ -16,6 +16,8 @@ pnpm-debug.log*
 # environment variables
 .env
 .env.production
+# per-env secret files for the observability stacks (examples are tracked)
+coreforge.env
 
 # macOS-specific files
 .DS_Store
@@ -33,6 +35,10 @@ settings.local.json
 
 public/boxes-raw/*
 !public/boxes-raw/.gitkeep
+public/items-raw/*
+!public/items-raw/.gitkeep
 
 histogramQuantile
 bash.exe.stackdump
+
+public/skins

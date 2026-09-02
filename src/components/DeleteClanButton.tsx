@@ -20,6 +20,7 @@ export default function DeleteClanButton({ clanName }: { clanName: string }) {
                 title="Delete clan"
                 message={`Delete clan "${clanName}"? Members will keep their filters as personal. This can't be undone.`}
                 confirmLabel="Delete clan"
+                track="org_delete"
                 onCancel={() => setOpen(false)}
                 onConfirm={() => {
                     setOpen(false)

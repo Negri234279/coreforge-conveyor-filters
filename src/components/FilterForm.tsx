@@ -22,6 +22,7 @@ const BOX_RESOLVE = (key: string): ComboboxEntry | undefined => {
     return { key: b.imagePath, label: b.name, imageUrl: boxImage(b.imagePath) }
 }
 import { copyToClipboard } from '../lib/clipboard'
+import { trackEvent } from '../otel-web/track'
 import { showToast } from './CopyToast'
 import { getCurrentUser } from '../store/auth'
 import type { FilterItem } from '../types'
@@ -289,6 +290,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
         showToast(ok ? 'Copied · Shift in-game' : 'Copy failed')
 
         if (ok) {
+            trackEvent('filter_export_json', { itemCount: String(items.length) })
             // Fire-and-forget usage beacon. Failure is non-fatal — server-side
             // logEvent already swallows its own errors.
             void fetch('/api/events/log', {

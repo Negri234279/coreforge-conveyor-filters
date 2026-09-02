@@ -1,0 +1,29 @@
+# Dev-only app target, scraped through the host gateway. Covers both dev
+# modes: the HOST-run dev server (`npm run dev:otel`, http://localhost:4300)
+# and the dockerized one (`npm run dev:docker:up`), which publishes the same
+# port on host loopback — Docker Desktop's host gateway reaches it there.
+# Staging/prod override this file with the container target.
+scrape_configs:
+    - job_name: coreforge-app
+      metrics_path: /metrics
+      static_configs:
+          - targets: ['host.docker.internal:4300']
+
+    # End-to-end liveness probe of the app's real HTTP handler (blackbox → app).
+    # Dev target is the host-run (or dockerized) dev server on :4300, reached
+    # through the host gateway — the blackbox container has the matching
+    # extra_hosts entry. Shows DOWN when the obs stack runs without the app.
+    - job_name: blackbox-app
+      metrics_path: /probe
+      params:
+          module: [http_2xx]
+      static_configs:
+          - targets: ['http://host.docker.internal:4300/api/healthz']
+            labels: { name: app }
+      relabel_configs:
+          - source_labels: [__address__]
+            target_label: __param_target
+          - source_labels: [__param_target]
+            target_label: instance
+          - target_label: __address__
+            replacement: 'coreforge-blackbox:9115'

@@ -1,3 +1,5 @@
+import { trackEvent, type TrackName } from '../otel-web/track'
+
 interface Props {
     open: boolean
     title: string
@@ -5,6 +7,9 @@ interface Props {
     confirmLabel?: string
     cancelLabel?: string
     confirmTone?: 'danger' | 'primary'
+    /** RUM event fired when the user CONFIRMS (not when the modal opens). */
+    track?: TrackName
+    trackAttrs?: Record<string, string>
     onCancel: () => void
     onConfirm: () => void
 }
@@ -16,10 +21,17 @@ export default function ConfirmDeleteModal({
     confirmLabel = 'Delete',
     cancelLabel = 'Cancel',
     confirmTone = 'danger',
+    track,
+    trackAttrs,
     onCancel,
     onConfirm,
 }: Props) {
     if (!open) return null
+
+    function handleConfirm() {
+        if (track) trackEvent(track, trackAttrs)
+        onConfirm()
+    }
 
     const confirmClass =
         confirmTone === 'primary'
@@ -66,7 +78,7 @@ export default function ConfirmDeleteModal({
                     >
                         {cancelLabel}
                     </button>
-                    <button type="button" onClick={onConfirm} class={confirmClass}>
+                    <button type="button" onClick={handleConfirm} class={confirmClass}>
                         {confirmLabel}
                     </button>
                 </div>
