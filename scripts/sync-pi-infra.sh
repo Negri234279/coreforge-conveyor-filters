@@ -8,7 +8,7 @@
 # CONTRACT — what the central pi-infra repo consumes from this app (source → dest).
 # prod's compose mounts ../observability, so both are synced side-by-side under
 # apps/coreforge/ to keep that relative path valid:
-#   infra/prod/                                → apps/coreforge/prod/        (the app stack)
+#   infra/prod/                                → apps/coreforge/        (the app stack)
 #   infra/observability/ (minus grafana/)      → apps/coreforge/observability/ (configs prod mounts)
 #   infra/observability/grafana/dashboards/
 #       coreforge-overview.json                → core/grafana/dashboards/coreforge/
@@ -52,9 +52,9 @@ mirror_dir() {
   fi
 }
 
-# 1) App stack → apps/coreforge/prod/
-log "app stack: infra/prod/ → apps/coreforge/prod/"
-mirror_dir "$SRC_ROOT/infra/prod" "$DEST/apps/coreforge/prod"
+# 1) App stack → apps/coreforge/
+log "app stack: infra/prod/ → apps/coreforge/"
+mirror_dir "$SRC_ROOT/infra/prod" "$DEST/apps/coreforge/"
 
 # 2) Shared obs configs (minus grafana/, which goes to core) → apps/coreforge/observability/
 #    (prod's compose mounts ../observability → apps/coreforge/observability after sync.)
@@ -76,9 +76,9 @@ cp "$SRC_ROOT/infra/observability/grafana/provisioning/datasources/datasources.y
 # Wire the app into the root include (idempotent): the action manages this too,
 # so a fresh pi-infra checkout needs no manual edit.
 if [ -f "$DEST/docker-compose.yml" ]; then
-  if ! grep -qF 'apps/coreforge/prod/docker-compose.yml' "$DEST/docker-compose.yml"; then
-    sed -i '/-[[:space:]]*core\/docker-compose.yml/a\  - apps/coreforge/prod/docker-compose.yml' "$DEST/docker-compose.yml"
-    log "added include: - apps/coreforge/prod/docker-compose.yml to root docker-compose.yml"
+  if ! grep -qF 'apps/coreforge/docker-compose.yml' "$DEST/docker-compose.yml"; then
+    sed -i '/-[[:space:]]*core\/docker-compose.yml/a\  - apps/coreforge/docker-compose.yml' "$DEST/docker-compose.yml"
+    log "added include: - apps/coreforge/docker-compose.yml to root docker-compose.yml"
   fi
 else
   log "WARNING: $DEST/docker-compose.yml not found — cannot wire the include."

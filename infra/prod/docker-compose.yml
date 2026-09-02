@@ -16,7 +16,7 @@
 #     └ custom location /collect              → http://coreforge-alloy:12347 (Faro RUM)
 #
 # This folder is the source of truth in the coreforge repo (infra/prod/) and is
-# synced into pi-infra/apps/coreforge/prod/ by the sync-pi-infra action.
+# synced into pi-infra/apps/coreforge/ by the sync-pi-infra action.
 # Secrets live in coreforge.env on the Pi only (gitignored; see
 # coreforge.env.example).
 # ─────────────────────────────────────────────────────────────
