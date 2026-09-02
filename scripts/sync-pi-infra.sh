@@ -54,7 +54,7 @@ mirror_dir() {
 
 # 1) App stack → apps/coreforge/
 log "app stack: infra/prod/ → apps/coreforge/"
-mirror_dir "$SRC_ROOT/infra/prod" "$DEST/apps/coreforge/prod"
+mirror_dir "$SRC_ROOT/infra/prod" "$DEST/apps/coreforge/"
 
 # 2) Shared obs configs (minus grafana/, which goes to core) → apps/coreforge/observability/
 #    (prod's compose mounts ../observability → apps/coreforge/observability after sync.)
