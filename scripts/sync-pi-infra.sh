@@ -6,7 +6,8 @@
 #   scripts/sync-pi-infra.sh /path/to/pi-infra
 #
 # CONTRACT — what the central pi-infra repo consumes from this app (source → dest).
-# prod's compose mounts ../observability, so both are synced side-by-side under
+# prod's compose (at apps/coreforge/docker-compose.yml) mounts ./observability,
+# so both the stack and its obs configs are synced side-by-side under
 # apps/coreforge/ to keep that relative path valid:
 #   infra/prod/                                → apps/coreforge/        (the app stack)
 #   infra/observability/ (minus grafana/)      → apps/coreforge/observability/ (configs prod mounts)
@@ -57,7 +58,7 @@ log "app stack: infra/prod/ → apps/coreforge/"
 mirror_dir "$SRC_ROOT/infra/prod" "$DEST/apps/coreforge/"
 
 # 2) Shared obs configs (minus grafana/, which goes to core) → apps/coreforge/observability/
-#    (prod's compose mounts ../observability → apps/coreforge/observability after sync.)
+#    (prod's compose mounts ./observability → apps/coreforge/observability after sync.)
 log "obs configs: infra/observability/ (minus grafana) → apps/coreforge/observability/"
 mirror_dir "$SRC_ROOT/infra/observability" "$DEST/apps/coreforge/observability" --exclude 'grafana/'
 
