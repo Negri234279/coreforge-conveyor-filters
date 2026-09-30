@@ -1,0 +1,14 @@
+{
+    "_comment": "Shortnames that exist in the Rust item dump but are NOT real conveyor-filterable items (DLC redirect-skins that collapse to a base item, world-only entities, etc.). The import (optimize-diff-items.mjs) never adds these to items.json and removes them if present; the verifier (verify-item-images.mjs) ignores them. Add a shortname here to keep future `items:update` runs from re-introducing it.",
+    "notFilterable": [
+        "hazmat.plague", 
+        "hat.dragonmask",
+        "hat.oxmask",
+        "hat.rabbitmask",
+        "hat.ratmask",
+        "hat.snakemask",
+        "hat.tigermask",
+        "industrial.wall.light.blue",
+        "rocket.launcher.rpg7"
+    ]
+}

@@ -32,7 +32,9 @@
         "optimize:items": "node scripts/optimize-items.mjs",
         "items:diff": "node scripts/diff-rust-items.mjs",
         "items:import": "node scripts/optimize-diff-items.mjs",
-        "items:update": "node scripts/diff-rust-items.mjs && node scripts/optimize-diff-items.mjs"
+        "items:update": "node scripts/diff-rust-items.mjs && node scripts/optimize-diff-items.mjs",
+        "items:verify": "node scripts/verify-item-images.mjs",
+        "items:recover-orphans": "node scripts/recover-orphan-items.mjs"
     },
     "dependencies": {
         "@astrojs/node": "10.1.0",
