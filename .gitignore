@@ -1,3 +1,6 @@
+# scratch / local diff output (never committed)
+tmp/
+
 # build output
 dist/
 # generated types
