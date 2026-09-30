@@ -1,16 +1,23 @@
 import { useEffect, useState } from 'preact/hooks'
+import type { ComponentChildren } from 'preact'
 import type { Filter } from '../types'
-import FilterCard from './FilterCard'
 
 interface Props {
     filters: Filter[]
     reordering: boolean
     onReorder: (orderedIds: string[]) => void
+    /** How each filter renders as a card (personal FilterCard vs clan FilterRow). */
+    renderCard: (filter: Filter) => ComponentChildren
 }
 
 const GRID_CLASS = 'grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3'
 
-export default function ReorderableFilterGrid({ filters, reordering, onReorder }: Props) {
+export default function ReorderableFilterGrid({
+    filters,
+    reordering,
+    onReorder,
+    renderCard,
+}: Props) {
     const [order, setOrder] = useState<Filter[]>(filters)
     const [dragId, setDragId] = useState<string | null>(null)
 
@@ -25,7 +32,7 @@ export default function ReorderableFilterGrid({ filters, reordering, onReorder }
         return (
             <div class={GRID_CLASS}>
                 {filters.map((f) => (
-                    <FilterCard key={f.id} filter={f} />
+                    <div key={f.id}>{renderCard(f)}</div>
                 ))}
             </div>
         )
@@ -100,9 +107,7 @@ export default function ReorderableFilterGrid({ filters, reordering, onReorder }
                         </svg>
                     </div>
                     {/* Suppress the card's own buttons while dragging is active. */}
-                    <div class="pointer-events-none">
-                        <FilterCard filter={f} />
-                    </div>
+                    <div class="pointer-events-none">{renderCard(f)}</div>
                 </div>
             ))}
         </div>

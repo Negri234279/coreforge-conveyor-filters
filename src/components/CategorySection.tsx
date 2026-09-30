@@ -14,6 +14,7 @@ import {
 import { getCurrentUser } from '../store/auth'
 import CategoryFormModal from './CategoryFormModal'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
+import FilterCard from './FilterCard'
 import ReorderableFilterGrid from './ReorderableFilterGrid'
 import SubcategoryFormModal from './SubcategoryFormModal'
 
@@ -399,6 +400,7 @@ export default function CategorySection({ category, forceExpand = false }: Props
                             onReorder={(orderedIds) =>
                                 reorderFilters(category.id, null, orderedIds)
                             }
+                            renderCard={(f) => <FilterCard filter={f} />}
                         />
                     </div>
                 ) : category.subcategories.length > 0 ? (
@@ -448,6 +450,7 @@ export default function CategorySection({ category, forceExpand = false }: Props
                                     onReorder={(orderedIds) =>
                                         reorderFilters(category.id, sub.id, orderedIds)
                                     }
+                                    renderCard={(f) => <FilterCard filter={f} />}
                                 />
                             )}
                         </div>

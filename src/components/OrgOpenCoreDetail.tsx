@@ -9,6 +9,7 @@ import {
     deleteOrgSubcategory,
     deleteOrgFilter,
     deleteOrgOpenCore,
+    reorderOrgFilters,
 } from '../store/org'
 import { getCurrentUser } from '../store/auth'
 import { deploymentTotals } from '../store/filters'
@@ -17,6 +18,7 @@ import { showToast } from './CopyToast'
 import OpenCoreBoxesView from './OpenCoreBoxesView'
 import DeploymentTotals from './DeploymentTotals'
 import FilterCardBase, { type FilterCardAction } from './FilterCardBase'
+import ReorderableFilterGrid from './ReorderableFilterGrid'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
 import NameFormModal from './NameFormModal'
 import OpenCoreViewer from './openCore3D/OpenCoreViewer'
@@ -127,6 +129,21 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
     // Category action menu
     const [catMenuOpen, setCatMenuOpen] = useState<string | null>(null)
     const [subMenuOpen, setSubMenuOpen] = useState<string | null>(null)
+    // Which category is currently in filter-reorder mode (one at a time).
+    const [reorderingCatId, setReorderingCatId] = useState<string | null>(null)
+
+    async function onReorderFilters(
+        categoryId: string,
+        subcategoryId: string | null,
+        orderedIds: string[],
+    ) {
+        try {
+            await reorderOrgFilters(categoryId, subcategoryId, orderedIds)
+            loadDetail()
+        } catch (e) {
+            showToast(e instanceof Error ? e.message : 'Reorder failed')
+        }
+    }
     const ssCollapseKey = `cf:oc:${openCoreId}:collapsed`
     const [collapsedCats, setCollapsedCats] = useState<Set<string>>(() => {
         try {
@@ -506,73 +523,112 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                 </div>
                                             </div>
                                             {canEdit ? (
-                                                <div class="relative">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            setCatMenuOpen(
-                                                                catMenuOpen === cat.id
-                                                                    ? null
-                                                                    : cat.id,
-                                                            )
-                                                        }
-                                                        class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                                                        aria-label="Category actions"
-                                                    >
-                                                        <svg
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            viewBox="0 0 24 24"
-                                                            fill="currentColor"
-                                                            class="h-4 w-4"
+                                                <div class="flex items-center gap-1">
+                                                    {reorderingCatId === cat.id ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setReorderingCatId(null)}
+                                                            class="rounded bg-amber-500 px-3 py-1 font-mono text-[11px] font-bold tracking-widest text-slate-950 uppercase transition-colors hover:bg-amber-400"
                                                         >
-                                                            <circle cx="12" cy="5" r="1.7" />
-                                                            <circle cx="12" cy="12" r="1.7" />
-                                                            <circle cx="12" cy="19" r="1.7" />
-                                                        </svg>
-                                                    </button>
-                                                    {catMenuOpen === cat.id ? (
-                                                        <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-xl">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setCatMenuOpen(null)
-                                                                    window.location.href = `/org/opencore/${openCoreId}/filter/new?categoryId=${encodeURIComponent(cat.id)}`
-                                                                }}
-                                                                class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
-                                                            >
-                                                                New Filter
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setCatMenuOpen(null)
-                                                                    setAddSubCatId(cat.id)
-                                                                    setAddSubOpen(true)
-                                                                }}
-                                                                class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
-                                                            >
-                                                                + Subcategory
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setCatMenuOpen(null)
-                                                                    setConfirmDeleteCat({
-                                                                        id: cat.id,
-                                                                        name: cat.name,
-                                                                    })
-                                                                }}
-                                                                class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
+                                                            Done
+                                                        </button>
                                                     ) : null}
+                                                    <div class="relative">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setCatMenuOpen(
+                                                                    catMenuOpen === cat.id
+                                                                        ? null
+                                                                        : cat.id,
+                                                                )
+                                                            }
+                                                            class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
+                                                            aria-label="Category actions"
+                                                        >
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                viewBox="0 0 24 24"
+                                                                fill="currentColor"
+                                                                class="h-4 w-4"
+                                                            >
+                                                                <circle cx="12" cy="5" r="1.7" />
+                                                                <circle cx="12" cy="12" r="1.7" />
+                                                                <circle cx="12" cy="19" r="1.7" />
+                                                            </svg>
+                                                        </button>
+                                                        {catMenuOpen === cat.id ? (
+                                                            <div class="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-xl">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setCatMenuOpen(null)
+                                                                        window.location.href = `/org/opencore/${openCoreId}/filter/new?categoryId=${encodeURIComponent(cat.id)}`
+                                                                    }}
+                                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                >
+                                                                    New Filter
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setCatMenuOpen(null)
+                                                                        setAddSubCatId(cat.id)
+                                                                        setAddSubOpen(true)
+                                                                    }}
+                                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                >
+                                                                    + Subcategory
+                                                                </button>
+                                                                {cat.filters.length > 1 ||
+                                                                cat.subcategories.some(
+                                                                    (s) => s.filters.length > 1,
+                                                                ) ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setCatMenuOpen(null)
+                                                                            setReorderingCatId(
+                                                                                reorderingCatId ===
+                                                                                    cat.id
+                                                                                    ? null
+                                                                                    : cat.id,
+                                                                            )
+                                                                        }}
+                                                                        class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                    >
+                                                                        {reorderingCatId === cat.id
+                                                                            ? 'Done reordering'
+                                                                            : 'Reorder filters'}
+                                                                    </button>
+                                                                ) : null}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setCatMenuOpen(null)
+                                                                        setConfirmDeleteCat({
+                                                                            id: cat.id,
+                                                                            name: cat.name,
+                                                                        })
+                                                                    }}
+                                                                    class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        ) : null}
+                                                    </div>
                                                 </div>
                                             ) : null}
                                         </div>
-                                        {!catCollapsed ? (
+                                        {!catCollapsed || reorderingCatId === cat.id ? (
                                             <>
+                                                {reorderingCatId === cat.id ? (
+                                                    <div class="mb-3 flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/5 px-3 py-2 font-mono text-[11px] tracking-widest text-amber-400/90 uppercase">
+                                                        Drag cards to rearrange · changes save
+                                                        automatically
+                                                    </div>
+                                                ) : null}
                                                 {cat.filters.length === 0 &&
                                                 cat.subcategories.length === 0 ? (
                                                     <p class="text-xs text-slate-500">
@@ -580,17 +636,25 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                     </p>
                                                 ) : null}
                                                 {cat.filters.length > 0 ? (
-                                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                                                        {cat.filters.map((f) => (
+                                                    <ReorderableFilterGrid
+                                                        filters={cat.filters}
+                                                        reordering={reorderingCatId === cat.id}
+                                                        onReorder={(orderedIds) =>
+                                                            onReorderFilters(
+                                                                cat.id,
+                                                                null,
+                                                                orderedIds,
+                                                            )
+                                                        }
+                                                        renderCard={(f) => (
                                                             <FilterRow
-                                                                key={f.id}
                                                                 filter={f}
                                                                 canEdit={canEdit}
                                                                 openCoreId={openCoreId}
                                                                 onDeleted={loadDetail}
                                                             />
-                                                        ))}
-                                                    </div>
+                                                        )}
+                                                    />
                                                 ) : null}
                                                 {cat.subcategories.map((sub) => (
                                                     <div key={sub.id} class="mt-6">
@@ -677,17 +741,27 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                 No filters.
                                                             </p>
                                                         ) : (
-                                                            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                                                                {sub.filters.map((f) => (
+                                                            <ReorderableFilterGrid
+                                                                filters={sub.filters}
+                                                                reordering={
+                                                                    reorderingCatId === cat.id
+                                                                }
+                                                                onReorder={(orderedIds) =>
+                                                                    onReorderFilters(
+                                                                        cat.id,
+                                                                        sub.id,
+                                                                        orderedIds,
+                                                                    )
+                                                                }
+                                                                renderCard={(f) => (
                                                                     <FilterRow
-                                                                        key={f.id}
                                                                         filter={f}
                                                                         canEdit={canEdit}
                                                                         openCoreId={openCoreId}
                                                                         onDeleted={loadDetail}
                                                                     />
-                                                                ))}
-                                                            </div>
+                                                                )}
+                                                            />
                                                         )}
                                                     </div>
                                                 ))}
