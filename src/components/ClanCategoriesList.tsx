@@ -1,3 +1,4 @@
+import { useState } from 'preact/hooks'
 import {
     cloneOrgCategory,
     ensureOrgCategoriesLoaded,
@@ -7,8 +8,8 @@ import {
     orgIsBusy,
 } from '../store/org'
 import { showToast } from './CopyToast'
+import ConfirmDeleteModal from './ConfirmDeleteModal'
 import DeploymentTotals from './DeploymentTotals'
-import TrackedButton from './TrackedButton'
 import type { OrgCategoryView } from '../types'
 
 export default function ClanCategoriesList() {
@@ -17,8 +18,10 @@ export default function ClanCategoriesList() {
     const error = orgCategoriesError.value
     const cats = orgCategories.value
     const busy = orgIsBusy.value
+    const [cloneTarget, setCloneTarget] = useState<OrgCategoryView | null>(null)
 
     async function onClone(c: OrgCategoryView) {
+        setCloneTarget(null)
         try {
             const res = await cloneOrgCategory(c.id)
             showToast(`Cloned "${res.name}" to your categories`)
@@ -95,19 +98,37 @@ export default function ClanCategoriesList() {
                         >
                             View
                         </a>
-                        <TrackedButton
+                        <button
                             type="button"
-                            track="category_clone"
-                            trackAttrs={{ categoryId: c.id }}
-                            onClick={() => onClone(c)}
+                            onClick={() => setCloneTarget(c)}
                             disabled={busy}
                             class="rounded bg-amber-500 px-3 py-1.5 text-xs font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Clone category
-                        </TrackedButton>
+                        </button>
                     </div>
                 </div>
             ))}
+
+            <ConfirmDeleteModal
+                open={!!cloneTarget}
+                title="Clone category"
+                message={
+                    cloneTarget
+                        ? `Clone "${cloneTarget.name}" (${cloneTarget.filterCount} ${
+                              cloneTarget.filterCount === 1 ? 'filter' : 'filters'
+                          }) into your own categories? You'll get an independent copy.`
+                        : ''
+                }
+                confirmLabel="Clone"
+                confirmTone="primary"
+                track="category_clone"
+                trackAttrs={cloneTarget ? { categoryId: cloneTarget.id } : undefined}
+                onCancel={() => setCloneTarget(null)}
+                onConfirm={() => {
+                    if (cloneTarget) void onClone(cloneTarget)
+                }}
+            />
         </div>
     )
 }
