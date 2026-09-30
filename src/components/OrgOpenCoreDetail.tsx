@@ -144,6 +144,19 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
             showToast(e instanceof Error ? e.message : 'Reorder failed')
         }
     }
+
+    // Close the category / subcategory action menus on any click outside them.
+    useEffect(() => {
+        if (!catMenuOpen && !subMenuOpen) return
+        function onDoc(e: MouseEvent) {
+            const target = e.target as Element | null
+            if (target?.closest('[data-menu-root]')) return
+            setCatMenuOpen(null)
+            setSubMenuOpen(null)
+        }
+        document.addEventListener('mousedown', onDoc)
+        return () => document.removeEventListener('mousedown', onDoc)
+    }, [catMenuOpen, subMenuOpen])
     const ssCollapseKey = `cf:oc:${openCoreId}:collapsed`
     const [collapsedCats, setCollapsedCats] = useState<Set<string>>(() => {
         try {
@@ -533,7 +546,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                             Done
                                                         </button>
                                                     ) : null}
-                                                    <div class="relative">
+                                                    <div class="relative" data-menu-root>
                                                         <button
                                                             type="button"
                                                             onClick={() =>
@@ -663,7 +676,10 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                 {sub.name}
                                                             </h3>
                                                             {canEdit ? (
-                                                                <div class="relative">
+                                                                <div
+                                                                    class="relative"
+                                                                    data-menu-root
+                                                                >
                                                                     <button
                                                                         type="button"
                                                                         onClick={() =>
