@@ -29,7 +29,10 @@
         "prod:logs": "docker compose -f infra/prod/docker-compose.yml logs -f",
         "migrate": "node scripts/run-migration.mjs",
         "optimize-images": "node scripts/optimize-images.mjs",
-        "optimize:items": "node scripts/optimize-items.mjs"
+        "optimize:items": "node scripts/optimize-items.mjs",
+        "items:diff": "node scripts/diff-rust-items.mjs",
+        "items:import": "node scripts/optimize-diff-items.mjs",
+        "items:update": "node scripts/diff-rust-items.mjs && node scripts/optimize-diff-items.mjs"
     },
     "dependencies": {
         "@astrojs/node": "10.1.0",

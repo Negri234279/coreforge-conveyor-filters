@@ -6,7 +6,8 @@
 // "Item" = the base name shared by a `<name>.json` + `<name>.png` pair. An item
 // is reported when:
 //   - new     : the .json exists in Staging but not in the live client
-//   - changed : the .json exists in both but its (normalized) content differs
+//   - changed : the .json exists in both but the (normalized) JSON content differs
+//               OR the .png bytes differ (icon re-render / re-skin with same JSON)
 // Items present only in the live client are reported as "removed" but nothing is
 // copied for them (there is no Staging source to copy).
 //
@@ -49,12 +50,15 @@ function parseArgs(args) {
             opts.dryRun = true
             continue
         }
+
         const key = Object.keys(flags).find((f) => a.startsWith(f))
         if (key) {
             flags[key](a.slice(key.length))
             continue
         }
+
         console.error(`Unknown argument: ${a}`)
+
         exit(1)
     }
 
@@ -64,6 +68,7 @@ function parseArgs(args) {
 async function exists(path) {
     try {
         await access(path)
+
         return true
     } catch {
         return false
@@ -74,25 +79,35 @@ async function exists(path) {
 async function readJsonIndex(dir) {
     const entries = await readdir(dir)
     const index = new Set()
+
     for (const entry of entries) {
         const { name, ext } = parse(entry)
-        if (ext.toLowerCase() === '.json') index.add(name)
+
+        if (ext.toLowerCase() === '.json') {
+            index.add(name)
+        }
     }
+
     return index
 }
 
 /** Stable string form of a JSON file so key order / whitespace never counts as a diff. */
 function stableStringify(value) {
-    if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`
+    if (Array.isArray(value)) {
+        return `[${value.map(stableStringify).join(',')}]`
+    }
+
     if (value && typeof value === 'object') {
         const keys = Object.keys(value).sort()
         return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`
     }
+
     return JSON.stringify(value)
 }
 
 async function normalizedJson(path) {
     const raw = await readFile(path, 'utf8')
+
     try {
         return stableStringify(JSON.parse(raw))
     } catch {
@@ -101,15 +116,33 @@ async function normalizedJson(path) {
     }
 }
 
+/** True when the two `<base>.png` files differ in bytes (missing on one side counts as a diff). */
+async function pngDiffers(base, stagingDir, liveDir) {
+    const stagingPng = join(stagingDir, `${base}.png`)
+    const livePng = join(liveDir, `${base}.png`)
+    const [hasStaging, hasLive] = await Promise.all([exists(stagingPng), exists(livePng)])
+
+    if (!hasStaging && !hasLive) return false
+    if (hasStaging !== hasLive) return true
+
+    const [a, b] = await Promise.all([readFile(stagingPng), readFile(livePng)])
+
+    return !a.equals(b)
+}
+
 /** Copy `<base>.json` and (if present) `<base>.png` from srcDir into destDir. */
 async function copyItem(base, srcDir, destDir, dryRun) {
     const copied = []
+
     for (const ext of ['.json', '.png']) {
         const src = join(srcDir, `${base}${ext}`)
+
         if (!(await exists(src))) continue
         if (!dryRun) await copyFile(src, join(destDir, `${base}${ext}`))
+
         copied.push(`${base}${ext}`)
     }
+
     return copied
 }
 
@@ -145,15 +178,22 @@ async function main() {
             newItems.push(base)
             continue
         }
-        const [stagingJson, liveJson] = await Promise.all([
+
+        const [stagingJson, liveJson, imageChanged] = await Promise.all([
             normalizedJson(join(opts.staging, `${base}.json`)),
             normalizedJson(join(opts.live, `${base}.json`)),
+            pngDiffers(base, opts.staging, opts.live),
         ])
-        if (stagingJson !== liveJson) changedItems.push(base)
+
+        if (stagingJson !== liveJson || imageChanged) {
+            changedItems.push(base)
+        }
     }
 
     for (const base of liveIndex) {
-        if (!stagingIndex.has(base)) removedItems.push(base)
+        if (!stagingIndex.has(base)) {
+            removedItems.push(base)
+        }
     }
 
     newItems.sort()
@@ -163,16 +203,23 @@ async function main() {
     // Fresh output dirs so stale results never linger between runs.
     const newDir = join(opts.out, 'new')
     const changedDir = join(opts.out, 'changed')
+
     if (!opts.dryRun) {
         await rm(opts.out, { recursive: true, force: true })
+
         await Promise.all([
             mkdir(newDir, { recursive: true }),
             mkdir(changedDir, { recursive: true }),
         ])
     }
 
-    for (const base of newItems) await copyItem(base, opts.staging, newDir, opts.dryRun)
-    for (const base of changedItems) await copyItem(base, opts.staging, changedDir, opts.dryRun)
+    for (const base of newItems) {
+        await copyItem(base, opts.staging, newDir, opts.dryRun)
+    }
+    
+    for (const base of changedItems) {
+        await copyItem(base, opts.staging, changedDir, opts.dryRun)
+    }
 
     const summary = {
         generatedAt: new Date().toISOString(),
@@ -199,7 +246,10 @@ async function main() {
     console.log(`new           : ${newItems.length}  -> ${resolve(newDir)}`)
     console.log(`changed       : ${changedItems.length}  -> ${resolve(changedDir)}`)
     console.log(`removed       : ${removedItems.length}  (not copied — no staging source)`)
-    if (!opts.dryRun) console.log(`\nsummary.json  : ${resolve(join(opts.out, 'summary.json'))}`)
+
+    if (!opts.dryRun) {
+        console.log(`\nsummary.json  : ${resolve(join(opts.out, 'summary.json'))}`)
+    }
 }
 
 try {
