@@ -38,8 +38,8 @@ function FilterRow({ filter }: { filter: Filter }) {
         setItemsModalOpen(true)
     }
     return (
-        <li class="flex items-center gap-3 rounded border border-slate-800 bg-slate-900/30 p-2">
-            <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-slate-800">
+        <li class="group flex items-center gap-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2 transition hover:border-amber-500/60 hover:shadow-[0_0_0_1px_rgba(245,158,11,0.2)]">
+            <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-slate-800/80">
                 <img
                     src={itemImage(filter.coverItemShortname)}
                     alt=""
@@ -295,7 +295,7 @@ export default function OrgCategoryDetail({ categoryId }: Props) {
             ) : (
                 <div class="space-y-6">
                     {detail.filters.length > 0 ? (
-                        <ul class="grid gap-3 sm:grid-cols-2">
+                        <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                             {detail.filters.map((f) => (
                                 <FilterRow key={f.id} filter={f} />
                             ))}
@@ -303,13 +303,13 @@ export default function OrgCategoryDetail({ categoryId }: Props) {
                     ) : null}
                     {detail.subcategories.map((sub) => (
                         <section key={sub.id}>
-                            <h2 class="font-mono text-[11px] font-semibold tracking-widest text-slate-400 uppercase">
+                            <h2 class="border-b border-slate-800 pb-2 font-mono text-[11px] tracking-widest text-slate-500 uppercase">
                                 {sub.name}
                             </h2>
                             {sub.filters.length === 0 ? (
                                 <p class="mt-2 text-xs text-slate-500">No filters.</p>
                             ) : (
-                                <ul class="mt-2 grid gap-3 sm:grid-cols-2">
+                                <ul class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                     {sub.filters.map((f) => (
                                         <FilterRow key={f.id} filter={f} />
                                     ))}

@@ -80,8 +80,8 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
     }
 
     return (
-        <li class="flex items-center gap-3 rounded border border-slate-800 bg-slate-900/30 p-2">
-            <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-slate-800">
+        <li class="group flex items-center gap-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2 transition hover:border-amber-500/60 hover:shadow-[0_0_0_1px_rgba(245,158,11,0.2)]">
+            <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-slate-800/80">
                 <img
                     src={itemImage(filter.coverItemShortname)}
                     alt=""
@@ -541,7 +541,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                     setAddCatName('')
                                     setAddCatOpen(true)
                                 }}
-                                class="rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400"
+                                class="rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400"
                             >
                                 + Category
                             </button>
@@ -683,7 +683,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                 return (
                                     <section key={cat.id} class="mb-4">
                                         <div class="mb-3 flex items-center justify-between border-b border-slate-800 pb-3">
-                                            <div class="flex items-center gap-2">
+                                            <div class="flex items-center gap-3">
                                                 <button
                                                     type="button"
                                                     onClick={() => toggleCatCollapsed(cat.id)}
@@ -707,19 +707,24 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                         <polyline points="6 9 12 15 18 9" />
                                                     </svg>
                                                 </button>
-                                                <div class="flex items-center gap-2">
-                                                    <h2
-                                                        class="text-lg text-slate-100"
-                                                        style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
-                                                    >
-                                                        {cat.name}
-                                                    </h2>
-                                                    {catCollapsed && catFilterCount > 0 ? (
-                                                        <span class="font-mono text-[11px] text-slate-600">
-                                                            {catFilterCount} filter
-                                                            {catFilterCount !== 1 ? 's' : ''}
-                                                        </span>
-                                                    ) : null}
+                                                <div>
+                                                    <div class="mb-0.5 font-mono text-[11px] tracking-widest text-amber-500/40 uppercase">
+                                                        Category
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <h2
+                                                            class="text-xl text-slate-100"
+                                                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
+                                                        >
+                                                            {cat.name}
+                                                        </h2>
+                                                        {catCollapsed && catFilterCount > 0 ? (
+                                                            <span class="font-mono text-[11px] text-slate-600">
+                                                                {catFilterCount} filter
+                                                                {catFilterCount !== 1 ? 's' : ''}
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
                                                 </div>
                                             </div>
                                             {canEdit ? (
@@ -798,7 +803,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                     </p>
                                                 ) : null}
                                                 {cat.filters.length > 0 ? (
-                                                    <ul class="grid gap-3 sm:grid-cols-3">
+                                                    <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                                         {cat.filters.map((f) => (
                                                             <FilterRow
                                                                 key={f.id}
@@ -812,8 +817,8 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                 ) : null}
                                                 {cat.subcategories.map((sub) => (
                                                     <div key={sub.id} class="mt-6">
-                                                        <div class="mb-2 flex items-center justify-between border-b border-slate-800/70 pb-2">
-                                                            <h3 class="font-mono text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                                                        <div class="mb-2 flex items-center justify-between border-b border-slate-800 pb-2">
+                                                            <h3 class="font-mono text-[11px] tracking-widest text-slate-500 uppercase">
                                                                 {sub.name}
                                                             </h3>
                                                             {canEdit ? (
@@ -895,7 +900,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                 No filters.
                                                             </p>
                                                         ) : (
-                                                            <ul class="grid gap-3 sm:grid-cols-3">
+                                                            <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                                                 {sub.filters.map((f) => (
                                                                     <FilterRow
                                                                         key={f.id}
