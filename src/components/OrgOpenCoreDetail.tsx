@@ -12,13 +12,13 @@ import {
 } from '../store/org'
 import { getCurrentUser } from '../store/auth'
 import { deploymentTotals } from '../store/filters'
-import { itemImage, getItem } from '../store/items'
-import { boxImage } from '../store/boxes'
-import { buildConveyorJson } from '../lib/conveyor'
-import { copyToClipboard } from '../lib/clipboard'
+import { getItem } from '../store/items'
 import { showToast } from './CopyToast'
 import OpenCoreBoxesView from './OpenCoreBoxesView'
 import DeploymentTotals from './DeploymentTotals'
+import FilterCardBase, { type FilterCardAction } from './FilterCardBase'
+import ConfirmDeleteModal from './ConfirmDeleteModal'
+import NameFormModal from './NameFormModal'
 import OpenCoreViewer from './openCore3D/OpenCoreViewer'
 import TrackedButton from './TrackedButton'
 import type { Category, Filter, OrgOpenCoreDetail as Detail } from '../types'
@@ -37,36 +37,15 @@ interface FilterRowProps {
 }
 
 function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
-    const [menuOpen, setMenuOpen] = useState(false)
-    const [itemsModalOpen, setItemsModalOpen] = useState(false)
     const [confirmDelete, setConfirmDelete] = useState(false)
     const [deleting, setDeleting] = useState(false)
-    const menuRef = useRef<HTMLDivElement | null>(null)
-
-    useEffect(() => {
-        function onDoc(e: MouseEvent) {
-            if (!menuRef.current) return
-            if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false)
-        }
-        document.addEventListener('mousedown', onDoc)
-        return () => document.removeEventListener('mousedown', onDoc)
-    }, [])
-
-    async function onCopy() {
-        const ok = await copyToClipboard(JSON.stringify(buildConveyorJson(filter.items)))
-        showToast(ok ? 'Copied · Shift in-game' : 'Copy failed')
-    }
-
-    function onViewItems() {
-        setMenuOpen(false)
-        setItemsModalOpen(true)
-    }
 
     function onEditFilter() {
         window.location.href = `/org/opencore/${openCoreId}/filter/edit?filterId=${encodeURIComponent(filter.id)}`
     }
 
     async function onDeleteFilter() {
+        if (deleting) return
         setDeleting(true)
         try {
             await deleteOrgFilter(filter.id)
@@ -79,217 +58,25 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
         }
     }
 
+    const actions: FilterCardAction[] = canEdit
+        ? [
+              { label: 'Edit', onClick: onEditFilter },
+              { label: 'Delete', tone: 'danger', onClick: () => setConfirmDelete(true) },
+          ]
+        : []
+
     return (
-        <li class="group flex items-center gap-3 rounded-md border border-slate-700/80 bg-slate-900/40 p-2 transition hover:border-amber-500/60 hover:shadow-[0_0_0_1px_rgba(245,158,11,0.2)]">
-            <div class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-slate-800/80">
-                <img
-                    src={itemImage(filter.coverItemShortname)}
-                    alt=""
-                    class="h-full w-full object-contain"
-                    loading="lazy"
-                />
-                {filter.boxImagePath ? (
-                    <img
-                        src={boxImage(filter.boxImagePath)}
-                        alt=""
-                        class="absolute right-0.5 bottom-0.5 h-7 w-7 rounded border border-slate-800 bg-slate-900/90 object-contain p-0.5"
-                        loading="lazy"
-                    />
-                ) : null}
-            </div>
-            <div class="flex min-w-0 flex-1 flex-col">
-                <span class="truncate text-sm font-semibold tracking-wide text-slate-100 uppercase">
-                    {filter.name}
-                </span>
-                <span class="truncate text-xs text-slate-500">
-                    {filter.items.length} {filter.items.length === 1 ? 'item' : 'items'}
-                    {' · '}
-                    <span title="Boxes / Conveyors / Storage adaptors">
-                        {filter.boxCount ?? 1}/{filter.conveyorCount ?? 1}/
-                        {filter.storageAdaptorCount ?? 1}
-                    </span>
-                </span>
-            </div>
-            <button
-                type="button"
-                onClick={onCopy}
-                class="rounded p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                aria-label="Copy conveyor JSON"
-                title="Copy conveyor JSON"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="h-4 w-4"
-                >
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-            </button>
-
-            <div class="relative" ref={menuRef}>
-                <button
-                    type="button"
-                    onClick={() => setMenuOpen((v) => !v)}
-                    class="rounded p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                    aria-label="More actions"
-                    aria-haspopup="menu"
-                    aria-expanded={menuOpen}
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        class="h-4 w-4"
-                    >
-                        <circle cx="12" cy="5" r="1.7" />
-                        <circle cx="12" cy="12" r="1.7" />
-                        <circle cx="12" cy="19" r="1.7" />
-                    </svg>
-                </button>
-                {menuOpen ? (
-                    <div
-                        role="menu"
-                        class="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded border border-slate-800 bg-[#0d1117] shadow-xl"
-                    >
-                        <button
-                            type="button"
-                            onClick={onViewItems}
-                            class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
-                        >
-                            View items
-                        </button>
-                        {canEdit ? (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={onEditFilter}
-                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setMenuOpen(false)
-                                        setConfirmDelete(true)
-                                    }}
-                                    class="block w-full px-3 py-2 text-left text-sm text-rose-400 transition-colors hover:bg-slate-800"
-                                >
-                                    Delete
-                                </button>
-                            </>
-                        ) : null}
-                    </div>
-                ) : null}
-            </div>
-
-            {itemsModalOpen ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4">
-                    <div
-                        class="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-lg border border-slate-800 shadow-xl"
-                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
-                    >
-                        <div class="border-b border-slate-800 px-4 py-3 sm:px-6 sm:py-4">
-                            <h2
-                                class="text-2xl text-slate-100"
-                                style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
-                            >
-                                {filter.name}
-                            </h2>
-                            <p class="mt-1 text-xs text-slate-400">
-                                {filter.items.length} {filter.items.length === 1 ? 'item' : 'items'}
-                            </p>
-                        </div>
-                        <div class="flex-1 overflow-y-auto p-2 sm:p-3">
-                            {filter.items.length === 0 ? (
-                                <p class="text-sm text-slate-400">No items in this filter.</p>
-                            ) : (
-                                <div class="grid grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-5 lg:grid-cols-6">
-                                    {filter.items.map((item, idx) => {
-                                        const itemData = getItem(item.shortname)
-                                        const itemName = itemData?.name ?? item.shortname
-                                        return (
-                                            <div
-                                                key={idx}
-                                                class="flex flex-col items-center gap-1 rounded border border-slate-800/50 bg-slate-800/30 p-1.5 text-center sm:p-2"
-                                            >
-                                                <img
-                                                    src={itemImage(item.shortname)}
-                                                    alt={itemName}
-                                                    class="h-10 w-10 rounded bg-slate-800 object-contain sm:h-12 sm:w-12"
-                                                    loading="lazy"
-                                                />
-                                                <div class="line-clamp-2 text-[9px] font-semibold text-slate-200 sm:text-[11px]">
-                                                    {itemName}
-                                                </div>
-                                                <div class="w-full text-[8px] text-slate-400 sm:text-[9px]">
-                                                    <div class="flex justify-between gap-0.5 sm:gap-1">
-                                                        <span title="Max">M:{item.max}</span>
-                                                        <span title="Buffer">B:{item.buffer}</span>
-                                                        <span title="Min">m:{item.min}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                        <div class="border-t border-slate-800 px-4 py-2 sm:px-6 sm:py-3">
-                            <button
-                                type="button"
-                                onClick={() => setItemsModalOpen(false)}
-                                class="w-full rounded bg-amber-500 px-3 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : null}
-
-            {confirmDelete ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                    <div
-                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
-                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
-                    >
-                        <h2
-                            class="text-xl text-slate-100"
-                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
-                        >
-                            Delete filter?
-                        </h2>
-                        <p class="mt-2 text-sm text-slate-400">
-                            "{filter.name}" will be permanently removed.
-                        </p>
-                        <div class="mt-4 flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setConfirmDelete(false)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={onDeleteFilter}
-                                disabled={deleting}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold tracking-wide text-slate-50 uppercase transition-colors hover:bg-rose-500 disabled:opacity-60"
-                            >
-                                {deleting ? 'Deleting…' : 'Delete'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : null}
-        </li>
+        <>
+            <FilterCardBase filter={filter} actions={actions} />
+            <ConfirmDeleteModal
+                open={confirmDelete}
+                title="Delete filter"
+                message={`"${filter.name}" will be permanently removed.`}
+                confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+                onCancel={() => setConfirmDelete(false)}
+                onConfirm={onDeleteFilter}
+            />
+        </>
     )
 }
 
@@ -330,13 +117,11 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
 
     // Add Category modal
     const [addCatOpen, setAddCatOpen] = useState(false)
-    const [addCatName, setAddCatName] = useState('')
     const [addCatBusy, setAddCatBusy] = useState(false)
 
     // Add Subcategory modal
     const [addSubOpen, setAddSubOpen] = useState(false)
     const [addSubCatId, setAddSubCatId] = useState('')
-    const [addSubName, setAddSubName] = useState('')
     const [addSubBusy, setAddSubBusy] = useState(false)
 
     // Category action menu
@@ -414,13 +199,11 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
         }
     }
 
-    async function onAddCategory() {
-        if (!addCatName.trim()) return
+    async function onAddCategory({ name }: { name: string }) {
         setAddCatBusy(true)
         try {
-            await createOrgCategory(openCoreId, addCatName.trim())
+            await createOrgCategory(openCoreId, name)
             setAddCatOpen(false)
-            setAddCatName('')
             loadDetail()
         } catch (e) {
             showToast(e instanceof Error ? e.message : 'Failed to create category')
@@ -429,13 +212,11 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
         }
     }
 
-    async function onAddSubcategory() {
-        if (!addSubName.trim()) return
+    async function onAddSubcategory({ name }: { name: string }) {
         setAddSubBusy(true)
         try {
-            await createOrgSubcategory(addSubCatId, addSubName.trim())
+            await createOrgSubcategory(addSubCatId, name)
             setAddSubOpen(false)
-            setAddSubName('')
             loadDetail()
         } catch (e) {
             showToast(e instanceof Error ? e.message : 'Failed to create subcategory')
@@ -537,10 +318,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                         {canEdit ? (
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setAddCatName('')
-                                    setAddCatOpen(true)
-                                }}
+                                onClick={() => setAddCatOpen(true)}
                                 class="rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-amber-500/40 hover:text-amber-400"
                             >
                                 + Category
@@ -769,7 +547,6 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                 onClick={() => {
                                                                     setCatMenuOpen(null)
                                                                     setAddSubCatId(cat.id)
-                                                                    setAddSubName('')
                                                                     setAddSubOpen(true)
                                                                 }}
                                                                 class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
@@ -803,7 +580,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                     </p>
                                                 ) : null}
                                                 {cat.filters.length > 0 ? (
-                                                    <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                                         {cat.filters.map((f) => (
                                                             <FilterRow
                                                                 key={f.id}
@@ -813,7 +590,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                 onDeleted={loadDetail}
                                                             />
                                                         ))}
-                                                    </ul>
+                                                    </div>
                                                 ) : null}
                                                 {cat.subcategories.map((sub) => (
                                                     <div key={sub.id} class="mt-6">
@@ -900,7 +677,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                 No filters.
                                                             </p>
                                                         ) : (
-                                                            <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                                            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                                                 {sub.filters.map((f) => (
                                                                     <FilterRow
                                                                         key={f.id}
@@ -910,7 +687,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                         onDeleted={loadDetail}
                                                                     />
                                                                 ))}
-                                                            </ul>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 ))}
@@ -931,209 +708,61 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                 <OpenCoreBoxesView categories={detail.categories} />
             )}
 
-            {/* Add Category modal */}
-            {addCatOpen ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                    <div
-                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
-                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
-                    >
-                        <h2
-                            class="text-xl text-slate-100"
-                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
-                        >
-                            New Category
-                        </h2>
-                        <input
-                            type="text"
-                            value={addCatName}
-                            onInput={(e) => setAddCatName((e.target as HTMLInputElement).value)}
-                            placeholder="Category name"
-                            class="mt-3 w-full rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 transition-colors outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') void onAddCategory()
-                            }}
-                            autoFocus
-                        />
-                        <div class="mt-4 flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setAddCatOpen(false)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={onAddCategory}
-                                disabled={addCatBusy || !addCatName.trim()}
-                                class="rounded bg-amber-500 px-4 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:opacity-60"
-                            >
-                                {addCatBusy ? 'Creating…' : 'Create'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : null}
+            {/* Create modals */}
+            <NameFormModal
+                open={addCatOpen}
+                eyebrow="New"
+                title="Category"
+                placeholder="e.g. Metal, Components"
+                submitLabel={addCatBusy ? 'Creating…' : 'Create'}
+                busy={addCatBusy}
+                onCancel={() => setAddCatOpen(false)}
+                onSubmit={onAddCategory}
+            />
+            <NameFormModal
+                open={addSubOpen}
+                eyebrow="New"
+                title="Subcategory"
+                placeholder="e.g. ROW 1, Common"
+                submitLabel={addSubBusy ? 'Creating…' : 'Create'}
+                busy={addSubBusy}
+                onCancel={() => setAddSubOpen(false)}
+                onSubmit={onAddSubcategory}
+            />
 
-            {/* Add Subcategory modal */}
-            {addSubOpen ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                    <div
-                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
-                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
-                    >
-                        <h2
-                            class="text-xl text-slate-100"
-                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
-                        >
-                            New Subcategory
-                        </h2>
-                        <input
-                            type="text"
-                            value={addSubName}
-                            onInput={(e) => setAddSubName((e.target as HTMLInputElement).value)}
-                            placeholder="Subcategory name"
-                            class="mt-3 w-full rounded border border-slate-800 bg-slate-800 px-3 py-2 text-sm text-slate-100 transition-colors outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20"
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') void onAddSubcategory()
-                            }}
-                            autoFocus
-                        />
-                        <div class="mt-4 flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setAddSubOpen(false)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={onAddSubcategory}
-                                disabled={addSubBusy || !addSubName.trim()}
-                                class="rounded bg-amber-500 px-4 py-2 text-sm font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:opacity-60"
-                            >
-                                {addSubBusy ? 'Creating…' : 'Create'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : null}
-
-            {/* Confirm delete category */}
-            {confirmDeleteCat ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                    <div
-                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
-                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
-                    >
-                        <h2
-                            class="text-xl text-slate-100"
-                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
-                        >
-                            Delete category?
-                        </h2>
-                        <p class="mt-2 text-sm text-slate-400">
-                            "{confirmDeleteCat.name}" and all its filters will be permanently
-                            removed.
-                        </p>
-                        <div class="mt-4 flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setConfirmDeleteCat(null)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={onDeleteCat}
-                                disabled={deletingCat}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold tracking-wide text-slate-50 uppercase transition-colors hover:bg-rose-500 disabled:opacity-60"
-                            >
-                                {deletingCat ? 'Deleting…' : 'Delete'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : null}
-
-            {/* Confirm delete subcategory */}
-            {confirmDeleteSub ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                    <div
-                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
-                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
-                    >
-                        <h2
-                            class="text-xl text-slate-100"
-                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
-                        >
-                            Delete subcategory?
-                        </h2>
-                        <p class="mt-2 text-sm text-slate-400">
-                            "{confirmDeleteSub.name}" will be removed. Filters in it will be moved
-                            up to the parent category.
-                        </p>
-                        <div class="mt-4 flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setConfirmDeleteSub(null)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={onDeleteSub}
-                                disabled={deletingSub}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold tracking-wide text-slate-50 uppercase transition-colors hover:bg-rose-500 disabled:opacity-60"
-                            >
-                                {deletingSub ? 'Deleting…' : 'Delete'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : null}
-
-            {/* Confirm delete clan Open Core */}
-            {confirmDeleteOc ? (
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                    <div
-                        class="w-full max-w-sm rounded-lg border border-slate-800 p-6 shadow-xl"
-                        style="background:rgba(15,23,42,0.97); border-left:2px solid rgba(245,158,11,0.32)"
-                    >
-                        <h2
-                            class="text-xl text-slate-100"
-                            style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.05em"
-                        >
-                            Delete from clan?
-                        </h2>
-                        <p class="mt-2 text-sm text-slate-400">
-                            "{detail.name}" will be permanently removed from the clan. This does not
-                            affect anyone's personal copies.
-                        </p>
-                        <div class="mt-4 flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setConfirmDeleteOc(false)}
-                                class="rounded px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-400"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={onDeleteOc}
-                                disabled={deletingOc}
-                                class="rounded bg-rose-600 px-4 py-2 text-sm font-bold tracking-wide text-slate-50 uppercase transition-colors hover:bg-rose-500 disabled:opacity-60"
-                            >
-                                {deletingOc ? 'Deleting…' : 'Delete'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : null}
+            {/* Confirm delete modals */}
+            <ConfirmDeleteModal
+                open={!!confirmDeleteCat}
+                title="Delete category"
+                message={
+                    confirmDeleteCat
+                        ? `"${confirmDeleteCat.name}" and all its filters will be permanently removed.`
+                        : ''
+                }
+                confirmLabel={deletingCat ? 'Deleting…' : 'Delete'}
+                onCancel={() => setConfirmDeleteCat(null)}
+                onConfirm={onDeleteCat}
+            />
+            <ConfirmDeleteModal
+                open={!!confirmDeleteSub}
+                title="Delete subcategory"
+                message={
+                    confirmDeleteSub
+                        ? `"${confirmDeleteSub.name}" will be removed. Filters in it will be moved up to the parent category.`
+                        : ''
+                }
+                confirmLabel={deletingSub ? 'Deleting…' : 'Delete'}
+                onCancel={() => setConfirmDeleteSub(null)}
+                onConfirm={onDeleteSub}
+            />
+            <ConfirmDeleteModal
+                open={confirmDeleteOc}
+                title="Delete from clan"
+                message={`"${detail.name}" will be permanently removed from the clan. This does not affect anyone's personal copies.`}
+                confirmLabel={deletingOc ? 'Deleting…' : 'Delete'}
+                onCancel={() => setConfirmDeleteOc(false)}
+                onConfirm={onDeleteOc}
+            />
         </div>
     )
 }
