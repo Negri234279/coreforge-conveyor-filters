@@ -244,6 +244,14 @@ export async function deleteOrgFilter(filterId: string): Promise<void> {
     await managePost('del-filter', { filterId })
 }
 
+export async function reorderOrgFilters(
+    categoryId: string,
+    subcategoryId: string | null,
+    orderedIds: string[],
+): Promise<void> {
+    await managePost('reorder-filters', { categoryId, subcategoryId, orderedIds })
+}
+
 export async function shareOpenCoreWithClan(
     openCoreId: string,
 ): Promise<{ id: string; name: string }> {
