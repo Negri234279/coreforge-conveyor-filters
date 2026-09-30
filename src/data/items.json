@@ -4180,7 +4180,7 @@
         "itemId": -1679267738,
         "shortname": "wall.graveyard.fence",
         "name": "Graveyard Fence",
-        "category": "Misc",
+        "category": "Construction",
         "imagePath": "wall.graveyard.fence"
     },
     {
@@ -5339,7 +5339,7 @@
         "id": 673,
         "itemId": -1579932985,
         "shortname": "horsedung",
-        "name": "Horse Dung",
+        "name": "Dung",
         "category": "Resources",
         "imagePath": "horsedung"
     },
@@ -6494,5 +6494,549 @@
         "name": "Medical Honey Bandage",
         "category": "Medical",
         "image_path": "medical.honey.bandage"
+    },
+    {
+        "id": 820,
+        "itemId": -219005627,
+        "shortname": "barricade.sandbags.half",
+        "name": "#barricade.sandbags.half",
+        "category": "Construction",
+        "imagePath": "barricade.sandbags.half"
+    },
+    {
+        "id": 821,
+        "itemId": -1088645302,
+        "shortname": "barricade.sandbags.pillbox",
+        "name": "#barricade.sandbags.pillbox",
+        "category": "Construction",
+        "imagePath": "barricade.sandbags.pillbox"
+    },
+    {
+        "id": 822,
+        "itemId": 2141654944,
+        "shortname": "barricade.sandbags.three.quarter",
+        "name": "#barricade.sandbags.three.quarter",
+        "category": "Construction",
+        "imagePath": "barricade.sandbags.three.quarter"
+    },
+    {
+        "id": 823,
+        "itemId": 718346230,
+        "shortname": "beefmeat.cooked",
+        "name": "Cooked Beef",
+        "category": "Food",
+        "imagePath": "beefmeat.cooked"
+    },
+    {
+        "id": 824,
+        "itemId": -201824959,
+        "shortname": "beefmeat",
+        "name": "Raw Beef",
+        "category": "Food",
+        "imagePath": "beefmeat"
+    },
+    {
+        "id": 825,
+        "itemId": 1412100395,
+        "shortname": "beefmeat.spoiled",
+        "name": "Spoiled Beef",
+        "category": "Food",
+        "imagePath": "beefmeat.spoiled"
+    },
+    {
+        "id": 826,
+        "itemId": -909588488,
+        "shortname": "bread.brioche.loaf",
+        "name": "Brioche Bread",
+        "category": "Food",
+        "imagePath": "bread.brioche.loaf"
+    },
+    {
+        "id": 827,
+        "itemId": 1185218972,
+        "shortname": "cream",
+        "name": "Cream",
+        "category": "Food",
+        "imagePath": "cream"
+    },
+    {
+        "id": 828,
+        "itemId": -1661343913,
+        "shortname": "generator.biofuel",
+        "name": "Biofuel Generator",
+        "category": "Items",
+        "imagePath": "generator.biofuel"
+    },
+    {
+        "id": 830,
+        "itemId": -132349657,
+        "shortname": "healingtea.pure.creamy",
+        "name": "Creamy Pure Healing Tea",
+        "category": "Food",
+        "imagePath": "healingtea.pure.creamy"
+    },
+    {
+        "id": 831,
+        "itemId": -1644292642,
+        "shortname": "healingtea.pure.milky",
+        "name": "Milky Pure Healing Tea",
+        "category": "Food",
+        "imagePath": "healingtea.pure.milky"
+    },
+    {
+        "id": 832,
+        "itemId": -1244746477,
+        "shortname": "maxhealthtea.pure.creamy",
+        "name": "Creamy Pure Max Health Tea",
+        "category": "Food",
+        "imagePath": "maxhealthtea.pure.creamy"
+    },
+    {
+        "id": 833,
+        "itemId": -1388103748,
+        "shortname": "maxhealthtea.pure.milky",
+        "name": "Milky Pure Max Health Tea",
+        "category": "Food",
+        "imagePath": "maxhealthtea.pure.milky"
+    },
+    {
+        "id": 834,
+        "itemId": 325350919,
+        "shortname": "milk",
+        "name": "Milk",
+        "category": "Food",
+        "imagePath": "milk"
+    },
+    {
+        "id": 835,
+        "itemId": -319133397,
+        "shortname": "muttonmeat.cooked",
+        "name": "Cooked Mutton",
+        "category": "Food",
+        "imagePath": "muttonmeat.cooked"
+    },
+    {
+        "id": 836,
+        "itemId": -1957595450,
+        "shortname": "muttonmeat",
+        "name": "Raw Mutton",
+        "category": "Food",
+        "imagePath": "muttonmeat"
+    },
+    {
+        "id": 837,
+        "itemId": 1751463672,
+        "shortname": "muttonmeat.spoiled",
+        "name": "Spoiled Mutton",
+        "category": "Food",
+        "imagePath": "muttonmeat.spoiled"
+    },
+    {
+        "id": 838,
+        "itemId": -744942541,
+        "shortname": "oretea.pure.creamy",
+        "name": "Creamy Pure Ore Tea",
+        "category": "Food",
+        "imagePath": "oretea.pure.creamy"
+    },
+    {
+        "id": 839,
+        "itemId": 1243083208,
+        "shortname": "oretea.pure.milky",
+        "name": "Milky Pure Ore Tea",
+        "category": "Food",
+        "imagePath": "oretea.pure.milky"
+    },
+    {
+        "id": 840,
+        "itemId": -1846744758,
+        "shortname": "pie.apple.rich",
+        "name": "Rich Apple Pie",
+        "category": "Food",
+        "imagePath": "pie.apple.rich"
+    },
+    {
+        "id": 841,
+        "itemId": 1883513936,
+        "shortname": "pie.bear.rich",
+        "name": "Rich Bear Pie",
+        "category": "Food",
+        "imagePath": "pie.bear.rich"
+    },
+    {
+        "id": 842,
+        "itemId": 782269436,
+        "shortname": "pie.beef",
+        "name": "Beef Pie",
+        "category": "Food",
+        "imagePath": "pie.beef"
+    },
+    {
+        "id": 843,
+        "itemId": -867055736,
+        "shortname": "pie.beef.rich",
+        "name": "Rich Beef Pie",
+        "category": "Food",
+        "imagePath": "pie.beef.rich"
+    },
+    {
+        "id": 844,
+        "itemId": 1469787676,
+        "shortname": "pie.bigcat.rich",
+        "name": "Rich Big Cat Pie",
+        "category": "Food",
+        "imagePath": "pie.bigcat.rich"
+    },
+    {
+        "id": 845,
+        "itemId": 2006264797,
+        "shortname": "pie.chicken.rich",
+        "name": "Rich Chicken Pie",
+        "category": "Food",
+        "imagePath": "pie.chicken.rich"
+    },
+    {
+        "id": 846,
+        "itemId": 1427291780,
+        "shortname": "pie.fish.rich",
+        "name": "Rich Fish Pie",
+        "category": "Food",
+        "imagePath": "pie.fish.rich"
+    },
+    {
+        "id": 847,
+        "itemId": -1188678681,
+        "shortname": "pie.hunters.rich",
+        "name": "Rich Hunters Pie",
+        "category": "Food",
+        "imagePath": "pie.hunters.rich"
+    },
+    {
+        "id": 848,
+        "itemId": 939198535,
+        "shortname": "pie.mutton",
+        "name": "Shepherds Pie",
+        "category": "Food",
+        "imagePath": "pie.mutton"
+    },
+    {
+        "id": 849,
+        "itemId": 1468691829,
+        "shortname": "pie.mutton.rich",
+        "name": "Rich Shepherds Pie",
+        "category": "Food",
+        "imagePath": "pie.mutton.rich"
+    },
+    {
+        "id": 850,
+        "itemId": 1988640176,
+        "shortname": "pie.pork.rich",
+        "name": "Rich Pork Pie",
+        "category": "Food",
+        "imagePath": "pie.pork.rich"
+    },
+    {
+        "id": 851,
+        "itemId": 1364112542,
+        "shortname": "pie.pumpkin.rich",
+        "name": "Rich Pumpkin Pie",
+        "category": "Food",
+        "imagePath": "pie.pumpkin.rich"
+    },
+    {
+        "id": 852,
+        "itemId": 1527700610,
+        "shortname": "purecoolingtea.creamy",
+        "name": "Creamy Pure Cooling Tea",
+        "category": "Food",
+        "imagePath": "purecoolingtea.creamy"
+    },
+    {
+        "id": 853,
+        "itemId": 1738714421,
+        "shortname": "purecoolingtea.milky",
+        "name": "Milky Pure Cooling Tea",
+        "category": "Food",
+        "imagePath": "purecoolingtea.milky"
+    },
+    {
+        "id": 854,
+        "itemId": -1661676046,
+        "shortname": "pureharvestingtea.creamy",
+        "name": "Creamy Pure Harvesting Tea",
+        "category": "Food",
+        "imagePath": "pureharvestingtea.creamy"
+    },
+    {
+        "id": 855,
+        "itemId": 789540413,
+        "shortname": "pureharvestingtea.milky",
+        "name": "Milky Pure Harvesting Tea",
+        "category": "Food",
+        "imagePath": "pureharvestingtea.milky"
+    },
+    {
+        "id": 856,
+        "itemId": 556232090,
+        "shortname": "purewarmingtea.creamy",
+        "name": "Creamy Pure Warming Tea",
+        "category": "Food",
+        "imagePath": "purewarmingtea.creamy"
+    },
+    {
+        "id": 857,
+        "itemId": 91167975,
+        "shortname": "purewarmingtea.milky",
+        "name": "Milky Pure Warming Tea",
+        "category": "Food",
+        "imagePath": "purewarmingtea.milky"
+    },
+    {
+        "id": 858,
+        "itemId": -1882497808,
+        "shortname": "radiationresisttea.pure.creamy",
+        "name": "Creamy Pure Anti-Rad Tea",
+        "category": "Food",
+        "imagePath": "radiationresisttea.pure.creamy"
+    },
+    {
+        "id": 859,
+        "itemId": -1341272471,
+        "shortname": "radiationresisttea.pure.milky",
+        "name": "Milky Pure Anti-Rad Tea",
+        "category": "Food",
+        "imagePath": "radiationresisttea.pure.milky"
+    },
+    {
+        "id": 860,
+        "itemId": 1519395656,
+        "shortname": "scraptea.pure.creamy",
+        "name": "Creamy Pure Scrap Tea",
+        "category": "Food",
+        "imagePath": "scraptea.pure.creamy"
+    },
+    {
+        "id": 861,
+        "itemId": -1057052157,
+        "shortname": "scraptea.pure.milky",
+        "name": "Milky Pure Scrap Tea",
+        "category": "Food",
+        "imagePath": "scraptea.pure.milky"
+    },
+    {
+        "id": 862,
+        "itemId": -1019639625,
+        "shortname": "skimmedmilk",
+        "name": "Skimmed Milk",
+        "category": "Food",
+        "imagePath": "skimmedmilk"
+    },
+    {
+        "id": 863,
+        "itemId": 1143376304,
+        "shortname": "wall.animal.fence.gate",
+        "name": "Animal Fence Gate",
+        "category": "Construction",
+        "imagePath": "wall.animal.fence.gate"
+    },
+    {
+        "id": 864,
+        "itemId": -1814195745,
+        "shortname": "wall.animal.fence",
+        "name": "Animal Fence",
+        "category": "Construction",
+        "imagePath": "wall.animal.fence"
+    },
+    {
+        "id": 865,
+        "itemId": -844428380,
+        "shortname": "woodtea.pure.creamy",
+        "name": "Creamy Pure Wood Tea",
+        "category": "Food",
+        "imagePath": "woodtea.pure.creamy"
+    },
+    {
+        "id": 866,
+        "itemId": 777041831,
+        "shortname": "woodtea.pure.milky",
+        "name": "Milky Pure Wood Tea",
+        "category": "Food",
+        "imagePath": "woodtea.pure.milky"
+    },
+    {
+        "id": 867,
+        "itemId": 204391867,
+        "shortname": "wool",
+        "name": "Wool",
+        "category": "Resources",
+        "imagePath": "wool"
+    },
+    {
+        "id": 868,
+        "itemId": 162882477,
+        "shortname": "50cal.mounted",
+        "name": "50 Cal Turret",
+        "category": "Weapon",
+        "imagePath": "50cal.mounted"
+    },
+    {
+        "id": 869,
+        "itemId": -1467876094,
+        "shortname": "50cal.mounted.left",
+        "name": "Dual 50 Cal Turret",
+        "category": "Weapon",
+        "imagePath": "50cal.mounted.left"
+    },
+    {
+        "id": 870,
+        "itemId": 1248383659,
+        "shortname": "50cal.mounted.right",
+        "name": "Dual 50 Cal Turret",
+        "category": "Weapon",
+        "imagePath": "50cal.mounted.right"
+    },
+    {
+        "id": 871,
+        "itemId": -1215166612,
+        "shortname": "barrelcostume",
+        "name": "A Barrel Costume",
+        "category": "Attire",
+        "imagePath": "barrelcostume"
+    },
+    {
+        "id": 872,
+        "itemId": 1189981699,
+        "shortname": "cratecostume",
+        "name": "Crate Costume",
+        "category": "Attire",
+        "imagePath": "cratecostume"
+    },
+    {
+        "id": 873,
+        "itemId": 607785075,
+        "shortname": "floor.ladder.hatch.toptier",
+        "name": "Armored Ladder Hatch",
+        "category": "Construction",
+        "imagePath": "floor.ladder.hatch.toptier"
+    },
+    {
+        "id": 874,
+        "itemId": -478923685,
+        "shortname": "floor.triangle.ladder.hatch.toptier",
+        "name": "Armored Triangle Ladder Hatch",
+        "category": "Construction",
+        "imagePath": "floor.triangle.ladder.hatch.toptier"
+    },
+    {
+        "id": 875,
+        "itemId": 999690781,
+        "shortname": "geiger.counter",
+        "name": "Geiger Counter",
+        "category": "Tool",
+        "imagePath": "geiger.counter"
+    },
+    {
+        "id": 876,
+        "itemId": -892718768,
+        "shortname": "prisonerhood",
+        "name": "Prisoner Hood",
+        "category": "Attire",
+        "imagePath": "prisonerhood"
+    },
+    {
+        "id": 877,
+        "itemId": -1770889433,
+        "shortname": "skylantern.skylantern.green",
+        "name": "Sky Lantern - Green",
+        "category": "Fun",
+        "imagePath": "skylantern.skylantern.green"
+    },
+    {
+        "id": 878,
+        "itemId": -1824770114,
+        "shortname": "skylantern.skylantern.orange",
+        "name": "Sky Lantern - Orange",
+        "category": "Fun",
+        "imagePath": "skylantern.skylantern.orange"
+    },
+    {
+        "id": 879,
+        "itemId": 831955134,
+        "shortname": "skylantern.skylantern.purple",
+        "name": "Sky Lantern - Purple",
+        "category": "Fun",
+        "imagePath": "skylantern.skylantern.purple"
+    },
+    {
+        "id": 880,
+        "itemId": -1433390281,
+        "shortname": "skylantern.skylantern.red",
+        "name": "Sky Lantern - Red",
+        "category": "Fun",
+        "imagePath": "skylantern.skylantern.red"
+    },
+    {
+        "id": 881,
+        "itemId": 1258768145,
+        "shortname": "sunglasses02black",
+        "name": "Sunglasses",
+        "category": "Attire",
+        "imagePath": "sunglasses02black"
+    },
+    {
+        "id": 882,
+        "itemId": -2103694546,
+        "shortname": "sunglasses02camo",
+        "name": "Sunglasses",
+        "category": "Attire",
+        "imagePath": "sunglasses02camo"
+    },
+    {
+        "id": 883,
+        "itemId": 1557173737,
+        "shortname": "sunglasses02red",
+        "name": "Sunglasses",
+        "category": "Attire",
+        "imagePath": "sunglasses02red"
+    },
+    {
+        "id": 884,
+        "itemId": -176608084,
+        "shortname": "sunglasses03black",
+        "name": "Sunglasses",
+        "category": "Attire",
+        "imagePath": "sunglasses03black"
+    },
+    {
+        "id": 885,
+        "itemId": -1997698639,
+        "shortname": "sunglasses03chrome",
+        "name": "Sunglasses",
+        "category": "Attire",
+        "imagePath": "sunglasses03chrome"
+    },
+    {
+        "id": 886,
+        "itemId": -1408336705,
+        "shortname": "sunglasses03gold",
+        "name": "Sunglasses",
+        "category": "Attire",
+        "imagePath": "sunglasses03gold"
+    },
+    {
+        "id": 887,
+        "itemId": -1647389398,
+        "shortname": "frankensteinmask",
+        "name": "Frankenstein Mask",
+        "category": "Attire",
+        "imagePath": "frankensteinmask"
+    },
+    {
+        "id": 888,
+        "itemId": 809689733,
+        "shortname": "mummymask",
+        "name": "Mummy Mask",
+        "category": "Attire",
+        "imagePath": "mummymask"
     }
 ]
