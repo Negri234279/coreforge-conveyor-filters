@@ -7,13 +7,14 @@ import {
     openCores,
     removeSubcategory,
     renameSubcategory,
+    reorderFilters,
     setCategoryShared,
     updateCategory,
 } from '../store/filters'
 import { getCurrentUser } from '../store/auth'
-import FilterCard from './FilterCard'
 import CategoryFormModal from './CategoryFormModal'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
+import ReorderableFilterGrid from './ReorderableFilterGrid'
 import SubcategoryFormModal from './SubcategoryFormModal'
 
 interface Props {
@@ -106,6 +107,10 @@ export default function CategorySection({ category, forceExpand = false }: Props
     const [subDeleteId, setSubDeleteId] = useState<string | null>(null)
     const [subRenameId, setSubRenameId] = useState<string | null>(null)
     const [subCreateOpen, setSubCreateOpen] = useState(false)
+    const [reordering, setReordering] = useState(false)
+
+    const canReorder =
+        category.filters.length > 1 || category.subcategories.some((s) => s.filters.length > 1)
 
     const inOrg = !!getCurrentUser()?.orgId
     const isShared = category.sharedWithOrg === true
@@ -241,13 +246,23 @@ export default function CategorySection({ category, forceExpand = false }: Props
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
-                    <button
-                        type="button"
-                        onClick={onAddSubcategory}
-                        class="flex items-center gap-1 rounded px-2 py-1 font-mono text-[11px] tracking-widest text-slate-500 uppercase transition-colors hover:bg-slate-800 hover:text-amber-400"
-                    >
-                        <span aria-hidden="true">+</span> Subcategory
-                    </button>
+                    {reordering ? (
+                        <button
+                            type="button"
+                            onClick={() => setReordering(false)}
+                            class="flex items-center gap-1 rounded bg-amber-500 px-3 py-1 font-mono text-[11px] font-bold tracking-widest text-slate-950 uppercase transition-colors hover:bg-amber-400"
+                        >
+                            Done
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={onAddSubcategory}
+                            class="flex items-center gap-1 rounded px-2 py-1 font-mono text-[11px] tracking-widest text-slate-500 uppercase transition-colors hover:bg-slate-800 hover:text-amber-400"
+                        >
+                            <span aria-hidden="true">+</span> Subcategory
+                        </button>
+                    )}
                     <HeaderMenu
                         items={[
                             {
@@ -258,6 +273,14 @@ export default function CategorySection({ category, forceExpand = false }: Props
                                     )}`
                                 },
                             },
+                            ...(canReorder
+                                ? [
+                                      {
+                                          label: reordering ? 'Done reordering' : 'Reorder filters',
+                                          onClick: () => setReordering((v) => !v),
+                                      },
+                                  ]
+                                : []),
                             { label: 'Edit', onClick: onEditCategory },
                             ...(inOrg
                                 ? [
@@ -339,7 +362,28 @@ export default function CategorySection({ category, forceExpand = false }: Props
                 validateName={validateCreateSubcategoryName}
             />
 
-            <div class={`mt-4 space-y-8 ${collapsed && !forceExpand ? 'hidden' : ''}`}>
+            <div
+                class={`mt-4 space-y-8 ${collapsed && !forceExpand && !reordering ? 'hidden' : ''}`}
+            >
+                {reordering ? (
+                    <div class="flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/5 px-3 py-2 font-mono text-[11px] tracking-widest text-amber-400/90 uppercase">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            class="h-4 w-4"
+                        >
+                            <circle cx="9" cy="6" r="1.6" />
+                            <circle cx="15" cy="6" r="1.6" />
+                            <circle cx="9" cy="12" r="1.6" />
+                            <circle cx="15" cy="12" r="1.6" />
+                            <circle cx="9" cy="18" r="1.6" />
+                            <circle cx="15" cy="18" r="1.6" />
+                        </svg>
+                        Drag cards to rearrange · changes save automatically
+                    </div>
+                ) : null}
+
                 {/* Filters directly in category */}
                 {category.filters.length === 0 && category.subcategories.length === 0 ? (
                     <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
@@ -349,11 +393,13 @@ export default function CategorySection({ category, forceExpand = false }: Props
 
                 {category.filters.length > 0 ? (
                     <div>
-                        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                            {category.filters.map((f) => (
-                                <FilterCard key={f.id} filter={f} />
-                            ))}
-                        </div>
+                        <ReorderableFilterGrid
+                            filters={category.filters}
+                            reordering={reordering}
+                            onReorder={(orderedIds) =>
+                                reorderFilters(category.id, null, orderedIds)
+                            }
+                        />
                     </div>
                 ) : category.subcategories.length > 0 ? (
                     <p class="font-mono text-[11px] tracking-widest text-slate-600 uppercase">
@@ -396,11 +442,13 @@ export default function CategorySection({ category, forceExpand = false }: Props
                                     No filters yet.
                                 </p>
                             ) : (
-                                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                                    {sub.filters.map((f) => (
-                                        <FilterCard key={f.id} filter={f} />
-                                    ))}
-                                </div>
+                                <ReorderableFilterGrid
+                                    filters={sub.filters}
+                                    reordering={reordering}
+                                    onReorder={(orderedIds) =>
+                                        reorderFilters(category.id, sub.id, orderedIds)
+                                    }
+                                />
                             )}
                         </div>
                     </div>

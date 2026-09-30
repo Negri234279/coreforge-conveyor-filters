@@ -548,3 +548,37 @@ export function deleteFilter(id: string): void {
     }
     commitFireAndForget(next)
 }
+
+/**
+ * Reorder the filters of one list (a category's own filters when
+ * `subcategoryId` is null, otherwise a subcategory's) to match `orderedIds`.
+ * Ids not present in the list are ignored; filters missing from `orderedIds`
+ * are appended in their original order so nothing is ever dropped.
+ */
+export function reorderFilters(
+    categoryId: string,
+    subcategoryId: string | null,
+    orderedIds: string[],
+): void {
+    const next = cloneCategories()
+    const cat = next.find((c) => c.id === categoryId)
+    if (!cat) return
+    const sub = subcategoryId ? cat.subcategories.find((s) => s.id === subcategoryId) : undefined
+    if (subcategoryId && !sub) return
+
+    const current = sub ? sub.filters : cat.filters
+    const byId = new Map(current.map((f) => [f.id, f]))
+    const reordered: Filter[] = []
+    for (const id of orderedIds) {
+        const f = byId.get(id)
+        if (!f) continue
+        reordered.push(f)
+        byId.delete(id)
+    }
+    for (const f of current) if (byId.has(f.id)) reordered.push(f)
+
+    if (reordered.length !== current.length) return
+    if (sub) sub.filters = reordered
+    else cat.filters = reordered
+    commitFireAndForget(next)
+}
