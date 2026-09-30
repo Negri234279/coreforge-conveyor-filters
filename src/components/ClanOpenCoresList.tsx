@@ -1,3 +1,4 @@
+import { useState } from 'preact/hooks'
 import {
     cloneOrgOpenCore,
     ensureOrgOpenCoresLoaded,
@@ -7,8 +8,8 @@ import {
     orgOpenCoresHydrated,
 } from '../store/org'
 import { showToast } from './CopyToast'
+import ConfirmDeleteModal from './ConfirmDeleteModal'
 import DeploymentTotals from './DeploymentTotals'
-import TrackedButton from './TrackedButton'
 import type { OrgOpenCoreView } from '../types'
 
 export default function ClanOpenCoresList() {
@@ -17,8 +18,10 @@ export default function ClanOpenCoresList() {
     const error = orgOpenCoresError.value
     const cores = orgOpenCores.value
     const busy = orgIsBusy.value
+    const [cloneTarget, setCloneTarget] = useState<OrgOpenCoreView | null>(null)
 
     async function onClone(oc: OrgOpenCoreView) {
+        setCloneTarget(null)
         try {
             const res = await cloneOrgOpenCore(oc.id)
             showToast(`Cloned "${res.name}" to your Open Cores`)
@@ -88,19 +91,39 @@ export default function ClanOpenCoresList() {
                         >
                             View
                         </a>
-                        <TrackedButton
+                        <button
                             type="button"
-                            track="opencore_clone"
-                            trackAttrs={{ openCoreId: oc.id }}
-                            onClick={() => onClone(oc)}
+                            onClick={() => setCloneTarget(oc)}
                             disabled={busy}
                             class="rounded bg-amber-500 px-3 py-1.5 text-xs font-bold tracking-wide text-slate-950 uppercase transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Clone entire
-                        </TrackedButton>
+                        </button>
                     </div>
                 </div>
             ))}
+
+            <ConfirmDeleteModal
+                open={!!cloneTarget}
+                title="Clone Open Core"
+                message={
+                    cloneTarget
+                        ? `Clone "${cloneTarget.name}" (${cloneTarget.categoryCount} ${
+                              cloneTarget.categoryCount === 1 ? 'category' : 'categories'
+                          }, ${cloneTarget.filterCount} ${
+                              cloneTarget.filterCount === 1 ? 'filter' : 'filters'
+                          }) into your own Open Cores? You'll get an independent copy.`
+                        : ''
+                }
+                confirmLabel="Clone"
+                confirmTone="primary"
+                track="opencore_clone"
+                trackAttrs={cloneTarget ? { openCoreId: cloneTarget.id } : undefined}
+                onCancel={() => setCloneTarget(null)}
+                onConfirm={() => {
+                    if (cloneTarget) void onClone(cloneTarget)
+                }}
+            />
         </div>
     )
 }
