@@ -30,6 +30,8 @@ export const POST: APIRoute = async ({ locals, request }) => {
     }
     const b = body as {
         filterId?: unknown
+        categoryId?: unknown
+        subcategoryId?: unknown
         name?: unknown
         description?: unknown
         coverItemShortname?: unknown
@@ -70,11 +72,51 @@ export const POST: APIRoute = async ({ locals, request }) => {
         .get()
     if (!ocOwner || ocOwner.orgId !== user.orgId) return json({ error: 'Not available' }, 403)
 
+    // Optional reassignment: move the filter to another category / subcategory
+    // *within the same Open Core*. Keeps the current placement when omitted.
+    let newCategoryId = filter.categoryId
+    if (typeof b.categoryId === 'string' && b.categoryId && b.categoryId !== filter.categoryId) {
+        const targetCat = db
+            .select()
+            .from(schema.categories)
+            .where(eq(schema.categories.id, b.categoryId))
+            .get()
+        if (!targetCat) return json({ error: 'Target category not found' }, 404)
+        if (targetCat.openCoreId !== cat.openCoreId)
+            return json({ error: 'Target category is not in this Open Core' }, 400)
+        newCategoryId = b.categoryId
+    }
+
+    let newSubcategoryId: string | null = null
+    if (typeof b.subcategoryId === 'string' && b.subcategoryId) {
+        const targetSub = db
+            .select()
+            .from(schema.subcategories)
+            .where(eq(schema.subcategories.id, b.subcategoryId))
+            .get()
+        if (!targetSub || targetSub.categoryId !== newCategoryId)
+            return json({ error: 'Subcategory is not in the target category' }, 400)
+        newSubcategoryId = b.subcategoryId
+    }
+
+    // When the parent category changes, append to the end of the destination.
+    const moved = newCategoryId !== filter.categoryId
+    const newPosition = moved
+        ? db
+              .select({ id: schema.filters.id })
+              .from(schema.filters)
+              .where(eq(schema.filters.categoryId, newCategoryId))
+              .all().length
+        : filter.position
+
     const items = Array.isArray(b.items) ? (b.items as FilterItem[]) : []
 
     db.transaction((tx) => {
         tx.update(schema.filters)
             .set({
+                categoryId: newCategoryId,
+                subcategoryId: newSubcategoryId,
+                position: newPosition,
                 name: (b.name as string).trim(),
                 description:
                     typeof b.description === 'string' && b.description.trim()

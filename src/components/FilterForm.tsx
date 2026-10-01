@@ -57,6 +57,16 @@ interface Props {
     }) => Promise<void>
     /** Where Cancel/back redirects to (org-mode). Defaults to '/'. */
     cancelHref?: string
+    /**
+     * Categories (with subcategories) the filter can be assigned to. In org-mode
+     * this enables reassigning the filter to another category/subcategory of the
+     * same Open Core. Ignored in personal mode (the store is the source there).
+     */
+    categoryOptions?: {
+        id: string
+        name: string
+        subcategories: { id: string; name: string }[]
+    }[]
 }
 
 const MAX_ITEMS = 30
@@ -140,10 +150,27 @@ function decodeSelection(value: string): { catId: string; subId?: string } | nul
     return { catId, subId: subId || undefined }
 }
 
-export default function FilterForm({ filterId, initialData, onSave, cancelHref }: Props) {
+export default function FilterForm({
+    filterId,
+    initialData,
+    onSave,
+    cancelHref,
+    categoryOptions,
+}: Props) {
     const editing = !!filterId || !!initialData
     const orgMode = !!onSave
     const cats = categories.value
+
+    // Category/subcategory choices for the picker. In org-mode they come from the
+    // Open Core being edited (prop); in personal mode from the store.
+    const categoryChoices = orgMode
+        ? (categoryOptions ?? [])
+        : cats.map((c) => ({
+              id: c.id,
+              name: c.name,
+              subcategories: c.subcategories.map((s) => ({ id: s.id, name: s.name })),
+          }))
+    const showCategoryPicker = !orgMode || !!categoryOptions
 
     const me = getCurrentUser()
     const inOrg = !!me?.orgId
@@ -599,13 +626,15 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
             ) : null}
 
             {/* Category picker */}
-            {!orgMode ? (
+            {showCategoryPicker ? (
                 <div>
                     <label class="block font-mono text-[11px] tracking-widest text-amber-500/50 uppercase">
                         Category <span class="text-rose-400">*</span>
                     </label>
                     <p class="mt-1 font-mono text-[11px] text-slate-600">
-                        Pick a parent category, or one of its subcategories.
+                        {orgMode
+                            ? 'Pick where this filter lives in the Open Core — a category or one of its subcategories.'
+                            : 'Pick a parent category, or one of its subcategories.'}
                     </p>
                     <select
                         required
@@ -615,7 +644,7 @@ export default function FilterForm({ filterId, initialData, onSave, cancelHref }
                         class="mt-1.5 w-full appearance-none rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 transition-colors outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <option value="">— Select a category —</option>
-                        {cats.map((cat) => (
+                        {categoryChoices.map((cat) => (
                             <optgroup key={cat.id} label={cat.name}>
                                 <option value={cat.id}>{cat.name} (no subcategory)</option>
                                 {cat.subcategories.map((sub) => (
