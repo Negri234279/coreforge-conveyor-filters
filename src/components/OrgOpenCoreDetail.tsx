@@ -4,6 +4,7 @@ import {
     fetchOrgOpenCoreDetail,
     orgIsBusy,
     createOrgCategory,
+    createOrgFilter,
     deleteOrgCategory,
     createOrgSubcategory,
     deleteOrgSubcategory,
@@ -13,6 +14,7 @@ import {
 } from '../store/org'
 import { getCurrentUser } from '../store/auth'
 import { deploymentTotals } from '../store/filters'
+import { copiedFilter, copyFilter } from '../store/filterClipboard'
 import { getItem } from '../store/items'
 import { showToast } from './CopyToast'
 import OpenCoreBoxesView from './OpenCoreBoxesView'
@@ -60,12 +62,18 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
         }
     }
 
+    function onCopyFilter() {
+        copyFilter(filter)
+        showToast(`Copied "${filter.name}" · paste into a category`)
+    }
+
     const actions: FilterCardAction[] = canEdit
         ? [
               { label: 'Edit', onClick: onEditFilter },
+              { label: 'Copy filter', onClick: onCopyFilter },
               { label: 'Delete', tone: 'danger', onClick: () => setConfirmDelete(true) },
           ]
-        : []
+        : [{ label: 'Copy filter', onClick: onCopyFilter }]
 
     return (
         <>
@@ -116,6 +124,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
 
     const user = getCurrentUser()
     const canEdit = user?.orgRole === 'owner' || user?.orgRole === 'admin'
+    const clipboard = copiedFilter.value
 
     // Add Category modal
     const [addCatOpen, setAddCatOpen] = useState(false)
@@ -131,6 +140,28 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
     const [subMenuOpen, setSubMenuOpen] = useState<string | null>(null)
     // Which category is currently in filter-reorder mode (one at a time).
     const [reorderingCatId, setReorderingCatId] = useState<string | null>(null)
+
+    async function onPasteFilter(categoryId: string, subcategoryId: string | null) {
+        if (!clipboard) return
+        try {
+            await createOrgFilter({
+                categoryId,
+                subcategoryId: subcategoryId ?? undefined,
+                name: clipboard.name,
+                description: clipboard.description,
+                coverItemShortname: clipboard.coverItemShortname,
+                boxImagePath: clipboard.boxImagePath,
+                boxCount: clipboard.boxCount,
+                conveyorCount: clipboard.conveyorCount,
+                storageAdaptorCount: clipboard.storageAdaptorCount,
+                items: clipboard.items,
+            })
+            showToast(`Pasted "${clipboard.name}"`)
+            loadDetail()
+        } catch (e) {
+            showToast(e instanceof Error ? e.message : 'Paste failed')
+        }
+    }
 
     async function onReorderFilters(
         categoryId: string,
@@ -582,6 +613,21 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                 >
                                                                     New Filter
                                                                 </button>
+                                                                {clipboard ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setCatMenuOpen(null)
+                                                                            void onPasteFilter(
+                                                                                cat.id,
+                                                                                null,
+                                                                            )
+                                                                        }}
+                                                                        class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                    >
+                                                                        Paste filter
+                                                                    </button>
+                                                                ) : null}
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => {
@@ -730,6 +776,23 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                             >
                                                                                 New Filter
                                                                             </button>
+                                                                            {clipboard ? (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setSubMenuOpen(
+                                                                                            null,
+                                                                                        )
+                                                                                        void onPasteFilter(
+                                                                                            cat.id,
+                                                                                            sub.id,
+                                                                                        )
+                                                                                    }}
+                                                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                                >
+                                                                                    Paste filter
+                                                                                </button>
+                                                                            ) : null}
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => {
