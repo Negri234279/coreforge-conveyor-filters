@@ -27,13 +27,30 @@ export default function OrgFilterIsland({
     const [initialData, setInitialData] = useState<
         (OrgFilterDraft & { items: FilterItem[] }) | null
     >(null)
+    const [categoryOptions, setCategoryOptions] = useState<
+        { id: string; name: string; subcategories: { id: string; name: string }[] }[]
+    >([])
     const [loadError, setLoadError] = useState<string | null>(null)
     const [loading, setLoading] = useState(editing)
 
     useEffect(() => {
-        if (!editing) return
+        let cancelled = false
         fetchOrgOpenCoreDetail(openCoreId)
             .then((detail: OrgOpenCoreDetail) => {
+                if (cancelled) return
+                setCategoryOptions(
+                    detail.categories.map((cat) => ({
+                        id: cat.id,
+                        name: cat.name,
+                        subcategories: cat.subcategories.map((sub) => ({
+                            id: sub.id,
+                            name: sub.name,
+                        })),
+                    })),
+                )
+
+                if (!editing) return
+
                 for (const cat of detail.categories) {
                     const allFilters = [
                         ...cat.filters.map((f) => ({ f, catId: cat.id })),
@@ -62,9 +79,15 @@ export default function OrgFilterIsland({
                 setLoadError('Filter not found in this Open Core.')
             })
             .catch((e: unknown) => {
+                if (cancelled) return
                 setLoadError(e instanceof Error ? e.message : 'Failed to load filter')
             })
-            .finally(() => setLoading(false))
+            .finally(() => {
+                if (!cancelled) setLoading(false)
+            })
+        return () => {
+            cancelled = true
+        }
     }, [filterId, openCoreId, editing])
 
     if (loading) {
@@ -87,8 +110,9 @@ export default function OrgFilterIsland({
         if (editing && filterId) {
             await updateOrgFilter(filterId, draft)
         } else {
-            const resolvedCategoryId = categoryId ?? draft.categoryId
-            await createOrgFilter({ ...draft, categoryId: resolvedCategoryId, subcategoryId })
+            // draft.categoryId / subcategoryId already reflect the picker (seeded
+            // from the category the "New filter" action was launched in).
+            await createOrgFilter(draft)
         }
         window.location.href = cancelHref
     }
@@ -114,6 +138,7 @@ export default function OrgFilterIsland({
             initialData={resolvedInitialData}
             onSave={onSave}
             cancelHref={cancelHref}
+            categoryOptions={categoryOptions}
         />
     )
 }
