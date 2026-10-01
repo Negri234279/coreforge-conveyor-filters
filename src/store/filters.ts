@@ -1,6 +1,7 @@
 import { signal } from '@preact/signals'
 import { nanoid } from 'nanoid'
 import { classifyBox } from '../lib/boxKind'
+import type { CopiedFilter } from './filterClipboard'
 import type { Category, Filter, FilterCounts, FilterItem, OpenCore, Subcategory } from '../types'
 
 const MAX_ITEMS_PER_FILTER = 30
@@ -536,6 +537,43 @@ export async function updateFilter(id: string, draft: FilterDraft): Promise<void
     }
 
     await commit(next)
+}
+
+/**
+ * Paste a copied filter into a category (or one of its subcategories) as a
+ * brand-new, independent filter — a fresh id, never shared, no link to the
+ * original. Powers the copy/paste "duplicate into a new Open Core" flow.
+ */
+export async function pasteFilter(
+    categoryId: string,
+    subcategoryId: string | null,
+    payload: CopiedFilter,
+): Promise<Filter> {
+    const next = cloneCategories()
+    const cat = next.find((c) => c.id === categoryId)
+    if (!cat) throw new Error('Category not found')
+    const sub = subcategoryId ? cat.subcategories.find((s) => s.id === subcategoryId) : undefined
+    if (subcategoryId && !sub) throw new Error('Subcategory not found')
+
+    const filter: Filter = {
+        id: nanoid(),
+        name: payload.name.trim(),
+        description: payload.description?.trim() || undefined,
+        coverItemShortname: payload.coverItemShortname,
+        boxImagePath: payload.boxImagePath || undefined,
+        categoryId: cat.id,
+        subcategoryId: sub?.id,
+        items: sanitizeDraftItems(payload.items),
+        sharedWithOrg: false,
+        ...normalizeCounts(payload),
+        createdAt: new Date().toISOString(),
+    }
+
+    if (sub) sub.filters.push(filter)
+    else cat.filters.push(filter)
+
+    await commit(next)
+    return filter
 }
 
 export function deleteFilter(id: string): void {

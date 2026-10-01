@@ -4,15 +4,19 @@ import {
     fetchOrgOpenCoreDetail,
     orgIsBusy,
     createOrgCategory,
+    createOrgFilter,
     deleteOrgCategory,
+    renameOrgCategory,
     createOrgSubcategory,
     deleteOrgSubcategory,
+    renameOrgSubcategory,
     deleteOrgFilter,
     deleteOrgOpenCore,
     reorderOrgFilters,
 } from '../store/org'
 import { getCurrentUser } from '../store/auth'
 import { deploymentTotals } from '../store/filters'
+import { copiedFilter, copyFilter } from '../store/filterClipboard'
 import { getItem } from '../store/items'
 import { showToast } from './CopyToast'
 import OpenCoreBoxesView from './OpenCoreBoxesView'
@@ -60,12 +64,18 @@ function FilterRow({ filter, canEdit, openCoreId, onDeleted }: FilterRowProps) {
         }
     }
 
+    function onCopyFilter() {
+        copyFilter(filter)
+        showToast(`Copied "${filter.name}" · paste into a category`)
+    }
+
     const actions: FilterCardAction[] = canEdit
         ? [
               { label: 'Edit', onClick: onEditFilter },
+              { label: 'Copy filter', onClick: onCopyFilter },
               { label: 'Delete', tone: 'danger', onClick: () => setConfirmDelete(true) },
           ]
-        : []
+        : [{ label: 'Copy filter', onClick: onCopyFilter }]
 
     return (
         <>
@@ -116,6 +126,7 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
 
     const user = getCurrentUser()
     const canEdit = user?.orgRole === 'owner' || user?.orgRole === 'admin'
+    const clipboard = copiedFilter.value
 
     // Add Category modal
     const [addCatOpen, setAddCatOpen] = useState(false)
@@ -126,11 +137,39 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
     const [addSubCatId, setAddSubCatId] = useState('')
     const [addSubBusy, setAddSubBusy] = useState(false)
 
+    // Rename modals
+    const [renameCat, setRenameCat] = useState<{ id: string; name: string } | null>(null)
+    const [renameCatBusy, setRenameCatBusy] = useState(false)
+    const [renameSub, setRenameSub] = useState<{ id: string; name: string } | null>(null)
+    const [renameSubBusy, setRenameSubBusy] = useState(false)
+
     // Category action menu
     const [catMenuOpen, setCatMenuOpen] = useState<string | null>(null)
     const [subMenuOpen, setSubMenuOpen] = useState<string | null>(null)
     // Which category is currently in filter-reorder mode (one at a time).
     const [reorderingCatId, setReorderingCatId] = useState<string | null>(null)
+
+    async function onPasteFilter(categoryId: string, subcategoryId: string | null) {
+        if (!clipboard) return
+        try {
+            await createOrgFilter({
+                categoryId,
+                subcategoryId: subcategoryId ?? undefined,
+                name: clipboard.name,
+                description: clipboard.description,
+                coverItemShortname: clipboard.coverItemShortname,
+                boxImagePath: clipboard.boxImagePath,
+                boxCount: clipboard.boxCount,
+                conveyorCount: clipboard.conveyorCount,
+                storageAdaptorCount: clipboard.storageAdaptorCount,
+                items: clipboard.items,
+            })
+            showToast(`Pasted "${clipboard.name}"`)
+            loadDetail()
+        } catch (e) {
+            showToast(e instanceof Error ? e.message : 'Paste failed')
+        }
+    }
 
     async function onReorderFilters(
         categoryId: string,
@@ -252,6 +291,34 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
             showToast(e instanceof Error ? e.message : 'Failed to create subcategory')
         } finally {
             setAddSubBusy(false)
+        }
+    }
+
+    async function onRenameCat({ name }: { name: string }) {
+        if (!renameCat) return
+        setRenameCatBusy(true)
+        try {
+            await renameOrgCategory(renameCat.id, name)
+            setRenameCat(null)
+            loadDetail()
+        } catch (e) {
+            showToast(e instanceof Error ? e.message : 'Rename failed')
+        } finally {
+            setRenameCatBusy(false)
+        }
+    }
+
+    async function onRenameSub({ name }: { name: string }) {
+        if (!renameSub) return
+        setRenameSubBusy(true)
+        try {
+            await renameOrgSubcategory(renameSub.id, name)
+            setRenameSub(null)
+            loadDetail()
+        } catch (e) {
+            showToast(e instanceof Error ? e.message : 'Rename failed')
+        } finally {
+            setRenameSubBusy(false)
         }
     }
 
@@ -582,6 +649,21 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                 >
                                                                     New Filter
                                                                 </button>
+                                                                {clipboard ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setCatMenuOpen(null)
+                                                                            void onPasteFilter(
+                                                                                cat.id,
+                                                                                null,
+                                                                            )
+                                                                        }}
+                                                                        class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                    >
+                                                                        Paste filter
+                                                                    </button>
+                                                                ) : null}
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => {
@@ -615,6 +697,19 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                             : 'Reorder filters'}
                                                                     </button>
                                                                 ) : null}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setCatMenuOpen(null)
+                                                                        setRenameCat({
+                                                                            id: cat.id,
+                                                                            name: cat.name,
+                                                                        })
+                                                                    }}
+                                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                >
+                                                                    Rename
+                                                                </button>
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => {
@@ -730,6 +825,38 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                             >
                                                                                 New Filter
                                                                             </button>
+                                                                            {clipboard ? (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setSubMenuOpen(
+                                                                                            null,
+                                                                                        )
+                                                                                        void onPasteFilter(
+                                                                                            cat.id,
+                                                                                            sub.id,
+                                                                                        )
+                                                                                    }}
+                                                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                                >
+                                                                                    Paste filter
+                                                                                </button>
+                                                                            ) : null}
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    setSubMenuOpen(
+                                                                                        null,
+                                                                                    )
+                                                                                    setRenameSub({
+                                                                                        id: sub.id,
+                                                                                        name: sub.name,
+                                                                                    })
+                                                                                }}
+                                                                                class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                            >
+                                                                                Rename
+                                                                            </button>
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => {
@@ -818,6 +945,26 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                 busy={addSubBusy}
                 onCancel={() => setAddSubOpen(false)}
                 onSubmit={onAddSubcategory}
+            />
+            <NameFormModal
+                open={!!renameCat}
+                eyebrow="Edit"
+                title="Category"
+                initialName={renameCat?.name ?? ''}
+                submitLabel={renameCatBusy ? 'Saving…' : 'Save'}
+                busy={renameCatBusy}
+                onCancel={() => setRenameCat(null)}
+                onSubmit={onRenameCat}
+            />
+            <NameFormModal
+                open={!!renameSub}
+                eyebrow="Edit"
+                title="Subcategory"
+                initialName={renameSub?.name ?? ''}
+                submitLabel={renameSubBusy ? 'Saving…' : 'Save'}
+                busy={renameSubBusy}
+                onCancel={() => setRenameSub(null)}
+                onSubmit={onRenameSub}
             />
 
             {/* Confirm delete modals */}

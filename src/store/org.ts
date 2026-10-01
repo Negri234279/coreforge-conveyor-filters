@@ -203,6 +203,10 @@ export async function deleteOrgCategory(categoryId: string): Promise<void> {
     await managePost('del-category', { categoryId })
 }
 
+export async function renameOrgCategory(categoryId: string, name: string): Promise<void> {
+    await managePost('rename-category', { categoryId, name })
+}
+
 export async function createOrgSubcategory(
     categoryId: string,
     name: string,
@@ -215,6 +219,10 @@ export async function createOrgSubcategory(
 
 export async function deleteOrgSubcategory(subcategoryId: string): Promise<void> {
     await managePost('del-subcategory', { subcategoryId })
+}
+
+export async function renameOrgSubcategory(subcategoryId: string, name: string): Promise<void> {
+    await managePost('rename-subcategory', { subcategoryId, name })
 }
 
 export interface OrgFilterDraft {

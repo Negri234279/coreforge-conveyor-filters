@@ -5,15 +5,18 @@ import {
     categories,
     deleteCategory,
     openCores,
+    pasteFilter,
     removeSubcategory,
     renameSubcategory,
     reorderFilters,
     setCategoryShared,
     updateCategory,
 } from '../store/filters'
+import { copiedFilter } from '../store/filterClipboard'
 import { getCurrentUser } from '../store/auth'
 import CategoryFormModal from './CategoryFormModal'
 import ConfirmDeleteModal from './ConfirmDeleteModal'
+import { showToast } from './CopyToast'
 import FilterCard from './FilterCard'
 import ReorderableFilterGrid from './ReorderableFilterGrid'
 import SubcategoryFormModal from './SubcategoryFormModal'
@@ -115,6 +118,17 @@ export default function CategorySection({ category, forceExpand = false }: Props
 
     const inOrg = !!getCurrentUser()?.orgId
     const isShared = category.sharedWithOrg === true
+    const clipboard = copiedFilter.value
+
+    async function handlePaste(subcategoryId: string | null) {
+        if (!clipboard) return
+        try {
+            await pasteFilter(category.id, subcategoryId, clipboard)
+            showToast(`Pasted "${clipboard.name}"`)
+        } catch (e) {
+            showToast(e instanceof Error ? e.message : 'Paste failed')
+        }
+    }
 
     function onAddSubcategory() {
         setSubCreateOpen(true)
@@ -274,6 +288,14 @@ export default function CategorySection({ category, forceExpand = false }: Props
                                     )}`
                                 },
                             },
+                            ...(clipboard
+                                ? [
+                                      {
+                                          label: 'Paste filter',
+                                          onClick: () => void handlePaste(null),
+                                      },
+                                  ]
+                                : []),
                             ...(canReorder
                                 ? [
                                       {
@@ -426,6 +448,14 @@ export default function CategorySection({ category, forceExpand = false }: Props
                                             )}&subcategoryId=${encodeURIComponent(sub.id)}`
                                         },
                                     },
+                                    ...(clipboard
+                                        ? [
+                                              {
+                                                  label: 'Paste filter',
+                                                  onClick: () => void handlePaste(sub.id),
+                                              },
+                                          ]
+                                        : []),
                                     {
                                         label: 'Rename',
                                         onClick: () => setSubRenameId(sub.id),
