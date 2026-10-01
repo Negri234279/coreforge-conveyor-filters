@@ -6,8 +6,10 @@ import {
     createOrgCategory,
     createOrgFilter,
     deleteOrgCategory,
+    renameOrgCategory,
     createOrgSubcategory,
     deleteOrgSubcategory,
+    renameOrgSubcategory,
     deleteOrgFilter,
     deleteOrgOpenCore,
     reorderOrgFilters,
@@ -134,6 +136,12 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
     const [addSubOpen, setAddSubOpen] = useState(false)
     const [addSubCatId, setAddSubCatId] = useState('')
     const [addSubBusy, setAddSubBusy] = useState(false)
+
+    // Rename modals
+    const [renameCat, setRenameCat] = useState<{ id: string; name: string } | null>(null)
+    const [renameCatBusy, setRenameCatBusy] = useState(false)
+    const [renameSub, setRenameSub] = useState<{ id: string; name: string } | null>(null)
+    const [renameSubBusy, setRenameSubBusy] = useState(false)
 
     // Category action menu
     const [catMenuOpen, setCatMenuOpen] = useState<string | null>(null)
@@ -283,6 +291,34 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
             showToast(e instanceof Error ? e.message : 'Failed to create subcategory')
         } finally {
             setAddSubBusy(false)
+        }
+    }
+
+    async function onRenameCat({ name }: { name: string }) {
+        if (!renameCat) return
+        setRenameCatBusy(true)
+        try {
+            await renameOrgCategory(renameCat.id, name)
+            setRenameCat(null)
+            loadDetail()
+        } catch (e) {
+            showToast(e instanceof Error ? e.message : 'Rename failed')
+        } finally {
+            setRenameCatBusy(false)
+        }
+    }
+
+    async function onRenameSub({ name }: { name: string }) {
+        if (!renameSub) return
+        setRenameSubBusy(true)
+        try {
+            await renameOrgSubcategory(renameSub.id, name)
+            setRenameSub(null)
+            loadDetail()
+        } catch (e) {
+            showToast(e instanceof Error ? e.message : 'Rename failed')
+        } finally {
+            setRenameSubBusy(false)
         }
     }
 
@@ -665,6 +701,19 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                     type="button"
                                                                     onClick={() => {
                                                                         setCatMenuOpen(null)
+                                                                        setRenameCat({
+                                                                            id: cat.id,
+                                                                            name: cat.name,
+                                                                        })
+                                                                    }}
+                                                                    class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                >
+                                                                    Rename
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setCatMenuOpen(null)
                                                                         setConfirmDeleteCat({
                                                                             id: cat.id,
                                                                             name: cat.name,
@@ -799,6 +848,21 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                                                                                     setSubMenuOpen(
                                                                                         null,
                                                                                     )
+                                                                                    setRenameSub({
+                                                                                        id: sub.id,
+                                                                                        name: sub.name,
+                                                                                    })
+                                                                                }}
+                                                                                class="block w-full px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800"
+                                                                            >
+                                                                                Rename
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    setSubMenuOpen(
+                                                                                        null,
+                                                                                    )
                                                                                     setConfirmDeleteSub(
                                                                                         {
                                                                                             id: sub.id,
@@ -881,6 +945,26 @@ export default function OrgOpenCoreDetail({ openCoreId }: Props) {
                 busy={addSubBusy}
                 onCancel={() => setAddSubOpen(false)}
                 onSubmit={onAddSubcategory}
+            />
+            <NameFormModal
+                open={!!renameCat}
+                eyebrow="Edit"
+                title="Category"
+                initialName={renameCat?.name ?? ''}
+                submitLabel={renameCatBusy ? 'Saving…' : 'Save'}
+                busy={renameCatBusy}
+                onCancel={() => setRenameCat(null)}
+                onSubmit={onRenameCat}
+            />
+            <NameFormModal
+                open={!!renameSub}
+                eyebrow="Edit"
+                title="Subcategory"
+                initialName={renameSub?.name ?? ''}
+                submitLabel={renameSubBusy ? 'Saving…' : 'Save'}
+                busy={renameSubBusy}
+                onCancel={() => setRenameSub(null)}
+                onSubmit={onRenameSub}
             />
 
             {/* Confirm delete modals */}
