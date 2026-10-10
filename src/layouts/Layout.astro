@@ -1,5 +1,10 @@
 ---
 import '../styles/global.css'
+// Imported (not referenced by literal path) so Vite fingerprints them into
+// /_astro/ with a 1-year immutable cache; the preload <link>s below use the
+// resulting hashed URL so they still match the @font-face fetch in global.css.
+import bebasNeueUrl from '../styles/fonts/bebas-neue-latin-400-normal.woff2?url'
+import jetbrainsMonoUrl from '../styles/fonts/jetbrains-mono-latin-400-normal.woff2?url'
 import { version as APP_VERSION } from '../../package.json'
 import { faroClientConfig } from '../lib/faro-config'
 import CopyToast from '../components/CopyToast'
@@ -68,20 +73,8 @@ const clientUser = user
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" href="/favicon.ico" />
 
-        <link
-            rel="preload"
-            as="font"
-            type="font/woff2"
-            href="/fonts/bebas-neue-latin-400-normal.woff2"
-            crossorigin
-        />
-        <link
-            rel="preload"
-            as="font"
-            type="font/woff2"
-            href="/fonts/jetbrains-mono-latin-400-normal.woff2"
-            crossorigin
-        />
+        <link rel="preload" as="font" type="font/woff2" href={bebasNeueUrl} crossorigin />
+        <link rel="preload" as="font" type="font/woff2" href={jetbrainsMonoUrl} crossorigin />
 
         <!-- Open Graph -->
         <meta property="og:type" content="website" />

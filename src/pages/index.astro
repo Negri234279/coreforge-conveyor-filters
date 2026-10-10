@@ -5,6 +5,9 @@ import MyConveyors from '../components/MyConveyors'
 import { version as APP_VERSION } from '../../package.json'
 import { faroClientConfig } from '../lib/faro-config'
 import '../styles/global.css'
+// Hashed + 1-year-immutable cached via Vite; preload uses the resulting URL.
+import bebasNeueUrl from '../styles/fonts/bebas-neue-latin-400-normal.woff2?url'
+import jetbrainsMonoUrl from '../styles/fonts/jetbrains-mono-latin-400-normal.woff2?url'
 
 const user = Astro.locals.user
 // The landing renders its own <html> (no Layout), so it must mount RUM itself
@@ -71,18 +74,12 @@ const TICKER =
                 <meta name="theme-color" content="#0a0e14" />
                 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
                 <link rel="icon" href="/favicon.ico" />
+                <link rel="preload" as="font" type="font/woff2" href={bebasNeueUrl} crossorigin />
                 <link
                     rel="preload"
                     as="font"
                     type="font/woff2"
-                    href="/fonts/bebas-neue-latin-400-normal.woff2"
-                    crossorigin
-                />
-                <link
-                    rel="preload"
-                    as="font"
-                    type="font/woff2"
-                    href="/fonts/jetbrains-mono-latin-400-normal.woff2"
+                    href={jetbrainsMonoUrl}
                     crossorigin
                 />
                 <style>{`
