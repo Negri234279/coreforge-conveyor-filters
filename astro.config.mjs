@@ -15,6 +15,12 @@ export default defineConfig({
     // and would 403 legit POSTs behind the TLS-terminating proxy / over HTTP.
     security: { checkOrigin: false },
     adapter: node({ mode: 'standalone' }),
+    // Inline ALL CSS into the HTML (default 'auto' only inlines <4KB, so the
+    // ~9KB Layout stylesheet shipped as a render-blocking <link>). Inlining
+    // removes that request from the critical path → faster FCP/LCP. Trade-off:
+    // the CSS isn't separately cached across navigations, but the app is tiny
+    // and single-page-load metrics win.
+    build: { inlineStylesheets: 'always' },
     vite: {
         plugins: [tailwindcss()],
         server: {
