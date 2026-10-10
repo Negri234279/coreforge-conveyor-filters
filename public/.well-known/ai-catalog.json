@@ -1,16 +1,4 @@
 {
-    "entries": [
-        {
-            "identifier": "urn:air:coreforge-conveyor-filters.negri.es:guide:llms-txt",
-            "displayName": "CoreForge — site guide",
-            "type": "text/markdown",
-            "url": "https://coreforge-conveyor-filters.negri.es/llms.txt",
-            "description": "Machine-readable guide to CoreForge — Conveyor Filters: what the site is and which pages are publicly accessible to agents.",
-            "representativeQueries": [
-                "what is CoreForge",
-                "Rust industrial conveyor filter presets",
-                "how do I sign in to CoreForge"
-            ]
-        }
-    ]
+    "specVersion": "1.0",
+    "entries": []
 }
