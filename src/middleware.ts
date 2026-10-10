@@ -44,6 +44,8 @@ function isPublicPath(pathname: string): boolean {
         pathname.startsWith('/boxes/') ||
         pathname === '/favicon.svg' ||
         pathname === '/favicon.ico' ||
+        pathname === '/robots.txt' ||
+        pathname === '/sitemap.xml' ||
         pathname.endsWith('.webp') ||
         pathname.endsWith('.png') ||
         pathname.endsWith('.svg')
