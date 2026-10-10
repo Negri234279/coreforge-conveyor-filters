@@ -1,0 +1,25 @@
+# CoreForge — Conveyor Filters
+
+> CoreForge is a web app to design, organise and share Rust industrial conveyor
+> filter presets. Users build presets in the browser (categories →
+> subcategories → filters → up to 30 items with Max / Buffer / Min per slot) and
+> copy/paste the exact JSON the game expects.
+
+Most of the app requires a user account; the pages below are the public surface.
+
+## Pages
+
+- [Home](https://coreforge-conveyor-filters.negri.es/): landing page and sign-in entry point.
+- [Legal](https://coreforge-conveyor-filters.negri.es/legal): terms, privacy and licensing information.
+
+## Access
+
+- [Sign in](https://coreforge-conveyor-filters.negri.es/login): existing accounts.
+- [Create an account](https://coreforge-conveyor-filters.negri.es/register): new users.
+
+## Notes
+
+- Interactive filter management, categories and the game-JSON import/export tools
+  live behind authentication and are not available to anonymous agents.
+- There is no public API or MCP server. The JSON interchange format is produced
+  and consumed inside the authenticated app.

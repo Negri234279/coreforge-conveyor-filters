@@ -13,8 +13,11 @@
 // server traces in Tempo. Custom business events go through
 // src/otel-web/track.ts (islands) or window.__cfTrack (inline scripts).
 
-import { getWebInstrumentations, initializeFaro, faro } from '@grafana/faro-web-sdk'
-import { TracingInstrumentation } from '@grafana/faro-web-tracing'
+// This module is loaded purely for its side effect (`import '../otel-web/init'`)
+// and no longer has a top-level static import, so mark it a module explicitly —
+// otherwise `declare global` below is treated as a script-scope augmentation and
+// TS rejects it.
+export {}
 
 declare global {
     interface Window {
@@ -29,38 +32,65 @@ declare global {
     }
 }
 
-const cfg = window.__cf_faro
-if (cfg && cfg.url) {
-    const user = window.__cf_user
+// The Faro SDK is ~57 KiB gzipped. Importing it statically pulls it into the
+// Layout script chunk that every page loads, so it shows up as unused JS on the
+// critical path. Instead, dynamically import it when the browser is idle: the
+// heavy SDK becomes its own chunk fetched off the critical path, and Web Vitals
+// are still captured accurately because Faro's instrumentation reads buffered
+// PerformanceObserver entries (LCP/FCP/CLS recorded before init are not lost).
+async function bootFaro(): Promise<void> {
+    const cfg = window.__cf_faro
+    if (!cfg || !cfg.url) return
 
-    initializeFaro({
-        url: cfg.url,
-        app: {
-            name: cfg.appName,
-            version: cfg.appVersion,
-            environment: cfg.environment,
-        },
-        ...(user ? { user: { id: user.id, username: user.username } } : {}),
-        instrumentations: [
-            ...getWebInstrumentations(),
-            new TracingInstrumentation({
-                instrumentationOptions: {
-                    // Only propagate trace headers to our own backend; otherwise
-                    // every CDN/3rd-party CORS request gets W3C trace headers
-                    // and may reject the preflight.
-                    propagateTraceHeaderCorsUrls: [/^https:\/\/[^/]*\.negri\.es\//],
-                },
-            }),
-        ],
-    })
+    try {
+        const [{ getWebInstrumentations, initializeFaro, faro }, { TracingInstrumentation }] =
+            await Promise.all([
+                import('@grafana/faro-web-sdk'),
+                import('@grafana/faro-web-tracing'),
+            ])
 
-    // Hook for inline (non-module) scripts like the landing CTA tracker,
-    // which can't import from the bundle.
-    window.__cfTrack = (name, attributes) => {
-        try {
-            faro.api?.pushEvent(name, attributes)
-        } catch {
-            // RUM must never break the page.
+        const user = window.__cf_user
+
+        initializeFaro({
+            url: cfg.url,
+            app: {
+                name: cfg.appName,
+                version: cfg.appVersion,
+                environment: cfg.environment,
+            },
+            ...(user ? { user: { id: user.id, username: user.username } } : {}),
+            instrumentations: [
+                ...getWebInstrumentations(),
+                new TracingInstrumentation({
+                    instrumentationOptions: {
+                        // Only propagate trace headers to our own backend; otherwise
+                        // every CDN/3rd-party CORS request gets W3C trace headers
+                        // and may reject the preflight.
+                        propagateTraceHeaderCorsUrls: [/^https:\/\/[^/]*\.negri\.es\//],
+                    },
+                }),
+            ],
+        })
+
+        // Hook for inline (non-module) scripts like the landing CTA tracker,
+        // which can't import from the bundle.
+        window.__cfTrack = (name, attributes) => {
+            try {
+                faro.api?.pushEvent(name, attributes)
+            } catch {
+                // RUM must never break the page.
+            }
         }
+    } catch {
+        // RUM is best-effort; a failed chunk load must never break the page.
     }
+}
+
+// Defer to idle so RUM never competes with first paint. `requestIdleCallback`
+// isn't in Safari — fall back to a macrotask. The timeout caps how long we wait
+// on a busy main thread so sessions aren't silently dropped.
+if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(() => void bootFaro(), { timeout: 3000 })
+} else {
+    setTimeout(() => void bootFaro(), 1)
 }

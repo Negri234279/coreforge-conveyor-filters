@@ -71,10 +71,19 @@ const TICKER =
                 <meta name="theme-color" content="#0a0e14" />
                 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
                 <link rel="icon" href="/favicon.ico" />
-                <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link
-                    href="https://fonts.bunny.net/css?family=bebas-neue:400|jetbrains-mono:400,500"
-                    rel="stylesheet"
+                    rel="preload"
+                    as="font"
+                    type="font/woff2"
+                    href="/fonts/bebas-neue-latin-400-normal.woff2"
+                    crossorigin
+                />
+                <link
+                    rel="preload"
+                    as="font"
+                    type="font/woff2"
+                    href="/fonts/jetbrains-mono-latin-400-normal.woff2"
+                    crossorigin
                 />
                 <style>{`
                     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -139,7 +148,7 @@ const TICKER =
                             <span>CoreForge</span>
                             <span
                                 class="cf-hide-sm"
-                                style="color: #475569; font-weight: 400; font-size: 0.75rem; letter-spacing: normal; text-transform: none"
+                                style="color: #94a3b8; font-weight: 400; font-size: 0.75rem; letter-spacing: normal; text-transform: none"
                             >
                                 · Conveyor Filters
                             </span>
@@ -214,7 +223,7 @@ const TICKER =
 
                             {/* Tagline */}
                             <p
-                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(245,158,11,0.55); margin-bottom: 1.375rem"
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(245,158,11,0.8); margin-bottom: 1.375rem"
                             >
                                 Your Rust conveyor filter arsenal
                             </p>
@@ -274,13 +283,13 @@ const TICKER =
                             style="display: inline-flex; width: max-content; will-change: transform"
                         >
                             <span
-                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: rgba(245,158,11,0.32); letter-spacing: 0.07em; white-space: nowrap; padding-right: 2rem"
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: rgba(245,158,11,0.75); letter-spacing: 0.07em; white-space: nowrap; padding-right: 2rem"
                             >
                                 {TICKER}
                             </span>
                             <span
                                 aria-hidden="true"
-                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: rgba(245,158,11,0.32); letter-spacing: 0.07em; white-space: nowrap; padding-right: 2rem"
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: rgba(245,158,11,0.75); letter-spacing: 0.07em; white-space: nowrap; padding-right: 2rem"
                             >
                                 {TICKER}
                             </span>
@@ -293,7 +302,7 @@ const TICKER =
                     >
                         <div style="text-align: center; margin-bottom: 3.5rem">
                             <div
-                                style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,158,11,0.45); margin-bottom: 0.875rem"
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,158,11,0.8); margin-bottom: 0.875rem"
                             >
                                 Features
                             </div>
@@ -334,7 +343,7 @@ const TICKER =
                                 >
                                     Organize by setup
                                 </h3>
-                                <p style="color: #64748b; font-size: 0.9rem; line-height: 1.68">
+                                <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.68">
                                     Sort filters into categories and subcategories — main base,
                                     quarry, outpost, whatever your build calls for. Find any preset
                                     in seconds.
@@ -371,7 +380,7 @@ const TICKER =
                                 >
                                     Share with your clan
                                 </h3>
-                                <p style="color: #64748b; font-size: 0.9rem; line-height: 1.68">
+                                <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.68">
                                     Flag filters as clan-shared and your whole squad sees the setup
                                     instantly. No more pasting configs in Discord at 2am during a
                                     raid.
@@ -406,7 +415,7 @@ const TICKER =
                                 >
                                     One-click JSON deploy
                                 </h3>
-                                <p style="color: #64748b; font-size: 0.9rem; line-height: 1.68">
+                                <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.68">
                                     Hit copy. Paste into the conveyor. CoreForge outputs the exact
                                     JSON Rust expects — Max, Buffer, Min, all 30 slots — no manual
                                     entry.
@@ -420,7 +429,7 @@ const TICKER =
                         style="border-top: 1px solid rgba(30,41,59,0.45); text-align: center; padding: 5rem 1.5rem; background: linear-gradient(to bottom, transparent, rgba(245,158,11,0.012))"
                     >
                         <div
-                            style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,158,11,0.45); margin-bottom: 1rem"
+                            style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,158,11,0.8); margin-bottom: 1rem"
                         >
                             Ready to deploy?
                         </div>
@@ -430,7 +439,7 @@ const TICKER =
                             Forge your arsenal
                         </h2>
                         <p
-                            style="color: #64748b; max-width: 28rem; margin: 0 auto 2rem; font-size: 0.9375rem; line-height: 1.68"
+                            style="color: #94a3b8; max-width: 28rem; margin: 0 auto 2rem; font-size: 0.9375rem; line-height: 1.68"
                         >
                             Free to use. No ads. No trackers. Just your filter presets, organized
                             and ready to paste.
@@ -461,11 +470,11 @@ const TICKER =
                     style="border-top: 1px solid rgba(30,41,59,0.4); padding: 2rem 1.5rem"
                 >
                     <div
-                        style="max-width: 72rem; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; align-items: center; color: #334155; font-size: 0.75rem"
+                        style="max-width: 72rem; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; align-items: center; color: #94a3b8; font-size: 0.75rem"
                     >
                         <span>© {new Date().getFullYear()} CoreForge — Conveyor Filters</span>
                         <span>·</span>
-                        <a href="/legal" style="color: #475569">Legal</a>
+                        <a href="/legal" style="color: #94a3b8">Legal</a>
                         <span>· v{APP_VERSION}</span>
                     </div>
                 </footer>
