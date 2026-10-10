@@ -5,3 +5,5 @@ Disallow: /login
 Disallow: /register
 Disallow: /filters/
 Disallow: /admin
+
+Agentmap: https://coreforge-conveyor-filters.negri.es/.well-known/ard.json
