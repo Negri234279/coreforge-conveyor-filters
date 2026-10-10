@@ -12,7 +12,13 @@
     font-family: 'Bebas Neue';
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    /* `optional` (not `swap`) for the big display wordmark: it never re-swaps
+       after the ~100ms block window, so the hero can't reflow once the font
+       arrives — this is what kills the CLS from the condensed-vs-fallback
+       metric mismatch. Combined with the preload + 1-year immutable cache, the
+       real font still shows on virtually every load (always on repeat visits).
+       JetBrains Mono stays `swap` (small labels, 0 measured shift). */
+    font-display: optional;
     src: url('./fonts/bebas-neue-latin-400-normal.woff2') format('woff2');
     unicode-range:
         U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
