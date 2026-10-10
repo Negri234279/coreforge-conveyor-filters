@@ -13,6 +13,12 @@
 // server traces in Tempo. Custom business events go through
 // src/otel-web/track.ts (islands) or window.__cfTrack (inline scripts).
 
+// This module is loaded purely for its side effect (`import '../otel-web/init'`)
+// and no longer has a top-level static import, so mark it a module explicitly —
+// otherwise `declare global` below is treated as a script-scope augmentation and
+// TS rejects it.
+export {}
+
 declare global {
     interface Window {
         __cf_faro?: { url: string; appName: string; appVersion?: string; environment?: string }
