@@ -11,8 +11,8 @@
 # apps/coreforge/ to keep that relative path valid:
 #   infra/prod/                                → apps/coreforge/        (the app stack)
 #   infra/observability/ (minus grafana/)      → apps/coreforge/observability/ (configs prod mounts)
-#   infra/observability/grafana/dashboards/
-#       coreforge-overview.json                → core/grafana/dashboards/coreforge/
+#   infra/observability/grafana/dashboards/*.json → core/grafana/dashboards/coreforge/
+#       (all dashboards, mirrored — new ones sync automatically, deleted ones pruned)
 #   infra/observability/grafana/provisioning/datasources/datasources.yaml
 #                                              → core/grafana/provisioning/datasources/coreforge.yml
 #
@@ -63,10 +63,12 @@ log "obs configs: infra/observability/ (minus grafana) → apps/coreforge/observ
 mirror_dir "$SRC_ROOT/infra/observability" "$DEST/apps/coreforge/observability" --exclude 'grafana/'
 
 # 3) App dashboards → core/grafana/dashboards/coreforge/
+#    Mirror the whole folder (not a single hardcoded file) so every dashboard —
+#    coreforge-overview.json, coreforge-rum.json, and any future one — is synced,
+#    and dashboards deleted at source are pruned from the central Grafana.
 log "dashboards → core/grafana/dashboards/coreforge/"
-mkdir -p "$DEST/core/grafana/dashboards/coreforge"
-cp "$SRC_ROOT/infra/observability/grafana/dashboards/coreforge-overview.json" \
-   "$DEST/core/grafana/dashboards/coreforge/"
+mirror_dir "$SRC_ROOT/infra/observability/grafana/dashboards" \
+           "$DEST/core/grafana/dashboards/coreforge"
 
 # 4) App datasources → core/grafana/provisioning/datasources/coreforge.yml
 log "datasources → core/grafana/provisioning/datasources/coreforge.yml"
