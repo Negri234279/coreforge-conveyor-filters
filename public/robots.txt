@@ -5,3 +5,5 @@ Disallow: /login
 Disallow: /register
 Disallow: /filters/
 Disallow: /admin
+
+Sitemap: https://coreforge-conveyor-filters.negri.es/sitemap.xml
