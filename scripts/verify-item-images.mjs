@@ -133,12 +133,15 @@ async function main() {
         }
 
         // Mirror itemImage(): imagePath first, else fall back to shortname.
-        const effectivePath = item.imagePath ?? item.shortname
+        // Tolerate the legacy snake_case `image_path` key (raw Rust rows that
+        // bypassed the importer) so they aren't miscounted as shortname-fallback.
+        const declaredPath = item.imagePath ?? item.image_path
+        const effectivePath = declaredPath ?? item.shortname
         if (!effectivePath) {
             noKey.push(`id:${item.id}`)
             continue
         }
-        if (!item.imagePath) fellBack.push(item.shortname)
+        if (!declaredPath) fellBack.push(item.shortname)
 
         referenced.add(effectivePath)
 

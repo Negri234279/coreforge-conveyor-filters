@@ -103,9 +103,11 @@ async function main() {
     if (!Array.isArray(items)) throw new Error(`${opts.itemsPath} is not a JSON array`)
 
     // Everything items.json currently points at (imagePath, else shortname).
+    // Also honour the legacy snake_case `image_path` key so raw rows that
+    // bypassed the importer aren't mistaken for orphans.
     const referenced = new Set()
     for (const it of items) {
-        const effectivePath = it.imagePath ?? it.shortname
+        const effectivePath = it.imagePath ?? it.image_path ?? it.shortname
         if (effectivePath) referenced.add(effectivePath)
     }
 

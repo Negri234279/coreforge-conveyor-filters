@@ -155,6 +155,23 @@ function toAppItem(gameItem, base) {
     }
 }
 
+// Rebuild an existing items.json entry into the canonical camelCase shape,
+// healing rows that slipped in with Rust's raw snake_case keys (`itemid` /
+// `image_path`) outside this importer. The app schema (src/types/index.ts) is
+// { id, itemId, shortname, name, category, imagePath } — emit exactly that, in
+// that order, so already-canonical rows re-serialize byte-identical (no diff)
+// while the legacy ones get fixed on the next run.
+function normalizeItem(it) {
+    return {
+        id: it.id,
+        itemId: it.itemId ?? it.itemid,
+        shortname: it.shortname,
+        name: it.name,
+        category: it.category,
+        imagePath: it.imagePath ?? it.image_path ?? it.shortname,
+    }
+}
+
 async function main() {
     const opts = parseArgs(argv.slice(2))
     const sizeNames = Object.keys(SIZES)
@@ -179,13 +196,15 @@ async function main() {
     // Cleanup pass: drop any excluded shortname already in items.json (and its
     // icons), so the list stays authoritative regardless of what the source holds.
     const removedExcluded = []
-    const existing = parsed.filter((it) => {
-        if (excluded.has(it.shortname)) {
-            removedExcluded.push(it)
-            return false
-        }
-        return true
-    })
+    const existing = parsed
+        .filter((it) => {
+            if (excluded.has(it.shortname)) {
+                removedExcluded.push(it)
+                return false
+            }
+            return true
+        })
+        .map(normalizeItem)
 
     const byShortname = new Map(existing.map((it) => [it.shortname, it]))
     let maxId = existing.reduce((m, it) => Math.max(m, it.id ?? 0), 0)

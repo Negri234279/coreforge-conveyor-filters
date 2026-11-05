@@ -1276,7 +1276,7 @@
         "itemId": -1913996738,
         "shortname": "fishtrophy",
         "name": "Fish Trophy",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "fishtrophy"
     },
     {
@@ -2188,7 +2188,7 @@
         "itemId": 1697996440,
         "shortname": "photoframe.landscape",
         "name": "Landscape Photo Frame",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "photoframe.landscape"
     },
     {
@@ -2260,7 +2260,7 @@
         "itemId": 1205084994,
         "shortname": "photoframe.large",
         "name": "Large Photo Frame",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "photoframe.large"
     },
     {
@@ -2340,7 +2340,7 @@
         "itemId": 1729712564,
         "shortname": "photoframe.portrait",
         "name": "Portrait Photo Frame",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "photoframe.portrait"
     },
     {
@@ -3132,7 +3132,7 @@
         "itemId": -845557339,
         "shortname": "sign.pictureframe.landscape",
         "name": "Landscape Picture Frame",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "sign.pictureframe.landscape"
     },
     {
@@ -3156,7 +3156,7 @@
         "itemId": -996185386,
         "shortname": "sign.pictureframe.xl",
         "name": "XL Picture Frame",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "sign.pictureframe.xl"
     },
     {
@@ -3164,7 +3164,7 @@
         "itemId": 121049755,
         "shortname": "sign.pictureframe.tall",
         "name": "Tall Picture Frame",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "sign.pictureframe.tall"
     },
     {
@@ -3180,7 +3180,7 @@
         "itemId": 98508942,
         "shortname": "sign.pictureframe.xxl",
         "name": "XXL Picture Frame",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "sign.pictureframe.xxl"
     },
     {
@@ -3204,7 +3204,7 @@
         "itemId": -1370759135,
         "shortname": "sign.pictureframe.portrait",
         "name": "Portrait Picture Frame",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "sign.pictureframe.portrait"
     },
     {
@@ -3796,7 +3796,7 @@
         "itemId": 975983052,
         "shortname": "trophy",
         "name": "Twitch Rivals Trophy",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "trophy"
     },
     {
@@ -3884,7 +3884,7 @@
         "itemId": -901370585,
         "shortname": "trophy2023",
         "name": "Twitch Rivals Trophy 2023",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "trophy2023"
     },
     {
@@ -4284,7 +4284,7 @@
         "itemId": -1344017968,
         "shortname": "wantedposter",
         "name": "Wanted Poster",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "wantedposter"
     },
     {
@@ -5356,7 +5356,7 @@
         "itemId": 960673498,
         "shortname": "huntingtrophylarge",
         "name": "Large Hunting Trophy",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "huntingtrophylarge"
     },
     {
@@ -5388,7 +5388,7 @@
         "itemId": -869598982,
         "shortname": "huntingtrophysmall",
         "name": "Small Hunting Trophy",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "huntingtrophysmall"
     },
     {
@@ -6169,315 +6169,315 @@
     },
     {
         "id": 781,
-        "itemid": -1989600732,
+        "itemId": -1989600732,
         "shortname": "hab.armor",
         "name": "Hot Air Balloon Armor",
         "category": "Attire",
-        "image_path": "hab.armor"
+        "imagePath": "hab.armor"
     },
     {
         "id": 782,
-        "itemid": 1346158228,
+        "itemId": 1346158228,
         "shortname": "pumpkinbasket",
         "name": "Pumpkin Basket",
         "category": "Misc",
-        "image_path": "pumpkinbasket"
+        "imagePath": "pumpkinbasket"
     },
     {
         "id": 783,
-        "itemid": -170436364,
+        "itemId": -170436364,
         "shortname": "snakemeat.cooked",
         "name": "Cooked Snake Meat",
         "category": "Food",
-        "image_path": "snakemeat.cooked"
+        "imagePath": "snakemeat.cooked"
     },
     {
         "id": 784,
-        "itemid": -2100458529,
+        "itemId": -2100458529,
         "shortname": "snakemeat",
         "name": "Raw Snake Meat",
         "category": "Food",
-        "image_path": "snakemeat"
+        "imagePath": "snakemeat"
     },
     {
         "id": 785,
-        "itemid": -1923843855,
+        "itemId": -1923843855,
         "shortname": "half.bamboo.shelves",
         "name": "Half Height Bamboo Shelves",
         "category": "Items",
-        "image_path": "half.bamboo.shelves"
+        "imagePath": "half.bamboo.shelves"
     },
     {
         "id": 786,
-        "itemid": -851288382,
+        "itemId": -851288382,
         "shortname": "blowpipe",
         "name": "Blow Pipe",
         "category": "Weapon",
-        "image_path": "blowpipe"
+        "imagePath": "blowpipe"
     },
     {
         "id": 787,
-        "itemid": 54265286,
+        "itemId": 54265286,
         "shortname": "pie.crocodile",
         "name": "Crocodile Pie",
         "category": "Food",
-        "image_path": "pie.crocodile"
+        "imagePath": "pie.crocodile"
     },
     {
         "id": 788,
-        "itemid": -594596146,
+        "itemId": -594596146,
         "shortname": "dart.radiation",
         "name": "Radiation Dart",
         "category": "Ammunition",
-        "image_path": "dart.radiation"
+        "imagePath": "dart.radiation"
     },
     {
         "id": 789,
-        "itemid": -1652561344,
+        "itemId": -1652561344,
         "shortname": "bamboo.barrel",
         "name": "Bamboo Barrel",
         "category": "Items",
-        "image_path": "bamboo.barrel"
+        "imagePath": "bamboo.barrel"
     },
     {
         "id": 790,
-        "itemid": -1081599445,
+        "itemId": -1081599445,
         "shortname": "crocodilemeat",
         "name": "Raw Crocodile Meat",
         "category": "Food",
-        "image_path": "crocodilemeat"
+        "imagePath": "crocodilemeat"
     },
     {
         "id": 791,
-        "itemid": 309017792,
+        "itemId": 309017792,
         "shortname": "pie.bigcat",
         "name": "Big Cat Pie",
         "category": "Food",
-        "image_path": "pie.bigcat"
+        "imagePath": "pie.bigcat"
     },
     {
         "id": 792,
-        "itemid": 2036395619,
+        "itemId": 2036395619,
         "shortname": "dart.scatter",
         "name": "Scatter Dart",
         "category": "Ammunition",
-        "image_path": "dart.scatter"
+        "imagePath": "dart.scatter"
     },
     {
         "id": 793,
-        "itemid": 248643189,
+        "itemId": 248643189,
         "shortname": "bigcatmeat.spoiled",
         "name": "Spoiled Big Cat Meat",
         "category": "Food",
-        "image_path": "bigcatmeat.spoiled"
+        "imagePath": "bigcatmeat.spoiled"
     },
     {
         "id": 794,
-        "itemid": -526026171,
+        "itemId": -526026171,
         "shortname": "wicker.barrel",
         "name": "Wicker Barrel",
         "category": "Items",
-        "image_path": "wicker.barrel"
+        "imagePath": "wicker.barrel"
     },
     {
         "id": 795,
-        "itemid": 392828520,
+        "itemId": 392828520,
         "shortname": "crocodilemeat.cooked",
         "name": "Cooked Crocodile Meat",
         "category": "Food",
-        "image_path": "crocodilemeat.cooked"
+        "imagePath": "crocodilemeat.cooked"
     },
     {
         "id": 796,
-        "itemid": -870140677,
+        "itemId": -870140677,
         "shortname": "venom.snake",
         "name": "Snake Venom",
         "category": "Items",
-        "image_path": "venom.snake"
+        "imagePath": "venom.snake"
     },
     {
         "id": 797,
-        "itemid": -1616704051,
+        "itemId": -1616704051,
         "shortname": "snakemeat.spoiled",
         "name": "Spoiled Snake Meat",
         "category": "Food",
-        "image_path": "snakemeat.spoiled"
+        "imagePath": "snakemeat.spoiled"
     },
     {
         "id": 798,
-        "itemid": -963819285,
+        "itemId": -963819285,
         "shortname": "dart.incapacitate",
         "name": "Incapacitate Dart",
         "category": "Ammunition",
-        "image_path": "dart.incapacitate"
+        "imagePath": "dart.incapacitate"
     },
     {
         "id": 799,
-        "itemid": -274709858,
+        "itemId": -274709858,
         "shortname": "dart.wood",
         "name": "Wood Dart",
         "category": "Ammunition",
-        "image_path": "dart.wood"
+        "imagePath": "dart.wood"
     },
     {
         "id": 800,
-        "itemid": -1318837358,
+        "itemId": -1318837358,
         "shortname": "bigcatmeat.cooked",
         "name": "Cooked Big Cat Meat",
         "category": "Food",
-        "image_path": "bigcatmeat.cooked"
+        "imagePath": "bigcatmeat.cooked"
     },
     {
         "id": 801,
-        "itemid": -2095813057,
+        "itemId": -2095813057,
         "shortname": "bigcatmeat",
         "name": "Raw Big Cat Meat",
         "category": "Food",
-        "image_path": "bigcatmeat"
+        "imagePath": "bigcatmeat"
     },
     {
         "id": 802,
-        "itemid": -1796837031,
+        "itemId": -1796837031,
         "shortname": "crocodilemeat.spoiled",
         "name": "Spoiled Crocodile Meat",
         "category": "Food",
-        "image_path": "crocodilemeat.spoiled"
+        "imagePath": "crocodilemeat.spoiled"
     },
     {
         "id": 803,
-        "itemid": -193519904,
+        "itemId": -193519904,
         "shortname": "single.shallow.wall.shelves",
         "name": "Single Shallow Wall Shelves",
         "category": "Items",
-        "image_path": "single.shallow.wall.shelves"
+        "imagePath": "single.shallow.wall.shelves"
     },
     {
         "id": 804,
-        "itemid": 1680793490,
+        "itemId": 1680793490,
         "shortname": "boomerang",
         "name": "Boomerang",
         "category": "Weapon",
-        "image_path": "boomerang"
+        "imagePath": "boomerang"
     },
     {
         "id": 805,
-        "itemid": -459159118,
+        "itemId": -459159118,
         "shortname": "woodarmor.gloves",
         "name": "Wood Armor Gloves",
         "category": "Attire",
-        "image_path": "woodarmor.gloves"
+        "imagePath": "woodarmor.gloves"
     },
     {
         "id": 806,
-        "itemid": 1127732084,
+        "itemId": 1127732084,
         "shortname": "ballistic.helmet",
         "name": "Ballistic Helmet",
         "category": "Attire",
-        "image_path": "ballistic.helmet"
+        "imagePath": "ballistic.helmet"
     },
     {
         "id": 807,
-        "itemid": -1780402255,
+        "itemId": -1780402255,
         "shortname": "ballistic.vest",
         "name": "Ballistic vest",
         "category": "Attire",
-        "image_path": "ballistic.vest"
+        "imagePath": "ballistic.vest"
     },
     {
         "id": 808,
-        "itemid": 1983541158,
+        "itemId": 1983541158,
         "shortname": "ballistic.legarmor",
         "name": "Ballistic leg armour",
         "category": "Attire",
-        "image_path": "ballistic.legarmor"
+        "imagePath": "ballistic.legarmor"
     },
     {
         "id": 809,
-        "itemid": -2127311451,
+        "itemId": -2127311451,
         "shortname": "bdu.shirt",
         "name": "BDU shirt",
         "category": "Attire",
-        "image_path": "bdu.shirt"
+        "imagePath": "bdu.shirt"
     },
     {
         "id": 810,
-        "itemid": 1468749025,
+        "itemId": 1468749025,
         "shortname": "bdu.pants",
         "name": "BDU pants",
         "category": "Attire",
-        "image_path": "bdu.pants"
+        "imagePath": "bdu.pants"
     },
     {
         "id": 811,
-        "itemid": -1800102806,
+        "itemId": -1800102806,
         "shortname": "discord.plushie",
         "name": "Wumpus Plush",
-        "category": "Items",
-        "image_path": "discord.plushie"
+        "category": "Fun",
+        "imagePath": "discord.plushie"
     },
     {
         "id": 812,
-        "itemid": -1019111952,
+        "itemId": -1019111952,
         "shortname": "industrial.storage.horizontal",
         "name": "Industrial Storage Horizontal Barrel",
         "category": "Items",
-        "image_path": "industrial.storage.horizontal"
+        "imagePath": "industrial.storage.horizontal"
     },
     {
         "id": 813,
-        "itemid": -883975138,
+        "itemId": -883975138,
         "shortname": "industrial.storage.vertical",
         "name": "Industrial Storage Vertical Barrel",
         "category": "Items",
-        "image_path": "industrial.storage.vertical"
+        "imagePath": "industrial.storage.vertical"
     },
     {
         "id": 814,
-        "itemid": 599591861,
+        "itemId": 599591861,
         "shortname": "m16a2",
         "name": "M16A2",
         "category": "Weapon",
-        "image_path": "m16a2"
+        "imagePath": "m16a2"
     },
     {
         "id": 815,
-        "itemid": -265202949,
+        "itemId": -265202949,
         "shortname": "wall.shallow.industrial.shelves",
         "name": "Industrial Wall Shelves",
         "category": "Items",
-        "image_path": "wall.shallow.industrial.shelves"
+        "imagePath": "wall.shallow.industrial.shelves"
     },
     {
         "id": 816,
-        "itemid": -418359052,
+        "itemId": -418359052,
         "shortname": "hat.horsemask",
         "name": "Horse Mask",
         "category": "Attire",
-        "image_path": "hat.horsemask"
+        "imagePath": "hat.horsemask"
     },
     {
         "id": 817,
-        "itemid": 1849409072,
+        "itemId": 1849409072,
         "shortname": "silly.horse.mask",
         "name": "Silly Horse Mask",
         "category": "Attire",
-        "image_path": "silly.horse.mask"
+        "imagePath": "silly.horse.mask"
     },
     {
         "id": 818,
-        "itemid": -945548410,
+        "itemId": -945548410,
         "shortname": "fuse.highgrade",
         "name": "Heavy Fuse",
         "category": "Component",
-        "image_path": "fuse.highgrade"
+        "imagePath": "fuse.highgrade"
     },
     {
         "id": 819,
-        "itemid": -75264812,
+        "itemId": -75264812,
         "shortname": "medical.honey.bandage",
         "name": "Medical Honey Bandage",
         "category": "Medical",
-        "image_path": "medical.honey.bandage"
+        "imagePath": "medical.honey.bandage"
     },
     {
         "id": 820,
@@ -7040,14 +7040,6 @@
         "imagePath": "abyss.barrel.vertical"
     },
     {
-        "id": 891,
-        "itemId": -1896395719,
-        "shortname": "advancedblueprintfragment",
-        "name": "Advanced Blueprint Fragment",
-        "category": "Component",
-        "imagePath": "advancedblueprintfragment"
-    },
-    {
         "id": 892,
         "itemId": -1498613415,
         "shortname": "advancedcoolingtea",
@@ -7112,14 +7104,6 @@
         "imagePath": "anchor"
     },
     {
-        "id": 900,
-        "itemId": -143481979,
-        "shortname": "basicblueprintfragment",
-        "name": "Basic Blueprint Fragment",
-        "category": "Component",
-        "imagePath": "basicblueprintfragment"
-    },
-    {
         "id": 901,
         "itemId": -321247698,
         "shortname": "boat.planner",
@@ -7164,7 +7148,7 @@
         "itemId": 2130820932,
         "shortname": "charity.plushy.01",
         "name": "Cancer Research UK Plushie",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "charity.plushy.01"
     },
     {
@@ -7172,7 +7156,7 @@
         "itemId": 2130820933,
         "shortname": "charity.plushy.02",
         "name": "Ronald McDonald House UK Plushie",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "charity.plushy.02"
     },
     {
@@ -7188,7 +7172,7 @@
         "itemId": -1779203452,
         "shortname": "easel",
         "name": "Portable Easel",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "easel"
     },
     {
@@ -7276,7 +7260,7 @@
         "itemId": 1578317134,
         "shortname": "hazmat.plushy",
         "name": "Hazmat Plushy",
-        "category": "Items",
+        "category": "Fun",
         "imagePath": "hazmat.plushy"
     },
     {
@@ -7310,14 +7294,6 @@
         "name": "Clothing Mannequin",
         "category": "Items",
         "imagePath": "mannequin"
-    },
-    {
-        "id": 932,
-        "itemId": 1174484438,
-        "shortname": "mini fridge",
-        "name": "Mini Fridge",
-        "category": "Electrical",
-        "imagePath": "mini fridge"
     },
     {
         "id": 933,
@@ -7566,5 +7542,461 @@
         "name": "Surplus Workbench Upgrade",
         "category": "Component",
         "imagePath": "workbench.upgrade.surplus"
+    },
+    {
+        "id": 965,
+        "itemId": -1896395719,
+        "shortname": "blueprintbook",
+        "name": "Blueprint Book",
+        "category": "Component",
+        "imagePath": "blueprintbook"
+    },
+    {
+        "id": 966,
+        "itemId": -143481979,
+        "shortname": "blueprintfragment",
+        "name": "Blueprint Fragment",
+        "category": "Component",
+        "imagePath": "blueprintfragment"
+    },
+    {
+        "id": 967,
+        "itemId": -1716287874,
+        "shortname": "blueprintpage",
+        "name": "Blueprint Page",
+        "category": "Component",
+        "imagePath": "blueprintpage"
+    },
+    {
+        "id": 968,
+        "itemId": -593892104,
+        "shortname": "clothing.mod.armorinsert_wool",
+        "name": "Wool Armor Insert",
+        "category": "Items",
+        "imagePath": "clothing.mod.armorinsert_wool"
+    },
+    {
+        "id": 969,
+        "itemId": 1174484438,
+        "shortname": "minifridge",
+        "name": "Mini Fridge",
+        "category": "Electrical",
+        "imagePath": "minifridge"
+    },
+    {
+        "id": 970,
+        "itemId": -1540865198,
+        "shortname": "pie.crocodile.rich",
+        "name": "Rich Crocodile Pie",
+        "category": "Food",
+        "imagePath": "pie.crocodile.rich"
+    },
+    {
+        "id": 971,
+        "itemId": -1953695556,
+        "shortname": "shears",
+        "name": "Shears",
+        "category": "Tool",
+        "imagePath": "shears"
+    },
+    {
+        "id": 972,
+        "itemId": 2125127001,
+        "shortname": "smg.uzi",
+        "name": "Uzi",
+        "category": "Weapon",
+        "imagePath": "smg.uzi"
+    },
+    {
+        "id": 973,
+        "itemId": 1930628359,
+        "shortname": "alien.costume",
+        "name": "Alien Costume",
+        "category": "Attire",
+        "imagePath": "alien.costume"
+    },
+    {
+        "id": 974,
+        "itemId": 2130820934,
+        "shortname": "charity.plushy.03",
+        "name": "Ronald McDonald House UK 2026 Plushie",
+        "category": "Fun",
+        "imagePath": "charity.plushy.03"
+    },
+    {
+        "id": 975,
+        "itemId": 2130820927,
+        "shortname": "charity.plushy.04",
+        "name": "Cancer Research UK 2026 Plushie",
+        "category": "Fun",
+        "imagePath": "charity.plushy.04"
+    },
+    {
+        "id": 976,
+        "itemId": -105343718,
+        "shortname": "circleballoon2025",
+        "name": "Circle Balloon",
+        "category": "Fun",
+        "imagePath": "circleballoon2025"
+    },
+    {
+        "id": 977,
+        "itemId": 1488606552,
+        "shortname": "cupboard.tool.retro",
+        "name": "Retro Tool Cupboard",
+        "category": "Construction",
+        "imagePath": "cupboard.tool.retro"
+    },
+    {
+        "id": 978,
+        "itemId": 1174957864,
+        "shortname": "cupboard.tool.shockbyte",
+        "name": "Shockbyte Tool Cupboard",
+        "category": "Construction",
+        "imagePath": "cupboard.tool.shockbyte"
+    },
+    {
+        "id": 979,
+        "itemId": 1494014226,
+        "shortname": "discord.trophy",
+        "name": "Discord Trophy",
+        "category": "Fun",
+        "imagePath": "discord.trophy"
+    },
+    {
+        "id": 980,
+        "itemId": -570638754,
+        "shortname": "discord.zombie.plushie",
+        "name": "Zombie Wumpus Plush",
+        "category": "Fun",
+        "imagePath": "discord.zombie.plushie"
+    },
+    {
+        "id": 981,
+        "itemId": -996235148,
+        "shortname": "goldframe.large",
+        "name": "Ornate Frame large",
+        "category": "Fun",
+        "imagePath": "goldframe.large"
+    },
+    {
+        "id": 982,
+        "itemId": -1901993050,
+        "shortname": "goldframe.medium",
+        "name": "Ornate Frame Medium",
+        "category": "Fun",
+        "imagePath": "goldframe.medium"
+    },
+    {
+        "id": 983,
+        "itemId": -1836526520,
+        "shortname": "goldframe.small",
+        "name": "Ornate Frame Small",
+        "category": "Fun",
+        "imagePath": "goldframe.small"
+    },
+    {
+        "id": 984,
+        "itemId": -1528767189,
+        "shortname": "goldframe.standing",
+        "name": "Ornate Frame Standing",
+        "category": "Fun",
+        "imagePath": "goldframe.standing"
+    },
+    {
+        "id": 985,
+        "itemId": -1430299277,
+        "shortname": "goldframe.xl",
+        "name": "Ornate Frame XL",
+        "category": "Fun",
+        "imagePath": "goldframe.xl"
+    },
+    {
+        "id": 986,
+        "itemId": -1322332389,
+        "shortname": "goldframe.xxl",
+        "name": "Ornate Frame XXL",
+        "category": "Fun",
+        "imagePath": "goldframe.xxl"
+    },
+    {
+        "id": 987,
+        "itemId": 362863314,
+        "shortname": "heartballoon2025",
+        "name": "Heart Balloon",
+        "category": "Fun",
+        "imagePath": "heartballoon2025"
+    },
+    {
+        "id": 988,
+        "itemId": 146221721,
+        "shortname": "heavy.scientist.plushie",
+        "name": "Heavy Scientist Plushie",
+        "category": "Fun",
+        "imagePath": "heavy.scientist.plushie"
+    },
+    {
+        "id": 989,
+        "itemId": 1295301598,
+        "shortname": "latexballoon2025",
+        "name": "Latex Balloon",
+        "category": "Fun",
+        "imagePath": "latexballoon2025"
+    },
+    {
+        "id": 990,
+        "itemId": -1440443161,
+        "shortname": "latexclumpballoon2025",
+        "name": "Clump of Latex Balloons",
+        "category": "Fun",
+        "imagePath": "latexclumpballoon2025"
+    },
+    {
+        "id": 991,
+        "itemId": 242421166,
+        "shortname": "lightup.large",
+        "name": "Light-Up Frame Large",
+        "category": "Fun",
+        "imagePath": "lightup.large"
+    },
+    {
+        "id": 992,
+        "itemId": 1801656689,
+        "shortname": "lightup.xl",
+        "name": "Light-Up Frame XL",
+        "category": "Fun",
+        "imagePath": "lightup.xl"
+    },
+    {
+        "id": 993,
+        "itemId": 1447138977,
+        "shortname": "lightup.xxl",
+        "name": "Light-Up Frame XXL",
+        "category": "Fun",
+        "imagePath": "lightup.xxl"
+    },
+    {
+        "id": 994,
+        "itemId": -1294739579,
+        "shortname": "lightupframe.medium",
+        "name": "Light-Up Frame Medium",
+        "category": "Fun",
+        "imagePath": "lightupframe.medium"
+    },
+    {
+        "id": 995,
+        "itemId": 1691223771,
+        "shortname": "lightupframe.small",
+        "name": "Light-Up Frame Small",
+        "category": "Fun",
+        "imagePath": "lightupframe.small"
+    },
+    {
+        "id": 996,
+        "itemId": 1950013766,
+        "shortname": "lightupframe.standing",
+        "name": "Light-Up Frame Standing",
+        "category": "Fun",
+        "imagePath": "lightupframe.standing"
+    },
+    {
+        "id": 997,
+        "itemId": 571949408,
+        "shortname": "mixedclumpballoon2025",
+        "name": "Clump of Mixed Balloons",
+        "category": "Fun",
+        "imagePath": "mixedclumpballoon2025"
+    },
+    {
+        "id": 998,
+        "itemId": 445662288,
+        "shortname": "scientist.plushie",
+        "name": "Scientist Plushie",
+        "category": "Fun",
+        "imagePath": "scientist.plushie"
+    },
+    {
+        "id": 999,
+        "itemId": -1094453063,
+        "shortname": "scrapframe.large",
+        "name": "Shutter Frame large",
+        "category": "Fun",
+        "imagePath": "scrapframe.large"
+    },
+    {
+        "id": 1000,
+        "itemId": -1060567807,
+        "shortname": "scrapframe.medium",
+        "name": "Shutter Frame Medium",
+        "category": "Fun",
+        "imagePath": "scrapframe.medium"
+    },
+    {
+        "id": 1001,
+        "itemId": -498301781,
+        "shortname": "scrapframe.small",
+        "name": "Shutter Frame Small",
+        "category": "Fun",
+        "imagePath": "scrapframe.small"
+    },
+    {
+        "id": 1002,
+        "itemId": -1774190142,
+        "shortname": "scrapframe.standing",
+        "name": "Shutter Frame Standing",
+        "category": "Fun",
+        "imagePath": "scrapframe.standing"
+    },
+    {
+        "id": 1003,
+        "itemId": -1244287686,
+        "shortname": "scrapframe.xl",
+        "name": "Shutter Frame XL",
+        "category": "Fun",
+        "imagePath": "scrapframe.xl"
+    },
+    {
+        "id": 1004,
+        "itemId": -1211801774,
+        "shortname": "scrapframe.xxl",
+        "name": "Shutter Frame XXL",
+        "category": "Fun",
+        "imagePath": "scrapframe.xxl"
+    },
+    {
+        "id": 1005,
+        "itemId": 504109620,
+        "shortname": "sculpture.ice",
+        "name": "Ice Sculpture",
+        "category": "Fun",
+        "imagePath": "sculpture.ice"
+    },
+    {
+        "id": 1006,
+        "itemId": 1852905808,
+        "shortname": "sculpture.rock",
+        "name": "Stone Sculpture",
+        "category": "Fun",
+        "imagePath": "sculpture.rock"
+    },
+    {
+        "id": 1007,
+        "itemId": -946599114,
+        "shortname": "sign.artistcanvas.l",
+        "name": "Artist Canvas Standing",
+        "category": "Fun",
+        "imagePath": "sign.artistcanvas.l"
+    },
+    {
+        "id": 1008,
+        "itemId": -946599113,
+        "shortname": "sign.artistcanvas.m",
+        "name": "Artist Canvas Large",
+        "category": "Fun",
+        "imagePath": "sign.artistcanvas.m"
+    },
+    {
+        "id": 1009,
+        "itemId": -946599131,
+        "shortname": "sign.artistcanvas.s",
+        "name": "Artist Canvas Medium",
+        "category": "Fun",
+        "imagePath": "sign.artistcanvas.s"
+    },
+    {
+        "id": 1010,
+        "itemId": 1562867678,
+        "shortname": "sign.artistcanvas.xl",
+        "name": "Artist Canvas XL",
+        "category": "Fun",
+        "imagePath": "sign.artistcanvas.xl"
+    },
+    {
+        "id": 1011,
+        "itemId": 1609921845,
+        "shortname": "sign.artistcanvas.xs",
+        "name": "Artist Canvas Small",
+        "category": "Fun",
+        "imagePath": "sign.artistcanvas.xs"
+    },
+    {
+        "id": 1012,
+        "itemId": -816769770,
+        "shortname": "sign.artistcanvas.xxl",
+        "name": "Artist Canvas XXL",
+        "category": "Fun",
+        "imagePath": "sign.artistcanvas.xxl"
+    },
+    {
+        "id": 1013,
+        "itemId": 963400638,
+        "shortname": "speechbubbleballoon2025",
+        "name": "Speech Bubble Balloon",
+        "category": "Fun",
+        "imagePath": "speechbubbleballoon2025"
+    },
+    {
+        "id": 1014,
+        "itemId": -1782127806,
+        "shortname": "starballoon2025",
+        "name": "Star Balloon",
+        "category": "Fun",
+        "imagePath": "starballoon2025"
+    },
+    {
+        "id": 1015,
+        "itemId": 301063058,
+        "shortname": "wantedposter.wantedposter2",
+        "name": "Wanted Poster 2",
+        "category": "Fun",
+        "imagePath": "wantedposter.wantedposter2"
+    },
+    {
+        "id": 1016,
+        "itemId": -1265020883,
+        "shortname": "wantedposter.wantedposter3",
+        "name": "Wanted Poster 3",
+        "category": "Fun",
+        "imagePath": "wantedposter.wantedposter3"
+    },
+    {
+        "id": 1017,
+        "itemId": 1463862472,
+        "shortname": "wantedposter.wantedposter4",
+        "name": "Wanted Poster 4",
+        "category": "Fun",
+        "imagePath": "wantedposter.wantedposter4"
+    },
+    {
+        "id": 1018,
+        "itemId": -635951327,
+        "shortname": "woodframe.large",
+        "name": "Wood Frame Large",
+        "category": "Fun",
+        "imagePath": "woodframe.large"
+    },
+    {
+        "id": 1019,
+        "itemId": -1541706279,
+        "shortname": "woodframe.medium",
+        "name": "Wood Frame Medium",
+        "category": "Fun",
+        "imagePath": "woodframe.medium"
+    },
+    {
+        "id": 1020,
+        "itemId": -1476278729,
+        "shortname": "woodframe.small",
+        "name": "Wood Frame Small",
+        "category": "Fun",
+        "imagePath": "woodframe.small"
+    },
+    {
+        "id": 1021,
+        "itemId": 1769475390,
+        "shortname": "woodframe.standing",
+        "name": "Wood Frame Standing",
+        "category": "Fun",
+        "imagePath": "woodframe.standing"
     }
 ]
