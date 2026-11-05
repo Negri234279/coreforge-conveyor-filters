@@ -1,8 +1,12 @@
 # syntax=docker/dockerfile:1.7
 
-# Pin the Node major + variant. For reproducible/secure builds consider
-# pinning to a digest in CI (e.g. node:24-slim@sha256:<digest>).
-ARG NODE_IMAGE=node:24-slim
+# Pin the Node patch + variant. 24.22.2 (2026-10-27, LTS Krypton) ships the fix
+# for CVE-2026-111497 ("Node2Shell", critical Brotli-decoder RCE, CVSS 9.2,
+# patched in 24.22.1) plus the rest of the Oct-2026 security batch. Bump this to
+# the latest 24.x patch on each security release rather than floating on
+# `node:24-slim`. For fully reproducible builds consider also pinning a digest
+# in CI (e.g. node:24.22.2-slim@sha256:<digest>).
+ARG NODE_IMAGE=node:24.22.2-slim
 
 ############################
 # Base                     #
